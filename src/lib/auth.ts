@@ -8,6 +8,9 @@ import bcrypt from "bcryptjs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db),
+  // Trust the deployment host so auth works in production builds (not just dev),
+  // and behind proxies. Without this, Auth.js throws UntrustedHost (500) on /api/auth/*.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",

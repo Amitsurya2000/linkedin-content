@@ -58,3 +58,6 @@ next-env.d.ts
 *.sqlite
 *.zip
 style-samples/
+
+# keep the example env (no secrets) so the project is runnable
+!.env.example
