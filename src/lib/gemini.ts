@@ -2,11 +2,32 @@ import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import path from "path";
 
-// Load the LinkedIn system prompt from the markdown file
-const systemPrompt = fs.readFileSync(
-  path.join(process.cwd(), "src/lib/prompts/linkedin-system-prompt.md"),
-  "utf-8"
-);
+// Load the LinkedIn system prompt + the Career OS knowledge base from disk.
+// The base prompt sets the ghostwriter role & viral rules; the two knowledge
+// files add (1) the Career OS framework library (Trust Engines, Hook Movie
+// Trailer, virality frameworks + the ₹1Cr+ India CX/CS/Product positioning) and
+// (2) real viral-post patterns distilled from 1,203 top-creator posts.
+function loadKnowledge(relPath: string): string {
+  try {
+    return fs.readFileSync(path.join(process.cwd(), relPath), "utf-8");
+  } catch {
+    return "";
+  }
+}
+
+const basePrompt = loadKnowledge("src/lib/prompts/linkedin-system-prompt.md");
+const contentBrain = loadKnowledge("src/lib/knowledge/career-os-content-brain.md");
+const viralPatterns = loadKnowledge("src/lib/knowledge/viral-post-patterns.md");
+
+const systemPrompt = [
+  basePrompt,
+  contentBrain
+    ? `\n\n---\n\n# CAREER OS CONTENT BRAIN (apply these frameworks)\n\n${contentBrain}`
+    : "",
+  viralPatterns
+    ? `\n\n---\n\n# ${viralPatterns}`
+    : "",
+].join("");
 
 interface GenerateLinkedInPostsParams {
   apiKey: string;
