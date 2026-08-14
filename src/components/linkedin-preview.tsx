@@ -31,11 +31,12 @@ export function LinkedInPreview({
     <div className="bg-[#1e1e1e] rounded-xl border border-[#333] overflow-hidden max-w-[550px] w-full">
       {/* Header */}
       <div className="p-4 flex items-start gap-3">
+        {/* Stays white: this avatar sits on LinkedIn blue, not on a KOYOPO surface. */}
         <div className="w-12 h-12 rounded-full bg-[#0A66C2] flex items-center justify-center text-white font-bold text-sm shrink-0">
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white font-semibold text-sm">{name}</p>
+          <p className="text-[#1A1A1A] font-semibold text-sm">{name}</p>
           <p className="text-[#8b8b8b] text-xs">
             {postType === "carousel" ? "Document" : "Post"} · 1st
           </p>
@@ -47,7 +48,7 @@ export function LinkedInPreview({
       {/* Content */}
       <div className="px-4 pb-3">
         {/* Hook - bold and prominent */}
-        <p className="text-white font-semibold text-[15px] leading-relaxed whitespace-pre-line mb-1">
+        <p className="text-[#1A1A1A] font-semibold text-[15px] leading-relaxed whitespace-pre-line mb-1">
           {hook}
         </p>
 

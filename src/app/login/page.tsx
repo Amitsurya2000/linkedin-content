@@ -36,13 +36,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#FCEBEC] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Top-left branding */}
       <div className="absolute top-6 left-6 flex items-center gap-2">
         <div className="w-7 h-7 rounded-lg bg-[#ED383B] flex items-center justify-center">
-          <Linkedin className="w-3.5 h-3.5 text-white" />
+          <Linkedin className="w-3.5 h-3.5 text-[#1A1A1A]" />
         </div>
-        <span className="text-base font-bold text-white tracking-tight">LI Post Gen</span>
+        <span className="text-base font-bold text-[#1A1A1A] tracking-tight">LI Post Gen</span>
       </div>
 
       {/* Background glow */}
@@ -58,9 +58,9 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-[#1e293b] border border-[#334155] rounded-2xl p-8 shadow-xl">
+        <div className="bg-[#FFFFFF] border border-[#F5C5C7] rounded-2xl p-8 shadow-xl">
           <div className="mb-6 text-center">
-            <h2 className="text-xl font-semibold text-white">Sign in</h2>
+            <h2 className="text-xl font-semibold text-[#1A1A1A]">Sign in</h2>
             <p className="text-[#94a3b8] text-sm mt-1">Enter your credentials to continue</p>
           </div>
 
@@ -79,7 +79,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="bg-[#0f172a] border-[#334155] text-white placeholder:text-[#64748b] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
+                  className="bg-[#FCEBEC] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#64748b] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
                 />
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="bg-[#0f172a] border-[#334155] text-white placeholder:text-[#64748b] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
+                  className="bg-[#FCEBEC] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#64748b] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
                 />
               </div>
             </div>

@@ -425,6 +425,7 @@ When generating carousel/document posts, include the `carouselSlides` array:
       "slideNumber": 2,
       "title": "Step 1: The Visibility Audit",
       "body": "List every project you touched last quarter.\n\nNow ask: How many of those did your skip-level manager know about?\n\nIf the answer is less than 50%, you have a visibility problem, not a skills problem.",
+      "takeaway": "You are not being overlooked for lack of work. You are being overlooked for lack of witnesses.",
       "designDirection": "White background. Title in deep navy (#0B1F3A) bold 36px. Body text in dark gray (#333333) at 20px, left-aligned. Step number '01' in oversized watermark style (120px, 8% opacity navy) in top-right corner. Gold (#C9A227) accent bar on left edge."
     },
     {

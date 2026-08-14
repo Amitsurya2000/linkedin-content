@@ -1,5 +1,5 @@
 /**
- * Premium LinkedIn image-prompt engine for Gathos.
+ * Premium LinkedIn image-prompt engine.
  *
  * Strategy for ZERO text mistakes + a clean, low-text editorial look (matching
  * the reference graphics): the AI generates a TEXT-FREE premium background in a
@@ -105,7 +105,7 @@ export interface StyleDef {
   category: string;
   width: number;
   height: number;
-  /** Text-free background prompt for Gathos. */
+  /** Text-free background prompt for the image model. */
   build: (input: PostImageInput) => string;
   /** Overlay config; return null for a purely visual (no-text) style. */
   overlay: (input: PostImageInput) => { text: string; theme: OverlayTheme } | null;
@@ -132,7 +132,7 @@ function authOverlay(hook: string): { text: string; theme: OverlayTheme } {
 // ── Editorial system: clean charcoal canvas + app-drawn graphic accents ──────
 const GOLD = "#D9AD45"; // muted editorial gold
 
-// Clean charcoal backgrounds via SHORT, POSITIVE-only prompts (Gathos ignores
+// Clean charcoal backgrounds via SHORT, POSITIVE-only prompts (image models ignore
 // "NO/AVOID" lists and adds the clutter you banned — so we never list avoids).
 const EDIT_BG: Record<string, string> = {
   vignette: `A minimalist editorial background, 1:1 square: a matte near-black charcoal surface (#0A0A0A) with extremely subtle tonal variation, a soft gentle vignette, fine paper-like film grain and quiet dimensional depth. Understated premium business-magazine aesthetic, calm and high-authority, vast empty negative space. No text.`,

@@ -170,8 +170,45 @@ export const creatorProfiles = sqliteTable("creator_profiles", {
   // Full structured analysis (JSON): summary, expertise, achievements, roles,
   // signatureStories, voiceTone, positioning, contentPillars, etc.
   profileJson: text("profile_json"),
+  // Profile Kit (JSON): the banner brief, 3 ranked headline options and the
+  // About section — the three assets a recruiter reads in their first 30
+  // seconds. Kept beside the profile because it is derived from it.
+  kitJson: text("kit_json"),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+});
+
+/**
+ * Post performance, entered by hand.
+ *
+ * LinkedIn's analytics API needs a partner-approved app, so there is no free
+ * way to pull these automatically. Typing five numbers off the post's own stats
+ * page takes seconds and is enough to learn which hooks, formats and posting
+ * days actually work for this account — which is the whole point.
+ */
+export const postMetrics = sqliteTable("post_metrics", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  // Nullable so metrics can be logged for a post published outside the app.
+  postId: text("post_id").references(() => generatedPosts.id, { onDelete: "set null" }),
+  /** Free-text label when there is no linked post. */
+  label: text("label"),
+  postType: text("post_type"),
+  hookCategory: text("hook_category"),
+  impressions: integer("impressions"),
+  reactions: integer("reactions"),
+  comments: integer("comments"),
+  reposts: integer("reposts"),
+  saves: integer("saves"),
+  profileViews: integer("profile_views"),
+  /** When it went live — the basis for day-of-week and hour analysis. */
+  postedAt: integer("posted_at", { mode: "timestamp_ms" }),
+  notes: text("notes"),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 // ─── Relations ───────────────────────────────────────────────────────────────

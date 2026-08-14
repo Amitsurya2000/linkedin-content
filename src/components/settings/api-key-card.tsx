@@ -100,7 +100,7 @@ export function ApiKeyCard({
   const isConnected = !!keyMeta;
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm">
+    <div className="rounded-2xl bg-white border border-[#F5C5C7] overflow-hidden shadow-sm">
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -108,19 +108,19 @@ export function ApiKeyCard({
               {icon}
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-              <p className="text-xs text-slate-500">{description}</p>
+              <h2 className="text-sm font-semibold text-[#1A1A1A]">{title}</h2>
+              <p className="text-xs text-[#6B6B6B]">{description}</p>
             </div>
           </div>
           {loading ? (
-            <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />
+            <Loader2 className="w-4 h-4 text-[#6B6B6B] animate-spin" />
           ) : isConnected ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-red-50 text-red-700">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
               Connected
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-[#FCEBEC] text-[#6B6B6B]">
               Not configured
             </span>
           )}
@@ -128,14 +128,14 @@ export function ApiKeyCard({
 
         {isConnected && !showInput ? (
           <div className="space-y-1.5">
-            <p className="text-xs text-slate-500 font-medium">API Key</p>
+            <p className="text-xs text-[#6B6B6B] font-medium">API Key</p>
             <div className="flex items-center gap-2">
-              <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-mono text-sm text-slate-400 tracking-wider">
+              <div className="flex-1 bg-slate-50 border border-[#F5C5C7] rounded-xl px-4 py-2.5 font-mono text-sm text-[#6B6B6B] tracking-wider">
                 {keyMeta.keyPrefix}••••••••••••••••••••••••••
               </div>
               <button
                 onClick={() => setShowInput(true)}
-                className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-400 hover:text-red-600 hover:border-red-300 transition-colors cursor-pointer"
+                className="w-10 h-10 rounded-xl border border-[#F5C5C7] bg-white flex items-center justify-center text-[#6B6B6B] hover:text-red-600 hover:border-red-300 transition-colors cursor-pointer"
                 title="Update key"
               >
                 <Eye className="w-4 h-4" />
@@ -143,7 +143,7 @@ export function ApiKeyCard({
               <button
                 onClick={handleRevoke}
                 disabled={revoking}
-                className="w-10 h-10 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-400 hover:text-red-600 hover:border-red-300 transition-colors cursor-pointer disabled:opacity-50"
+                className="w-10 h-10 rounded-xl border border-[#F5C5C7] bg-white flex items-center justify-center text-[#6B6B6B] hover:text-red-600 hover:border-red-300 transition-colors cursor-pointer disabled:opacity-50"
                 title="Revoke key"
               >
                 {revoking ? (
@@ -153,13 +153,13 @@ export function ApiKeyCard({
                 )}
               </button>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#6B6B6B]">
               Added {new Date(keyMeta.createdAt).toLocaleDateString()}
             </p>
           </div>
         ) : (
           <div className="space-y-1.5">
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-[#6B6B6B] font-medium">
               {isConnected ? "Update API Key" : "Enter API Key"}
             </p>
             <div className="flex items-center gap-2">
@@ -168,12 +168,12 @@ export function ApiKeyCard({
                 placeholder={placeholder}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="flex-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-red-500/20 focus-visible:border-red-500 h-10 rounded-xl font-mono text-sm"
+                className="flex-1 bg-white border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#6B6B6B] focus-visible:ring-red-500/20 focus-visible:border-red-500 h-10 rounded-xl font-mono text-sm"
               />
               <Button
                 onClick={handleSave}
                 disabled={saving || !inputValue.trim()}
-                className="h-10 bg-red-600 hover:bg-red-700 text-white rounded-xl px-4 cursor-pointer disabled:opacity-50"
+                className="h-10 bg-red-600 hover:bg-red-700 text-[#1A1A1A] rounded-xl px-4 cursor-pointer disabled:opacity-50"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -184,7 +184,7 @@ export function ApiKeyCard({
               {isConnected && (
                 <button
                   onClick={() => { setShowInput(false); setInputValue(""); }}
-                  className="text-xs text-slate-500 hover:text-slate-700 cursor-pointer"
+                  className="text-xs text-[#6B6B6B] hover:text-[#6B6B6B] cursor-pointer"
                 >
                   Cancel
                 </button>

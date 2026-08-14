@@ -4,8 +4,9 @@ import fs from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { generatedPosts, postBatches } from "@/lib/db/schema";
-import { generateImage, isGathosConfigured } from "@/lib/gathos";
+import { generatedPosts, postBatches, userApiKeys } from "@/lib/db/schema";
+import { decrypt } from "@/lib/crypto";
+import { generateImage } from "@/lib/gemini-image";
 import { buildStyledPrompt } from "@/lib/image-prompt";
 import { composeSlide, type SlideSpec, type OverlayTheme } from "@/lib/compose";
 
@@ -26,7 +27,7 @@ export async function POST(
 ) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!isGathosConfigured()) return NextResponse.json({ error: "Image generation is not configured." }, { status: 503 });
+  // Backgrounds come from the user's Gemini key — checked with the post below.
 
   try {
     const { postId } = await params;
@@ -62,9 +63,25 @@ export async function POST(
     const theme: OverlayTheme = built.overlay?.theme ?? { fg: "#FFFFFF", accent: "#C9A227", font: "serif", align: "center", scrim: "none" };
     const { width, height } = built;
 
+    const [keyRow] = await db
+      .select()
+      .from(userApiKeys)
+      .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
+      .limit(1);
+    if (!keyRow) {
+      return NextResponse.json(
+        { error: "Add your Google Gemini API key in Settings first — it generates the backgrounds." },
+        { status: 400 }
+      );
+    }
+
     // One shared, cohesive background for the whole carousel (fast + consistent).
-    const bg = await generateImage(built.prompt, { width, height });
-    const bgBuf = Buffer.from(bg.base64, "base64");
+    const bg = await generateImage(
+      decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag),
+      built.prompt,
+      { aspectRatio: width / height > 1.2 ? "16:9" : width / height < 0.95 ? "4:5" : "1:1" }
+    );
+    const bgBuf = bg.buffer;
 
     // One image per Gemini slide — nothing dropped, nothing truncated. Slide 1 =
     // cover, last = CTA, the rest = content. Full copy is rendered verbatim.

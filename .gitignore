@@ -61,3 +61,20 @@ style-samples/
 
 # keep the example env (no secrets) so the project is runnable
 !.env.example
+
+# local render previews (regenerate with the scripts in scripts/)
+/public/swipe-preview/
+/public/attention-preview/
+/public/banner-preview/
+/public/assets-preview/
+/public/deck-preview/
+/public/koyopo-preview/
+/public/swipe-file.html
+/public/gemini-edit-test.png
+
+# dev server logs
+dev.log
+dev.err.log
+
+# third-party course transcript — used locally as outreach knowledge, not ours to publish
+/src/lib/knowledge/relationship-building.md

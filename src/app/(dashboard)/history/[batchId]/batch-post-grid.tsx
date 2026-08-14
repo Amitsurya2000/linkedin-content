@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Copy, Check, Layers } from "lucide-react";
+import { SwipeDeck } from "@/components/swipe-deck";
 
 interface Post {
   id: string;
@@ -46,31 +47,31 @@ function PostItem({ post }: { post: Post }) {
   }
 
   return (
-    <div className="bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden">
+    <div className="bg-[#FFFFFF] border border-[#F5C5C7] rounded-2xl overflow-hidden">
       <div className="p-5 space-y-3">
         <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-[#ED383B]/10 text-[#ED383B] border border-[#ED383B]/20">
           {post.hookCategory}
         </span>
-        <p className="text-white font-semibold leading-snug">{post.hook}</p>
-        <p className="text-sm text-slate-400 whitespace-pre-line line-clamp-6">{post.body}</p>
+        <p className="text-[#1A1A1A] font-semibold leading-snug">{post.hook}</p>
+        <p className="text-sm text-[#6B6B6B] whitespace-pre-line line-clamp-6">{post.body}</p>
       </div>
 
       {carousel.length > 0 ? (
         <div className="px-5 pb-3">
-          <p className="text-xs text-slate-500 mb-2 flex items-center gap-1.5">
+          <p className="text-xs text-[#6B6B6B] mb-2 flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-[#ED383B]" /> {carousel.length} slides
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <SwipeDeck slideClassName="w-[45%]" label="Carousel slides">
             {carousel.map((url, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={url} alt={`Slide ${i + 1}`} className="w-[45%] shrink-0 rounded-lg border border-[#334155]" />
+              <img key={i} src={url} alt={`Slide ${i + 1}`} className="w-full rounded-lg border border-[#F5C5C7] select-none pointer-events-none" draggable={false} />
             ))}
-          </div>
+          </SwipeDeck>
         </div>
       ) : post.imageUrl ? (
         <div className="px-5 pb-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={post.imageUrl} alt="Post visual" className="w-full rounded-xl border border-[#334155]" />
+          <img src={post.imageUrl} alt="Post visual" className="w-full rounded-xl border border-[#F5C5C7]" />
         </div>
       ) : null}
 
@@ -89,7 +90,7 @@ function PostItem({ post }: { post: Post }) {
 
 export function BatchPostGrid({ initialPosts }: { initialPosts: Post[]; batchId: string }) {
   if (!initialPosts.length) {
-    return <p className="text-slate-400 text-sm">No posts in this batch.</p>;
+    return <p className="text-[#6B6B6B] text-sm">No posts in this batch.</p>;
   }
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

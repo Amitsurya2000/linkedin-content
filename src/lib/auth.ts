@@ -25,8 +25,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        // Emails are stored lower-cased and trimmed at signup, so normalise the
+        // same way here — otherwise "Foo@bar.com" or an autofilled trailing
+        // space never matches the stored row and login fails as bad credentials.
+        const email = (credentials.email as string).toLowerCase().trim();
+
         const user = await db.query.users.findFirst({
-          where: eq(users.email, credentials.email as string),
+          where: eq(users.email, email),
         });
 
         if (!user || !user.password) return null;

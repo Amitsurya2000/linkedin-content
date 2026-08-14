@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { creatorProfiles, userApiKeys } from "@/lib/db/schema";
 import { decrypt } from "@/lib/crypto";
-import { analyzeResume } from "@/lib/resume";
+import { analyzeResume, type CreatorProfileData } from "@/lib/resume";
 
 export const maxDuration = 120;
 
@@ -39,7 +39,79 @@ export async function GET() {
   });
 }
 
-/** POST — analyze an uploaded resume (PDF file) or pasted text into a profile. */
+/** One profile per user — insert or update in place. */
+async function upsertProfile(userId: string, values: Record<string, unknown>) {
+  const [existing] = await db
+    .select({ id: creatorProfiles.id })
+    .from(creatorProfiles)
+    .where(eq(creatorProfiles.userId, userId))
+    .limit(1);
+
+  if (existing) {
+    await db.update(creatorProfiles).set(values).where(eq(creatorProfiles.id, existing.id));
+  } else {
+    await db.insert(creatorProfiles).values({ id: crypto.randomUUID(), ...values } as never);
+  }
+}
+
+const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
+const strList = (v: unknown): string[] =>
+  Array.isArray(v) ? v.map(str).filter(Boolean) : [];
+
+/**
+ * Coerce a hand-filled profile form into the same shape the analyzer returns,
+ * so downstream generation reads manual and AI-built profiles identically.
+ */
+function normalizeProfile(input: Record<string, unknown>): CreatorProfileData {
+  const objList = <T>(v: unknown, map: (o: Record<string, unknown>) => T, keep: (o: T) => boolean): T[] =>
+    Array.isArray(v)
+      ? v.filter((o): o is Record<string, unknown> => !!o && typeof o === "object").map(map).filter(keep)
+      : [];
+
+  return {
+    fullName: str(input.fullName),
+    headline: str(input.headline),
+    industry: str(input.industry),
+    targetAudience: str(input.targetAudience),
+    summary: str(input.summary),
+    expertise: strList(input.expertise),
+    achievements: objList(
+      input.achievements,
+      (o) => ({ text: str(o.text), metric: str(o.metric) || undefined }),
+      (a) => !!a.text
+    ),
+    roles: objList(
+      input.roles,
+      (o) => ({
+        title: str(o.title),
+        company: str(o.company),
+        period: str(o.period) || undefined,
+        highlights: strList(o.highlights),
+      }),
+      (r) => !!(r.title || r.company)
+    ),
+    signatureStories: strList(input.signatureStories),
+    voiceTone: str(input.voiceTone),
+    positioning: str(input.positioning),
+    contentPillars: objList(
+      input.contentPillars,
+      (o) => ({ name: str(o.name), description: str(o.description) }),
+      (c) => !!c.name
+    ),
+    postIdeas: strList(input.postIdeas),
+    transcriptDetail: strList(input.transcriptDetail),
+    goals: str(input.goals),
+    objectives: strList(input.objectives),
+    contentStrategy: str(input.contentStrategy),
+  };
+}
+
+/**
+ * POST — build the creator profile, one of two ways:
+ *  • multipart/JSON with a CV file or resume text → Gemini analyzes it.
+ *  • JSON `{ profile: {...} }` → the user filled the sections in by hand;
+ *    saved as-is, so no Gemini key is required for this path.
+ */
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -47,26 +119,56 @@ export async function POST(req: NextRequest) {
   }
   const userId = session.user.id;
 
-  const apiKey = await getGeminiKey(userId);
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "Add your Google Gemini API key in Settings first — it's used to analyze the resume." },
-      { status: 400 }
-    );
-  }
-
   try {
+    const contentType = req.headers.get("content-type") || "";
+    const isMultipart = contentType.includes("multipart/form-data");
+    const form = isMultipart ? await req.formData() : null;
+    const body: Record<string, unknown> = isMultipart ? {} : await req.json().catch(() => ({}));
+
+    // ── Manual entry ──
+    if (body.profile && typeof body.profile === "object") {
+      const data = normalizeProfile(body.profile as Record<string, unknown>);
+      if (!data.fullName && !data.headline && !data.summary) {
+        return NextResponse.json(
+          { error: "Fill in at least your name, headline, or summary." },
+          { status: 400 }
+        );
+      }
+      const values = {
+        userId,
+        rawText: "[profile entered manually]",
+        sourceFilename: null,
+        onePagerText: null,
+        onePagerFilename: null,
+        fullName: data.fullName || null,
+        headline: data.headline || null,
+        industry: data.industry || null,
+        targetAudience: data.targetAudience || null,
+        profileJson: JSON.stringify(data),
+        updatedAt: new Date(),
+      };
+      await upsertProfile(userId, values);
+      return NextResponse.json({ profile: { ...values, data } });
+    }
+
+    // ── Analyzed from documents ──
+    const apiKey = await getGeminiKey(userId);
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "Add your Google Gemini API key in Settings first — it's used to analyze the resume. (Or fill the sections in manually.)" },
+        { status: 400 }
+      );
+    }
+
     let pdfBase64: string | undefined;
     let mimeType: string | undefined;
     let text: string | undefined;
     let sourceFilename: string | undefined;
-    // One-pager (optional)
+    // Second document — experience transcript (or a legacy goals one-pager).
     let onePagerPdfBase64: string | undefined;
     let onePagerMimeType: string | undefined;
     let onePagerText: string | undefined;
     let onePagerFilename: string | undefined;
-
-    const contentType = req.headers.get("content-type") || "";
 
     // Extract a File into pdf-base64 (for PDFs) or utf-8 text (for txt/md).
     async function readFile(file: File): Promise<{ pdf?: string; mime?: string; text?: string } | { error: string }> {
@@ -79,12 +181,13 @@ export async function POST(req: NextRequest) {
       return { pdf: buf.toString("base64"), mime: mt || "application/pdf" };
     }
 
-    if (contentType.includes("multipart/form-data")) {
-      const form = await req.formData();
+    if (form) {
       const file = form.get("file");
       const pastedText = form.get("text");
-      const onePagerFile = form.get("onePager");
-      const onePagerPasted = form.get("onePagerText");
+      // "transcript" is the current name; "onePager" is accepted so older
+      // clients and any saved forms keep working.
+      const onePagerFile = form.get("transcript") ?? form.get("onePager");
+      const onePagerPasted = form.get("transcriptText") ?? form.get("onePagerText");
 
       if (file && file instanceof File) {
         sourceFilename = file.name;
@@ -103,9 +206,9 @@ export async function POST(req: NextRequest) {
         onePagerText = onePagerPasted;
       }
     } else {
-      const body = await req.json().catch(() => ({}));
       if (typeof body.text === "string") text = body.text;
-      if (typeof body.onePagerText === "string") onePagerText = body.onePagerText;
+      if (typeof body.transcriptText === "string") onePagerText = body.transcriptText;
+      else if (typeof body.onePagerText === "string") onePagerText = body.onePagerText;
     }
 
     if (!pdfBase64 && (!text || text.trim().length < 30)) {
@@ -121,13 +224,6 @@ export async function POST(req: NextRequest) {
     });
     const rawText = text || `[PDF resume: ${sourceFilename || "uploaded"}]`;
 
-    // Upsert (one profile per user)
-    const [existing] = await db
-      .select({ id: creatorProfiles.id })
-      .from(creatorProfiles)
-      .where(eq(creatorProfiles.userId, userId))
-      .limit(1);
-
     const values = {
       userId,
       rawText: rawText.slice(0, 40000),
@@ -142,11 +238,7 @@ export async function POST(req: NextRequest) {
       updatedAt: new Date(),
     };
 
-    if (existing) {
-      await db.update(creatorProfiles).set(values).where(eq(creatorProfiles.id, existing.id));
-    } else {
-      await db.insert(creatorProfiles).values({ id: crypto.randomUUID(), ...values });
-    }
+    await upsertProfile(userId, values);
 
     return NextResponse.json({ profile: { ...values, data } });
   } catch (err) {

@@ -31,11 +31,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Normalise BEFORE the duplicate check — the row is inserted lower-cased and
+    // trimmed below, so checking the raw value lets "Foo@bar.com" slip past this
+    // guard and die on the UNIQUE constraint as an opaque 500 instead.
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Check if email already exists
     const [existing] = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.email, email))
+      .where(eq(users.email, normalizedEmail))
       .limit(1);
 
     if (existing) {
@@ -52,7 +57,7 @@ export async function POST(req: NextRequest) {
     await db.insert(users).values({
       id: crypto.randomUUID(),
       name: name.trim(),
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       password: hashedPassword,
     });
 
@@ -61,6 +66,14 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
+    // Belt-and-braces: two simultaneous signups can both pass the check above,
+    // so surface the constraint as the real reason rather than a blank 500.
+    if (err instanceof Error && /UNIQUE constraint failed: users\.email/.test(err.message)) {
+      return NextResponse.json(
+        { error: "An account with this email already exists" },
+        { status: 400 }
+      );
+    }
     console.error("Signup error:", err);
     return NextResponse.json(
       { error: "Internal server error" },

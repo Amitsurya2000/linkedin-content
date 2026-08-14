@@ -22,15 +22,23 @@ export interface CreatorProfileData {
   positioning: string; // their category-of-one angle
   contentPillars: { name: string; description: string }[]; // 4–5 pillars
   postIdeas: string[]; // 8–10 concrete post ideas grounded in the resume
-  // From the one-pager (goals / what they want to work on / who they want to become).
+  // From the second document (experience transcript, or a goals one-pager).
+  transcriptDetail?: string[]; // concrete specifics the CV omits: numbers, tools, failures
   goals?: string; // one-line summary of what they want from LinkedIn
   objectives?: string[]; // specific outcomes they're after
   contentStrategy?: string; // the sharp strategic angle tying resume + goals together
 }
 
-const ANALYSIS_PROMPT = `You are an elite LinkedIn ghostwriter and personal-brand strategist. You are given a person's CV / resume, and OPTIONALLY a one-pager describing their goals — what they want to work on, who they want to reach, and what they're trying to become. Analyze BOTH deeply and extract a structured "Creator Profile" that becomes the BASE context for ALL of their LinkedIn content (posts, carousels, articles, image concepts).
+const ANALYSIS_PROMPT = `You are an elite LinkedIn ghostwriter and personal-brand strategist. You are given a person's CV / resume, and OPTIONALLY a SECOND document — usually an experience transcript (a detailed account of what they actually did, often transcribed from a conversation), sometimes a one-pager of goals. Analyze BOTH deeply and extract a structured "Creator Profile" that becomes the BASE context for ALL of their LinkedIn content (posts, carousels, articles, image concepts).
 
-Read EVERYTHING in both documents: experience, roles, achievements, skills, education, projects, personal/about sections, AND their stated goals and intent. Think like a strategist: where they've BEEN (resume) + where they WANT to go (one-pager) = their sharpest positioning. Go deep — surface non-obvious angles, tensions, and the stories only THEY can tell. If a one-pager is present, weight their goals heavily: the content should move them TOWARD what they said they want.
+Read EVERYTHING in both documents: experience, roles, achievements, skills, education, projects, personal/about sections, and whatever the second document adds.
+
+The two documents do different jobs, so read them differently:
+- The CV is a compressed, formal record. It tells you WHAT they did.
+- An experience transcript is where the usable material lives. It tells you HOW it went — the specific numbers, tools, dead ends, arguments, and decisions a CV strips out. Mine it hard for concrete detail: exact figures, named tools, what broke, what they tried first, what they would do differently. These specifics are the single biggest quality difference between a post that sounds like anyone and a post only this person could write. Capture them verbatim in "transcriptDetail" — do not paraphrase numbers.
+- If the second document instead states goals, weight those heavily: the content should move them TOWARD what they said they want.
+
+Never invent a number, a client, or an outcome to fill a field. If the documents do not contain it, leave it out.
 
 Return ONLY a valid JSON object (no markdown, no code fences) with exactly this structure:
 
@@ -44,6 +52,7 @@ Return ONLY a valid JSON object (no markdown, no code fences) with exactly this 
   "achievements": [{"text": "a real, specific accomplishment from the resume", "metric": "the number/%/$ if present, else empty"}],
   "roles": [{"title": "role", "company": "company", "period": "dates if present", "highlights": ["1-3 notable things from that role"]}],
   "signatureStories": ["5-8 REAL experiences, pivots, lessons, or moments from their career that would make compelling personal LinkedIn posts"],
+  "transcriptDetail": ["specific facts from the second document that the CV does not contain: exact numbers, named tools, failures, trade-offs, decisions. Verbatim where possible. Empty array if there is no second document."],
   "voiceTone": "one line on the tone their content should carry given their seniority and field",
   "positioning": "their category-of-one angle — the specific POV that makes them impossible to ignore in their space",
   "contentPillars": [{"name": "pillar", "description": "what they post about under it"}],
@@ -94,7 +103,10 @@ export async function analyzeResume(params: AnalyzeParams): Promise<CreatorProfi
   parts.push({ text: "Now produce the deep Creator Profile JSON, weaving the resume and (if present) the one-pager together." });
 
   const response = await genai.models.generateContent({
-    model: "gemini-2.5-flash",
+    // Same generation as the post generator rather than the older 2.5-flash.
+    // Do NOT add thinkingConfig here: gemini-3.6-flash rejects thinkingBudget: 0
+    // with a 400 INVALID_ARGUMENT, which fails the whole analysis.
+    model: "gemini-3.6-flash",
     config: {
       systemInstruction: ANALYSIS_PROMPT,
       temperature: 0.6,

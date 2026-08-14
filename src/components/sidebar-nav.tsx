@@ -9,11 +9,17 @@ import {
   History,
   CalendarDays,
   Settings,
+  BadgeCheck,
+  Layers,
+  TrendingUp,
 } from "lucide-react";
 
 const mainNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/create", label: "Create Post", icon: PenSquare },
+  { href: "/branding", label: "Profile Kit", icon: BadgeCheck },
+  { href: "/assets", label: "Assets", icon: Layers },
+  { href: "/analytics", label: "Analytics", icon: TrendingUp },
   { href: "/history", label: "History", icon: History },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -30,10 +36,10 @@ function NavItem({ href, label, icon: Icon }: { href: string; label: string; ico
         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
         isActive
           ? "bg-[#ED383B]/15 text-[#ED383B]"
-          : "text-[#94a3b8] hover:text-white hover:bg-white/5"
+          : "text-[#94a3b8] hover:text-[#1A1A1A] hover:bg-white/5"
       )}
     >
-      <Icon className={cn("w-4 h-4 shrink-0 transition-colors", isActive ? "text-[#ED383B]" : "group-hover:text-white")} />
+      <Icon className={cn("w-4 h-4 shrink-0 transition-colors", isActive ? "text-[#ED383B]" : "group-hover:text-[#1A1A1A]")} />
       <span className="flex-1">{label}</span>
       {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#ED383B] shrink-0" />}
     </Link>

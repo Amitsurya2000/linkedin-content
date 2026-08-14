@@ -28,7 +28,7 @@ function StatusBadge({ status }: { status: string }) {
     completed: { label: "Completed", dotCls: "bg-red-500", textCls: "text-red-400", bgCls: "bg-red-500/10" },
     generating: { label: "Generating", dotCls: "bg-amber-500 animate-pulse", textCls: "text-amber-400", bgCls: "bg-amber-500/10" },
     failed: { label: "Failed", dotCls: "bg-red-500", textCls: "text-red-400", bgCls: "bg-red-500/10" },
-    draft: { label: "Draft", dotCls: "bg-[#64748b]", textCls: "text-[#94a3b8]", bgCls: "bg-[#334155]" },
+    draft: { label: "Draft", dotCls: "bg-[#64748b]", textCls: "text-[#94a3b8]", bgCls: "bg-[#F5C5C7]" },
   };
   const { label, dotCls, textCls, bgCls } = config[status] ?? config.draft;
   return (
@@ -73,7 +73,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-bold text-[#1A1A1A] tracking-tight">
             Welcome back, {userName}!
           </h1>
           <p className="text-[#94a3b8] text-sm mt-1">
@@ -120,7 +120,7 @@ export default function DashboardPage() {
       <div className="rounded-2xl bg-gradient-to-r from-[#ED383B]/20 to-[#DB272A]/10 border border-[#ED383B]/20 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-white mb-1">Ready to create?</h3>
+            <h3 className="text-lg font-semibold text-[#1A1A1A] mb-1">Ready to create?</h3>
             <p className="text-[#94a3b8] text-sm">Generate your next batch of LinkedIn posts in seconds.</p>
           </div>
           <Link href="/create">
@@ -136,19 +136,19 @@ export default function DashboardPage() {
       {loading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-[#1e293b] rounded-2xl border border-[#334155] animate-pulse" />
+            <div key={i} className="h-16 bg-[#FFFFFF] rounded-2xl border border-[#F5C5C7] animate-pulse" />
           ))}
         </div>
       )}
 
       {/* Empty State */}
       {!loading && batches.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-[#334155] bg-[#1e293b] flex flex-col items-center text-center py-16 space-y-4">
+        <div className="rounded-2xl border border-dashed border-[#F5C5C7] bg-[#FFFFFF] flex flex-col items-center text-center py-16 space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-[#ED383B]/10 border border-[#ED383B]/20 flex items-center justify-center">
             <FileText className="w-7 h-7 text-[#ED383B]" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-[#1A1A1A]">
               No posts yet
             </h3>
             <p className="text-[#94a3b8] text-sm mt-1 max-w-xs">
@@ -168,14 +168,14 @@ export default function DashboardPage() {
       {!loading && batches.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-white">Recent Batches</h2>
+            <h2 className="text-base font-semibold text-[#1A1A1A]">Recent Batches</h2>
             <Link href="/history" className="text-sm text-[#ED383B] hover:text-[#DB272A] transition-colors">
               View all
             </Link>
           </div>
 
-          <div className="rounded-2xl bg-[#1e293b] border border-[#334155] overflow-hidden">
-            <div className="hidden md:grid grid-cols-[2fr_1fr_80px_120px_80px] gap-4 px-5 py-3 border-b border-[#334155] bg-[#0f172a]/50">
+          <div className="rounded-2xl bg-[#FFFFFF] border border-[#F5C5C7] overflow-hidden">
+            <div className="hidden md:grid grid-cols-[2fr_1fr_80px_120px_80px] gap-4 px-5 py-3 border-b border-[#F5C5C7] bg-[#FCEBEC]/50">
               <span className="text-xs font-medium text-[#64748b] uppercase tracking-wider">Topic</span>
               <span className="text-xs font-medium text-[#64748b] uppercase tracking-wider">Status</span>
               <span className="text-xs font-medium text-[#64748b] uppercase tracking-wider">Posts</span>
@@ -183,7 +183,7 @@ export default function DashboardPage() {
               <span className="text-xs font-medium text-[#64748b] uppercase tracking-wider">Action</span>
             </div>
 
-            <div className="divide-y divide-[#334155]">
+            <div className="divide-y divide-[#F5C5C7]">
               {batches.map((batch) => (
                 <div
                   key={batch.id}
@@ -194,7 +194,7 @@ export default function DashboardPage() {
                       <FileText className="w-4 h-4 text-[#ED383B]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm truncate">
+                      <p className="text-[#1A1A1A] font-medium text-sm truncate">
                         {batch.topic || "Untitled"}
                       </p>
                       <p className="text-[#64748b] text-xs mt-0.5 capitalize">
@@ -203,7 +203,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div><StatusBadge status={batch.status} /></div>
-                  <div className="text-sm text-white font-medium">{batch.postsCount}</div>
+                  <div className="text-sm text-[#1A1A1A] font-medium">{batch.postsCount}</div>
                   <div className="text-[#94a3b8] text-sm">
                     {new Date(batch.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </div>
@@ -226,16 +226,16 @@ export default function DashboardPage() {
 
 function StatCard({ icon, label, value, loading }: { icon: React.ReactNode; label: string; value: number; loading: boolean }) {
   return (
-    <div className="rounded-2xl bg-[#1e293b] border border-[#334155] p-5">
+    <div className="rounded-2xl bg-[#FFFFFF] border border-[#F5C5C7] p-5">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
           {icon}
         </div>
       </div>
       {loading ? (
-        <div className="h-8 w-16 bg-[#334155] rounded-lg animate-pulse" />
+        <div className="h-8 w-16 bg-[#F5C5C7] rounded-lg animate-pulse" />
       ) : (
-        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className="text-2xl font-bold text-[#1A1A1A]">{value}</p>
       )}
       <p className="text-xs text-[#64748b] mt-1">{label}</p>
     </div>

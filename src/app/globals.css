@@ -3,29 +3,37 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* KOYOPO / 1Cr+ CAREER OS palette — the same six colours the slide renderer uses
+   (src/lib/koyopo.ts). The app previously ran a dark slate theme that shared
+   nothing with the decks it produced; these tokens make the product and its
+   output one brand. No colours outside this set. */
 @theme inline {
-  --color-background: #0f172a;
-  --color-foreground: #f8fafc;
-  --color-card: #1e293b;
-  --color-card-foreground: #f8fafc;
+  --color-background: #FFFFFF;
+  --color-foreground: #1A1A1A;
+  --color-card: #FCEBEC;
+  --color-card-foreground: #1A1A1A;
   --color-primary: #ED383B;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #334155;
-  --color-secondary-foreground: #f8fafc;
-  --color-muted: #1e293b;
-  --color-muted-foreground: #94a3b8;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #FCEBEC;
+  --color-secondary-foreground: #1A1A1A;
+  --color-muted: #FCEBEC;
+  --color-muted-foreground: #6B6B6B;
   --color-accent: #ED383B;
-  --color-accent-foreground: #ffffff;
-  --color-destructive: #f53437;
-  --color-border: #334155;
-  --color-input: #334155;
+  --color-accent-foreground: #FFFFFF;
+  --color-destructive: #ED383B;
+  --color-border: #F5C5C7;
+  --color-input: #F5C5C7;
   --color-ring: #ED383B;
-  --color-popover: #1e293b;
-  --color-popover-foreground: #f8fafc;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1A1A1A;
   /* Koyopo brand palette */
   --color-brand: #ED383B;
-  --color-brand-deep: #7F1D1F;
-  --color-brand-red: #f53437;
+  --color-brand-deep: #B32A2C;
+  --color-brand-red: #ED383B;
+  --color-koyopo-ink: #1A1A1A;
+  --color-koyopo-muted: #6B6B6B;
+  --color-koyopo-card: #FCEBEC;
+  --color-koyopo-border: #F5C5C7;
   --radius: 0.75rem;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -55,13 +63,13 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #F5C5C7;
   border-radius: 3px;
 }
 
 /* LinkedIn gradient */
 .linkedin-gradient {
-  background: linear-gradient(135deg, #ED383B 0%, #7F1D1F 100%);
+  background: linear-gradient(135deg, #ED383B 0%, #B32A2C 100%);
 }
 
 /* Pulse animation */

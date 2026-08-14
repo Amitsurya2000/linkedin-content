@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { LinkedInPreview } from "@/components/linkedin-preview";
 import { ResumeOnboarding } from "@/components/resume-onboarding";
+import { SwipeDeck } from "@/components/swipe-deck";
 import { STYLE_META } from "@/lib/image-prompt";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -71,6 +72,17 @@ const TONES = [
 
 const COUNTS = [1, 2, 3, 5];
 
+// The create flow is a wizard rather than one long form: the resume gates
+// everything (posts are written from it), and showing every field at once buried
+// the one required field — the topic — among six optional ones.
+type WizardStep = 1 | 2 | 3 | 4;
+const WIZARD_STEPS: { n: WizardStep; label: string; blurb: string }[] = [
+  { n: 1, label: "Resume", blurb: "Start with your resume — every post is written from your real experience." },
+  { n: 2, label: "Topic", blurb: "What should this post be about?" },
+  { n: 3, label: "Format", blurb: "Pick the post type and how many you want." },
+  { n: 4, label: "Details", blurb: "Optional context that sharpens the result." },
+];
+
 // Group styles by category once for the picker.
 const STYLE_GROUPS = STYLE_META.reduce<Record<string, typeof STYLE_META>>((acc, s) => {
   (acc[s.category] ||= []).push(s);
@@ -99,7 +111,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
   const [postStatus, setPostStatus] = useState(post.approvalStatus || "draft");
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
 
-  // ── Premium image generation (Gathos) — 24 luxury styles ──
+  // ── Premium image generation (Gemini) — 36 styles ──
   const [imageUrl, setImageUrl] = useState<string | null>(post.imageUrl ?? null);
   const [imgStyle, setImgStyle] = useState<string>("auto");
   const [imgStyleName, setImgStyleName] = useState<string | null>(null);
@@ -110,16 +122,24 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
   const isCarousel = post.postType === "carousel";
   const [carouselImages, setCarouselImages] = useState<string[]>(post.carouselImages ?? []);
   const [carLoading, setCarLoading] = useState(false);
+  // "tall" (4:5) is the LinkedIn-native ratio; "wide" is the spec's 16:9 deck.
+  const [deckShape, setDeckShape] = useState<"tall" | "wide">("tall");
+  // "swipe" = the minimalist creator deck (default — it is what wins on LinkedIn);
+  // "attention" = swipe plus highlight chips, Q&A, bar charts and a follow CTA;
+  // "editorial" = multi-colour with icons/charts; "koyopo" = the flat red brand deck.
+  const [deckStyle, setDeckStyle] = useState<"swipe" | "attention" | "editorial" | "koyopo">("swipe");
   const [carError, setCarError] = useState<string | null>(null);
 
   async function generateCarousel() {
     setCarLoading(true);
     setCarError(null);
     try {
-      const res = await fetch(`/api/posts/${post.id}/carousel`, {
+      // KOYOPO renderer, not the image one: it draws the brand's flat colours
+      // directly, so it needs no image API key and costs nothing per deck.
+      const res = await fetch(`/api/posts/${post.id}/koyopo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ canvas: deckShape, format: "png", style: deckStyle }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -279,7 +299,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
   }
 
   return (
-    <div className="bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden hover:border-[#ED383B]/40 transition-all">
+    <div className="bg-[#FFFFFF] border border-[#F5C5C7] rounded-2xl overflow-hidden hover:border-[#ED383B]/40 transition-all">
       {/* Header */}
       <div className="p-5 pb-3 flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-[#ED383B]/10 text-[#ED383B] border border-[#ED383B]/20">
@@ -288,7 +308,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setEditing(!editing); setEditHook(post.hook); setEditBody(post.body); }}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-[#ED383B] hover:bg-[#ED383B]/10 transition-colors"
+            className="p-1.5 rounded-lg text-[#6B6B6B] hover:text-[#ED383B] hover:bg-[#ED383B]/10 transition-colors"
             title="Edit post"
           >
             {editing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
@@ -301,21 +321,21 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
         {editing ? (
           <div className="space-y-3">
             <div>
-              <Label className="text-xs text-slate-400 mb-1">Hook (first 2 lines)</Label>
+              <Label className="text-xs text-[#6B6B6B] mb-1">Hook (first 2 lines)</Label>
               <Textarea
                 value={editHook}
                 onChange={(e) => setEditHook(e.target.value)}
                 rows={2}
-                className="bg-[#0f172a] border-[#334155] text-white text-sm rounded-xl"
+                className="bg-[#FCEBEC] border-[#F5C5C7] text-[#1A1A1A] text-sm rounded-xl"
               />
             </div>
             <div>
-              <Label className="text-xs text-slate-400 mb-1">Body</Label>
+              <Label className="text-xs text-[#6B6B6B] mb-1">Body</Label>
               <Textarea
                 value={editBody}
                 onChange={(e) => setEditBody(e.target.value)}
                 rows={8}
-                className="bg-[#0f172a] border-[#334155] text-white text-sm rounded-xl"
+                className="bg-[#FCEBEC] border-[#F5C5C7] text-[#1A1A1A] text-sm rounded-xl"
               />
             </div>
             <div className="flex gap-2 justify-end">
@@ -323,7 +343,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                 variant="outline"
                 size="sm"
                 onClick={() => setEditing(false)}
-                className="rounded-lg border-[#334155] text-slate-400 hover:text-white"
+                className="rounded-lg border-[#F5C5C7] text-[#6B6B6B] hover:text-[#1A1A1A]"
               >
                 Cancel
               </Button>
@@ -352,19 +372,19 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
       {/* Carousel Slides */}
       {post.carouselSlides && post.carouselSlides.length > 0 && (
         <div className="px-5 mt-3">
-          <p className="text-xs text-slate-400 font-medium mb-2">Carousel Slides ({post.carouselSlides.length})</p>
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <p className="text-xs text-[#6B6B6B] font-medium mb-2">Carousel Slides ({post.carouselSlides.length})</p>
+          <SwipeDeck slideClassName="w-[200px]" label="Carousel slide copy">
             {post.carouselSlides.map((slide, i) => (
               <div
                 key={i}
-                className="min-w-[200px] max-w-[200px] bg-[#0f172a] border border-[#334155] rounded-xl p-3 shrink-0"
+                className="h-full bg-[#FCEBEC] border border-[#F5C5C7] rounded-xl p-3"
               >
                 <p className="text-[10px] text-[#ED383B] font-medium mb-1">Slide {slide.slideNumber}</p>
-                <p className="text-sm font-bold text-white mb-1 line-clamp-2">{slide.title}</p>
-                <p className="text-xs text-slate-400 line-clamp-3">{slide.body}</p>
+                <p className="text-sm font-bold text-[#1A1A1A] mb-1 line-clamp-2">{slide.title}</p>
+                <p className="text-xs text-[#6B6B6B] line-clamp-3">{slide.body}</p>
               </div>
             ))}
-          </div>
+          </SwipeDeck>
         </div>
       )}
 
@@ -372,46 +392,91 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
       {isCarousel && (
         <div className="px-5 mt-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+            <p className="text-xs text-[#6B6B6B] font-medium flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-[#ED383B]" />
-              Carousel {carouselImages.length > 0 && <span className="text-slate-500">· {carouselImages.length} slides</span>}
+              Carousel {carouselImages.length > 0 && <span className="text-[#6B6B6B]">· {carouselImages.length} slides</span>}
             </p>
-            <button
-              onClick={generateCarousel}
-              disabled={carLoading}
-              className="text-[11px] rounded-lg bg-[#ED383B] text-white px-2.5 py-1 font-medium disabled:opacity-50 flex items-center gap-1"
-            >
-              {carLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-              {carouselImages.length > 0 ? "Regenerate" : "Generate"}
-            </button>
+            <div className="flex items-center gap-1.5">
+              {/* Shape picker — tall renders 1080x1350, wide renders 2000x1125. */}
+              {(["tall", "wide"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setDeckShape(s)}
+                  disabled={carLoading}
+                  className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
+                    deckShape === s
+                      ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/10"
+                      : "border-[#F5C5C7] text-[#6B6B6B]"
+                  }`}
+                >
+                  {s === "tall" ? "4:5" : "16:9"}
+                </button>
+              ))}
+              {/* Style switch — same copy, four visual languages. */}
+              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"]] as const).map(([v, label]) => (
+                <button
+                  key={v}
+                  onClick={() => setDeckStyle(v)}
+                  disabled={carLoading}
+                  className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
+                    deckStyle === v ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/10" : "border-[#F5C5C7] text-[#6B6B6B]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+              <a
+                href={`/api/posts/${post.id}/koyopo?format=pptx&canvas=${deckShape}`}
+                className="text-[10px] rounded-lg border border-[#F5C5C7] text-[#1A1A1A] px-2 py-1 font-medium hover:border-[#ED383B]"
+              >
+                .pptx
+              </a>
+              {/* Encodes the deck to MP4 server-side with ffmpeg — LinkedIn gives
+                  native video its own reach, and the slides already exist. */}
+              <a
+                href={`/api/posts/${post.id}/video?style=${deckStyle}&seconds=3`}
+                className="text-[10px] rounded-lg border border-[#F5C5C7] text-[#1A1A1A] px-2 py-1 font-medium hover:border-[#ED383B]"
+                title="Encode these slides into an MP4 (takes ~20-60s)"
+              >
+                .mp4
+              </a>
+              <button
+                onClick={generateCarousel}
+                disabled={carLoading}
+                className="text-[11px] rounded-lg bg-[#ED383B] text-white px-2.5 py-1 font-medium disabled:opacity-50 flex items-center gap-1"
+              >
+                {carLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                {carouselImages.length > 0 ? "Regenerate" : "Generate"}
+              </button>
+            </div>
           </div>
           {carLoading ? (
-            <div className="rounded-xl border border-[#334155] bg-[#0f172a] aspect-[4/5] flex items-center justify-center">
+            <div className="rounded-xl border border-[#F5C5C7] bg-[#FCEBEC] aspect-[4/5] flex items-center justify-center">
               <div className="text-center px-4">
                 <Loader2 className="w-7 h-7 text-[#ED383B] animate-spin mx-auto mb-2" />
-                <p className="text-xs text-slate-400">Designing your carousel slides…</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Gathos AI · ~60–120s</p>
+                <p className="text-xs text-[#6B6B6B]">Designing your carousel slides…</p>
+                <p className="text-[10px] text-[#6B6B6B] mt-0.5">Gemini · ~30–90s</p>
               </div>
             </div>
           ) : carouselImages.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
+            <SwipeDeck slideClassName="w-[70%]" label="Carousel slides">
               {carouselImages.map((url, i) => (
-                <div key={i} className="relative shrink-0 w-[70%] snap-start rounded-xl overflow-hidden border border-[#334155] bg-[#0f172a]">
+                <div key={i} className="relative rounded-xl overflow-hidden border border-[#F5C5C7] bg-[#FCEBEC]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt={`Slide ${i + 1}`} className="w-full h-auto" />
-                  <span className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-black/60 text-white">
+                  <img src={url} alt={`Slide ${i + 1}`} className="w-full h-auto select-none pointer-events-none" draggable={false} />
+                  <span className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-black/60 text-[#1A1A1A]">
                     {i + 1}/{carouselImages.length}
                   </span>
-                  <a href={url} download className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-black/70">
+                  <a href={url} download className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-[#1A1A1A] hover:bg-black/70">
                     <Download className="w-3.5 h-3.5" />
                   </a>
                 </div>
               ))}
-            </div>
+            </SwipeDeck>
           ) : (
-            <div className="rounded-xl border border-dashed border-[#334155] bg-[#0f172a] p-6 text-center">
-              <Layers className="w-7 h-7 text-slate-500 mx-auto mb-2" />
-              <p className="text-xs text-slate-400">{carError || "No carousel yet"}</p>
+            <div className="rounded-xl border border-dashed border-[#F5C5C7] bg-[#FCEBEC] p-6 text-center">
+              <Layers className="w-7 h-7 text-[#6B6B6B] mx-auto mb-2" />
+              <p className="text-xs text-[#6B6B6B]">{carError || "No carousel yet"}</p>
               <button onClick={generateCarousel} className="mt-2 text-xs text-[#ED383B] hover:text-[#DB272A] font-medium">
                 Generate carousel slides
               </button>
@@ -420,20 +485,20 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
         </div>
       )}
 
-      {/* Premium image (Gathos) — single image for non-carousel posts */}
+      {/* Premium image (Gemini) — single image for non-carousel posts */}
       {!isCarousel && (
       <div className="px-5 mt-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+          <p className="text-xs text-[#6B6B6B] font-medium flex items-center gap-1.5">
             <ImageIcon className="w-3.5 h-3.5 text-[#ED383B]" />
             Premium Image
-            {imgStyleName && <span className="text-slate-500">· {imgStyleName}</span>}
+            {imgStyleName && <span className="text-[#6B6B6B]">· {imgStyleName}</span>}
           </p>
           <select
             value={imgStyle}
             onChange={(e) => generateImage(e.target.value)}
             disabled={imgLoading}
-            className="text-[11px] rounded-lg bg-[#0f172a] border border-[#334155] text-slate-300 px-2 py-1 focus:border-[#ED383B] outline-none disabled:opacity-50 max-w-[160px]"
+            className="text-[11px] rounded-lg bg-[#FCEBEC] border border-[#F5C5C7] text-[#1A1A1A] px-2 py-1 focus:border-[#ED383B] outline-none disabled:opacity-50 max-w-[160px]"
           >
             <option value="auto">✨ Auto (Surprise me)</option>
             {Object.entries(STYLE_GROUPS).map(([cat, styles]) => (
@@ -446,20 +511,20 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
           </select>
         </div>
 
-        <div className="relative rounded-xl overflow-hidden border border-[#334155] bg-[#0f172a] aspect-[4/5] flex items-center justify-center">
+        <div className="relative rounded-xl overflow-hidden border border-[#F5C5C7] bg-[#FCEBEC] aspect-[4/5] flex items-center justify-center">
           {imgLoading ? (
             <div className="text-center px-4">
               <Loader2 className="w-7 h-7 text-[#ED383B] animate-spin mx-auto mb-2" />
-              <p className="text-xs text-slate-400">Designing your premium visual…</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">Gathos AI · ~30–90s</p>
+              <p className="text-xs text-[#6B6B6B]">Designing your premium visual…</p>
+              <p className="text-[10px] text-[#6B6B6B] mt-0.5">Gemini · ~15–40s</p>
             </div>
           ) : imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="Generated premium visual" className="w-full h-full object-contain" />
           ) : (
             <div className="text-center px-4">
-              <Wand2 className="w-7 h-7 text-slate-500 mx-auto mb-2" />
-              <p className="text-xs text-slate-400">{imgError || "No image yet"}</p>
+              <Wand2 className="w-7 h-7 text-[#6B6B6B] mx-auto mb-2" />
+              <p className="text-xs text-[#6B6B6B]">{imgError || "No image yet"}</p>
               <button
                 onClick={() => generateImage(imgStyle)}
                 className="mt-2 text-xs text-[#ED383B] hover:text-[#DB272A] font-medium"
@@ -474,14 +539,14 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
               <a
                 href={imageUrl}
                 download
-                className="w-8 h-8 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className="w-8 h-8 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-[#1A1A1A] hover:bg-black/70 transition-colors"
                 title="Download image"
               >
                 <Download className="w-4 h-4" />
               </a>
               <button
                 onClick={() => generateImage(imgStyle)}
-                className="w-8 h-8 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className="w-8 h-8 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-[#1A1A1A] hover:bg-black/70 transition-colors"
                 title="Regenerate"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -516,7 +581,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
             </span>
             <button
               onClick={() => { setPostStatus("draft"); setScheduledAt(null); setSchedOpen(true); }}
-              className="text-xs text-slate-400 hover:text-white transition-colors"
+              className="text-xs text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors"
             >
               Change
             </button>
@@ -527,7 +592,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
               <Button
                 onClick={handlePostNow}
                 disabled={statusBusy}
-                className="w-full h-10 bg-[#0f172a] hover:bg-[#0f172a]/70 border border-[#334155] text-white font-medium rounded-xl gap-2 disabled:opacity-50"
+                className="w-full h-10 bg-[#FCEBEC] hover:bg-[#FCEBEC]/70 border border-[#F5C5C7] text-[#1A1A1A] font-medium rounded-xl gap-2 disabled:opacity-50"
               >
                 {statusBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Post Now
@@ -535,27 +600,27 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
               <Button
                 onClick={() => setSchedOpen((v) => !v)}
                 disabled={statusBusy}
-                className="w-full h-10 bg-[#0f172a] hover:bg-[#0f172a]/70 border border-[#334155] text-white font-medium rounded-xl gap-2 disabled:opacity-50"
+                className="w-full h-10 bg-[#FCEBEC] hover:bg-[#FCEBEC]/70 border border-[#F5C5C7] text-[#1A1A1A] font-medium rounded-xl gap-2 disabled:opacity-50"
               >
                 <CalendarIcon className="w-4 h-4" />
                 Schedule
               </Button>
             </div>
             {schedOpen && (
-              <div className="rounded-xl bg-[#0f172a] border border-[#334155] p-3 space-y-2.5">
-                <p className="text-xs text-slate-400 font-medium">Pick a date & time — it lands on your Calendar.</p>
+              <div className="rounded-xl bg-[#FCEBEC] border border-[#F5C5C7] p-3 space-y-2.5">
+                <p className="text-xs text-[#6B6B6B] font-medium">Pick a date & time — it lands on your Calendar.</p>
                 <div className="flex items-center gap-2">
                   <input
                     type="date"
                     value={schedDate}
                     onChange={(e) => setSchedDate(e.target.value)}
-                    className="flex-1 text-xs px-2.5 py-2 rounded-lg border border-[#334155] bg-[#1e293b] text-white outline-none focus:border-[#ED383B]"
+                    className="flex-1 text-xs px-2.5 py-2 rounded-lg border border-[#F5C5C7] bg-[#FFFFFF] text-[#1A1A1A] outline-none focus:border-[#ED383B]"
                   />
                   <input
                     type="time"
                     value={schedTime}
                     onChange={(e) => setSchedTime(e.target.value)}
-                    className="text-xs px-2.5 py-2 rounded-lg border border-[#334155] bg-[#1e293b] text-white outline-none focus:border-[#ED383B]"
+                    className="text-xs px-2.5 py-2 rounded-lg border border-[#F5C5C7] bg-[#FFFFFF] text-[#1A1A1A] outline-none focus:border-[#ED383B]"
                   />
                 </div>
                 <Button
@@ -573,14 +638,14 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
 
         {/* Why this works */}
         <button
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-300 transition-colors w-full justify-center"
+          className="flex items-center gap-1.5 text-xs text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors w-full justify-center"
           onClick={() => setExpanded(!expanded)}
         >
           Why this works
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
         {expanded && (
-          <p className="text-xs text-slate-400 leading-relaxed bg-[#0f172a] rounded-xl p-3 border border-[#334155]">
+          <p className="text-xs text-[#6B6B6B] leading-relaxed bg-[#FCEBEC] rounded-xl p-3 border border-[#F5C5C7]">
             {post.whyThisWorks}
           </p>
         )}
@@ -600,15 +665,15 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                 {post.variations.map((v, i) => (
                   <div
                     key={i}
-                    className="bg-[#0f172a] border border-[#334155] rounded-xl p-3 group"
+                    className="bg-[#FCEBEC] border border-[#F5C5C7] rounded-xl p-3 group"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line flex-1">
+                      <p className="text-xs text-[#1A1A1A] leading-relaxed whitespace-pre-line flex-1">
                         {v}
                       </p>
                       <button
                         onClick={() => copyToClipboard(v, i)}
-                        className="shrink-0 p-1.5 rounded-lg text-slate-500 hover:text-[#ED383B] hover:bg-[#ED383B]/10 transition-colors"
+                        className="shrink-0 p-1.5 rounded-lg text-[#6B6B6B] hover:text-[#ED383B] hover:bg-[#ED383B]/10 transition-colors"
                         title="Copy variation"
                       >
                         {copiedIdx === i ? <Check className="w-3.5 h-3.5 text-red-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -633,6 +698,10 @@ export default function CreatePage() {
   const [industry, setIndustry] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [tone, setTone] = useState("");
+  const [wizardStep, setWizardStep] = useState<WizardStep>(1);
+  // Set from ResumeOnboarding once a profile exists (freshly uploaded or already
+  // saved), which is what unlocks step 2.
+  const [profileReady, setProfileReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [posts, setPosts] = useState<GeneratedPost[]>([]);
   const [batchId, setBatchId] = useState<string | null>(null);
@@ -693,152 +762,266 @@ export default function CreatePage() {
 
   // ── FORM ──
   if (step === "form") {
+    const canAdvance =
+      wizardStep === 1 ? profileReady :
+      wizardStep === 2 ? topic.trim().length > 0 :
+      true;
+
     return (
       <div className="max-w-2xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white tracking-tight">Create LinkedIn Post</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            We craft every post from your real experience — starting with your resume.
-          </p>
+          <h1 className="text-3xl font-bold text-[#1A1A1A] tracking-tight">Create LinkedIn Post</h1>
+          <p className="text-[#6B6B6B] text-sm mt-1">{WIZARD_STEPS[wizardStep - 1].blurb}</p>
         </div>
 
-        {/* Resume-first onboarding: the client's CV is the base for all content */}
-        <div className="mb-6">
-          <ResumeOnboarding onUseIdea={(idea) => setTopic(idea)} />
+        {/* Progress rail — completed steps stay clickable so nothing is a dead end. */}
+        <div className="flex items-center gap-2 mb-8">
+          {WIZARD_STEPS.map((s, i) => {
+            const done = wizardStep > s.n;
+            const active = wizardStep === s.n;
+            return (
+              <div key={s.n} className="flex items-center gap-2 flex-1">
+                <button
+                  type="button"
+                  onClick={() => { if (wizardStep > s.n) setWizardStep(s.n); }}
+                  disabled={wizardStep <= s.n}
+                  className={`flex items-center gap-2 ${wizardStep > s.n ? "cursor-pointer" : "cursor-default"}`}
+                >
+                  <span
+                    className={`w-7 h-7 rounded-full text-[11px] font-semibold flex items-center justify-center shrink-0 transition-colors ${
+                      done
+                        ? "bg-[#ED383B]/20 text-[#ED383B] border border-[#ED383B]"
+                        : active
+                          ? "bg-[#ED383B] text-white"
+                          : "bg-[#FFFFFF] text-[#6B6B6B] border border-[#F5C5C7]"
+                    }`}
+                  >
+                    {done ? <Check className="w-3.5 h-3.5" /> : s.n}
+                  </span>
+                  <span className={`text-xs font-medium hidden sm:inline ${active ? "text-[#1A1A1A]" : done ? "text-[#1A1A1A]" : "text-[#6B6B6B]"}`}>
+                    {s.label}
+                  </span>
+                </button>
+                {i < WIZARD_STEPS.length - 1 && (
+                  <span className={`h-px flex-1 ${wizardStep > s.n ? "bg-[#ED383B]/50" : "bg-[#F5C5C7]"}`} />
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Topic */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-slate-300">
-              What do you want to post about? <span className="text-red-400">*</span>
-            </Label>
-            <Textarea
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. Why I stopped chasing job titles and started chasing skills instead. Share a personal story about a career pivot that led to unexpected growth..."
-              rows={4}
-              className="bg-[#1e293b] border-[#334155] text-white placeholder:text-slate-500 rounded-xl text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
-              required
-            />
-            <p className="text-xs text-slate-500">
-              Tip: The more specific you are, the better the posts. Include personal angles, numbers, or contrarian takes.
-            </p>
-          </div>
-
-          {/* Post Type */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-slate-300">Post Type</Label>
-            <div className="grid grid-cols-2 gap-3">
-              {POST_TYPES.map((pt) => (
-                <button
-                  key={pt.value}
-                  type="button"
-                  onClick={() => setPostType(pt.value)}
-                  className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
-                    postType === pt.value
-                      ? "border-[#ED383B] bg-[#ED383B]/10"
-                      : "border-[#334155] bg-[#1e293b] hover:border-[#475569]"
-                  }`}
-                >
-                  <pt.icon className={`w-5 h-5 mt-0.5 shrink-0 ${postType === pt.value ? "text-[#ED383B]" : "text-slate-400"}`} />
-                  <div>
-                    <p className={`text-sm font-semibold ${postType === pt.value ? "text-[#ED383B]" : "text-white"}`}>
-                      {pt.label}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-0.5">{pt.description}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Number of Posts */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-slate-300">Number of Posts</Label>
-            <div className="flex gap-2">
-              {COUNTS.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setPostsCount(n)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    postsCount === n
-                      ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
-                      : "bg-[#1e293b] text-slate-400 border border-[#334155] hover:border-[#475569]"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Industry & Audience */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-300">Industry</Label>
-              <select
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-[#1e293b] border border-[#334155] text-white text-sm focus:ring-[#ED383B]/30 focus:border-[#ED383B] outline-none"
-              >
-                <option value="">Select industry...</option>
-                {INDUSTRIES.map((i) => (
-                  <option key={i} value={i}>{i}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-300">Target Audience</Label>
-              <Input
-                value={targetAudience}
-                onChange={(e) => setTargetAudience(e.target.value)}
-                placeholder="e.g. Startup founders, Mid-level managers"
-                className="bg-[#1e293b] border-[#334155] text-white placeholder:text-slate-500 rounded-xl h-10 text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
+          {/* STEP 1 — Resume. Every post is written from this, so it comes first. */}
+          {wizardStep === 1 && (
+            <div className="space-y-3">
+              <ResumeOnboarding
+                onProfileReady={(p) => setProfileReady(!!p)}
+                onUseIdea={(idea) => { setTopic(idea); setWizardStep(2); }}
               />
+              {!profileReady && (
+                <p className="text-xs text-[#6B6B6B]">
+                  Upload your CV or paste your background above. Posts written from your real
+                  experience beat generic advice — this is what makes them yours.
+                </p>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* Tone */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-slate-300">Tone & Style</Label>
-            <div className="flex flex-wrap gap-2">
-              {TONES.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setTone(tone === t ? "" : t)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
-                    tone === t
-                      ? "bg-[#ED383B] text-white"
-                      : "bg-[#1e293b] text-slate-400 border border-[#334155] hover:border-[#475569]"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+          {/* STEP 2 — Topic */}
+          {wizardStep === 2 && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-[#1A1A1A]">
+                What do you want to post about? <span className="text-red-400">*</span>
+              </Label>
+              <Textarea
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="e.g. I quantized a YOLOv8 detector to ONNX FP16 expecting to lose accuracy. mAP went from 0.6637 to 0.6642. Why edge deployment is less painful than engineers assume."
+                rows={5}
+                autoFocus
+                className="bg-[#FFFFFF] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#6B6B6B] rounded-xl text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
+              />
+              <p className="text-xs text-[#6B6B6B]">
+                Be specific. A real number, a real failure, or a claim someone could argue with
+                beats a broad topic every time.
+              </p>
             </div>
-          </div>
+          )}
 
-          {/* Submit */}
-          <Button
-            type="submit"
-            disabled={submitting || !topic.trim()}
-            className="w-full h-12 bg-[#ED383B] hover:bg-[#ED383B]/90 text-white font-semibold rounded-xl text-base gap-2 shadow-lg shadow-[#ED383B]/25 disabled:opacity-50"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Generating {postsCount} post{postsCount !== 1 ? "s" : ""}...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5" />
-                Generate {postsCount} LinkedIn Post{postsCount !== 1 ? "s" : ""}
-              </>
+          {/* STEP 3 — Format */}
+          {wizardStep === 3 && (
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[#1A1A1A]">Post Type</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {POST_TYPES.map((pt) => (
+                    <button
+                      key={pt.value}
+                      type="button"
+                      onClick={() => setPostType(pt.value)}
+                      className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+                        postType === pt.value
+                          ? "border-[#ED383B] bg-[#ED383B]/10"
+                          : "border-[#F5C5C7] bg-[#FFFFFF] hover:border-[#ED383B]"
+                      }`}
+                    >
+                      <pt.icon className={`w-5 h-5 mt-0.5 shrink-0 ${postType === pt.value ? "text-[#ED383B]" : "text-[#6B6B6B]"}`} />
+                      <div>
+                        <p className={`text-sm font-semibold ${postType === pt.value ? "text-[#ED383B]" : "text-[#1A1A1A]"}`}>
+                          {pt.label}
+                        </p>
+                        <p className="text-xs text-[#6B6B6B] mt-0.5">{pt.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[#1A1A1A]">Number of Posts</Label>
+                <div className="flex gap-2">
+                  {COUNTS.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setPostsCount(n)}
+                      className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        postsCount === n
+                          ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
+                          : "bg-[#FFFFFF] text-[#6B6B6B] border border-[#F5C5C7] hover:border-[#ED383B]"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-[#6B6B6B]">
+                  Each post also comes with 3 alternative versions, so {postsCount} gives you {postsCount * 4} to choose from.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4 — Details */}
+          {wizardStep === 4 && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#1A1A1A]">Industry</Label>
+                  <select
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    className="w-full h-10 px-3 rounded-xl bg-[#FFFFFF] border border-[#F5C5C7] text-[#1A1A1A] text-sm focus:ring-[#ED383B]/30 focus:border-[#ED383B] outline-none"
+                  >
+                    <option value="">Select industry...</option>
+                    {INDUSTRIES.map((i) => (
+                      <option key={i} value={i}>{i}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#1A1A1A]">Target Audience</Label>
+                  <Input
+                    value={targetAudience}
+                    onChange={(e) => setTargetAudience(e.target.value)}
+                    placeholder="e.g. AI/ML engineers and hiring managers in India"
+                    className="bg-[#FFFFFF] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#6B6B6B] rounded-xl h-10 text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[#1A1A1A]">Tone &amp; Style</Label>
+                <div className="flex flex-wrap gap-2">
+                  {TONES.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTone(tone === t ? "" : t)}
+                      className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
+                        tone === t
+                          ? "bg-[#ED383B] text-white"
+                          : "bg-[#FFFFFF] text-[#6B6B6B] border border-[#F5C5C7] hover:border-[#ED383B]"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recap, so the earlier steps can be checked without navigating back. */}
+              <div className="rounded-xl border border-[#F5C5C7] bg-[#FCEBEC] p-4 space-y-1.5">
+                <p className="text-[11px] uppercase tracking-wider text-[#6B6B6B] font-semibold">Ready to generate</p>
+                <p className="text-xs text-[#1A1A1A] line-clamp-2">
+                  <span className="text-[#6B6B6B]">Topic:</span> {topic || "—"}
+                </p>
+                <p className="text-xs text-[#1A1A1A]">
+                  <span className="text-[#6B6B6B]">Format:</span>{" "}
+                  {POST_TYPES.find((p) => p.value === postType)?.label} · {postsCount} post{postsCount !== 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="flex items-center gap-3 pt-2">
+            {wizardStep > 1 && (
+              <Button
+                type="button"
+                onClick={() => setWizardStep((s) => (s - 1) as WizardStep)}
+                className="h-12 px-5 bg-[#FFFFFF] hover:bg-[#F5C5C7] text-[#1A1A1A] font-medium rounded-xl border border-[#F5C5C7]"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
             )}
-          </Button>
+
+            {wizardStep < 4 ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  if (!canAdvance) {
+                    toast.error(wizardStep === 1 ? "Add your resume first" : "Tell us what the post is about");
+                    return;
+                  }
+                  setWizardStep((s) => (s + 1) as WizardStep);
+                }}
+                className="flex-1 h-12 bg-[#ED383B] hover:bg-[#ED383B]/90 text-white font-semibold rounded-xl text-base gap-2 shadow-lg shadow-[#ED383B]/25"
+              >
+                Continue
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 h-12 bg-[#ED383B] hover:bg-[#ED383B]/90 text-white font-semibold rounded-xl text-base gap-2 shadow-lg shadow-[#ED383B]/25 disabled:opacity-50"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Generating {postsCount} post{postsCount !== 1 ? "s" : ""}...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Generate {postsCount} LinkedIn Post{postsCount !== 1 ? "s" : ""}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+
+          {/* Step 1 is gated on the resume, but never trap someone who has not got one. */}
+          {wizardStep === 1 && !profileReady && (
+            <button
+              type="button"
+              onClick={() => setWizardStep(2)}
+              className="w-full text-xs text-[#6B6B6B] hover:text-[#6B6B6B] underline underline-offset-4"
+            >
+              Skip for now — posts will be more generic without it
+            </button>
+          )}
         </form>
       </div>
     );
@@ -851,8 +1034,8 @@ export default function CreatePage() {
         <div className="w-16 h-16 rounded-2xl bg-[#ED383B]/10 border border-[#ED383B]/20 flex items-center justify-center mx-auto mb-6">
           <Loader2 className="w-8 h-8 text-[#ED383B] animate-spin" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">Generating your LinkedIn posts...</h2>
-        <p className="text-slate-400 text-sm">This usually takes 15-30 seconds. Our AI is crafting scroll-stopping content.</p>
+        <h2 className="text-xl font-bold text-[#1A1A1A] mb-2">Generating your LinkedIn posts...</h2>
+        <p className="text-[#6B6B6B] text-sm">This usually takes 15-30 seconds. Our AI is crafting scroll-stopping content.</p>
       </div>
     );
   }
@@ -863,16 +1046,16 @@ export default function CreatePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-[#1A1A1A] tracking-tight">
             {posts.length} LinkedIn Post{posts.length !== 1 ? "s" : ""} Ready!
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-[#6B6B6B] text-sm mt-1">
             Review your posts, edit if needed, then copy and paste into LinkedIn.
           </p>
         </div>
         <button
           onClick={() => { setStep("form"); setPosts([]); setBatchId(null); }}
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-sm text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Create More
