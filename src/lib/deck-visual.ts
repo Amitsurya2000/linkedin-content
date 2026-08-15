@@ -102,13 +102,19 @@ function promptFor(slide: KoyopoSlide, designDirection: string | undefined, topi
     .replace(/\s{2,}/g, " ")
     .trim();
 
-  const subject = slide.title || topic;
+  // The slide title is deliberately NOT quoted. Naming it makes image models
+  // letter it onto the artwork — the first run produced a calendar with "The
+  // close was never the bottlerek. eck" hand-written across it. The art brief
+  // carries the subject instead, and the topic is the fallback context.
   return [
-    `Editorial illustration for a LinkedIn carousel slide about: ${subject}.`,
-    brief ? `Art direction: ${brief}.` : "",
-    "Rich, human-made feel — a real photograph, a hand-drawn illustration, a character, or a textured graphic pattern, whichever suits the idea.",
-    "Strong single focal subject, generous negative space, muted professional palette.",
-    "ABSOLUTELY NO TEXT, no words, no letters, no numbers, no logos, no watermarks, no UI chrome anywhere in the image.",
+    "TEXT-FREE IMAGE. Do not render any words, letters, numbers, captions, labels, logos, watermarks or user-interface chrome anywhere in this image.",
+    "If the subject would normally carry writing — a page, a screen, a sign, a calendar, a book — show it blank, or with abstract marks that are clearly not letters.",
+    brief ? `Subject and art direction: ${brief}.` : `Subject: a visual metaphor for ${topic}.`,
+    topic && brief ? `Wider context: ${topic}.` : "",
+    "Rich, human-made feel — a real photograph, a hand-drawn illustration, a character, or a textured graphic pattern, whichever suits the subject.",
+    "One strong focal subject, generous negative space, muted professional palette.",
+    "Do not draw readable numerals either — a calendar, clock or chart should show blank cells or abstract marks.",
+    "Remember: absolutely no text of any kind.",
   ].filter(Boolean).join(" ");
 }
 
@@ -168,9 +174,12 @@ export async function renderVisualDeck(
     }
     if (!art && opts.generateArt) {
       try {
+        // Generate AT the art band's own ratio. A square image cover-cropped
+        // into a wide band loses the top and bottom of its subject — the first
+        // run cut the head off the illustration.
         const img = await generateBackground(
           promptFor(slide, opts.designDirections?.[i], opts.topic ?? ""),
-          { width: 1024, height: 1024, geminiKey: opts.geminiKey }
+          { width: 1080, height: Math.round(H * 0.52), geminiKey: opts.geminiKey }
         );
         art = img.buffer;
       } catch {
@@ -217,29 +226,39 @@ export async function renderVisualDeck(
       : (slide.body ?? slide.subtitle ?? "").split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 3);
 
     const footTop = H - 150;
+
+    // Measure the takeaway card before laying out the body — otherwise the last
+    // paragraph runs underneath it, which is exactly what the first render did.
+    const takeaway = slide.subtitle?.trim();
+    const tk = takeaway && !isHero ? fit(takeaway, boxW - 56, 24, 18, 2, "bold") : null;
+    const takeH = tk ? 52 + tk.lines.length * Math.round(tk.px * 1.32) : 0;
+    const bodyLimit = footTop - (takeH ? takeH + 24 : 0);
+
     let bodyPx = 26;
     let lines: string[][] = [];
     for (;;) {
       lines = paras.map((p) => wrap(p, boxW, bodyPx));
       const h = lines.reduce((a, l, idx) => a + l.length * Math.round(bodyPx * 1.45) + (idx ? 20 : 0), 0);
-      if (y + h <= footTop || bodyPx <= 19) break;
+      if (y + h <= bodyLimit || bodyPx <= 19) break;
       bodyPx -= 1;
     }
-    lines.forEach((para, idx) => {
-      if (idx) y += 20;
+    for (let pi = 0; pi < lines.length; pi++) {
+      const para = lines[pi];
+      const paraH = para.length * Math.round(bodyPx * 1.45) + (pi ? 20 : 0);
+      // At the floor size a long slide can still overflow; stop cleanly rather
+      // than printing over the takeaway.
+      if (y + paraH > bodyLimit) break;
+      if (pi) y += 20;
       para.forEach((ln) => {
         parts.push(T(ln, pad, y, bodyPx, { fill: K.body }));
         y += Math.round(bodyPx * 1.45);
       });
-    });
+    }
 
     // Takeaway pinned above the footer, where the eye lands last.
-    const takeaway = slide.subtitle?.trim();
-    if (takeaway && !isHero) {
-      const tk = fit(takeaway, boxW - 56, 24, 18, 2, "bold");
-      const th = 52 + tk.lines.length * Math.round(tk.px * 1.32);
-      const top = footTop - th;
-      parts.push(roundRect(pad, top, boxW, th, 20, K.card));
+    if (tk) {
+      const top = footTop - takeH;
+      parts.push(roundRect(pad, top, boxW, takeH, 20, K.card));
       let ty = top + 34;
       tk.lines.forEach((ln) => {
         parts.push(T(ln, pad + 28, ty, tk.px, { fill: K.ink, weight: 700 }));

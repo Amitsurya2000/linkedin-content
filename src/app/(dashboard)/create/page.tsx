@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { LinkedInPreview } from "@/components/linkedin-preview";
 import { ResumeOnboarding } from "@/components/resume-onboarding";
 import { SwipeDeck } from "@/components/swipe-deck";
+import { DeckLightbox } from "@/components/deck-lightbox";
 import { STYLE_META } from "@/lib/image-prompt";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ import {
   Calendar as CalendarIcon,
   Send,
   Clock,
+  Maximize2,
 } from "lucide-react";
 
 type PostType = "text" | "carousel" | "article" | "poll";
@@ -140,6 +142,8 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
   // opens and closes properly.
   const [deckCount, setDeckCount] = useState<number>(0);
   const [carError, setCarError] = useState<string | null>(null);
+  // Index of the slide open full screen; null when the viewer is closed.
+  const [lightbox, setLightbox] = useState<number | null>(null);
   const slideTotal = post.carouselSlides?.length ?? 0;
 
   async function generateCarousel() {
@@ -475,6 +479,15 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                   {label}
                 </button>
               ))}
+              {carouselImages.length > 0 && (
+                <button
+                  onClick={() => setLightbox(0)}
+                  className="text-[10px] rounded-lg px-2 py-1 font-medium border border-[#F5C5C7] text-[#1A1A1A] hover:border-[#ED383B] flex items-center gap-1"
+                  title="View the deck full screen"
+                >
+                  <Maximize2 className="w-3 h-3" /> Expand
+                </button>
+              )}
               {deckStyle === "visual" && (
                 <button
                   onClick={() => setGenArt(!genArt)}
@@ -535,7 +548,11 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
               )}
             <SwipeDeck slideClassName="w-[70%]" label="Carousel slides">
               {carouselImages.map((url, i) => (
-                <div key={i} className="relative rounded-xl overflow-hidden border border-[#F5C5C7] bg-[#FCEBEC]">
+                <div
+                  key={i}
+                  onClick={() => setLightbox(i)}
+                  className="relative rounded-xl overflow-hidden border border-[#F5C5C7] bg-[#FCEBEC] cursor-zoom-in"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt={`Slide ${i + 1}`} className="w-full h-auto select-none pointer-events-none" draggable={false} />
                   <span className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-black/60 text-[#1A1A1A]">
@@ -632,6 +649,15 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
           )}
         </div>
       </div>
+      )}
+
+      {lightbox !== null && carouselImages.length > 0 && (
+        <DeckLightbox
+          images={carouselImages}
+          startIndex={lightbox}
+          onClose={() => setLightbox(null)}
+          label={`Carousel for "${post.hook.slice(0, 40)}"`}
+        />
       )}
 
       {/* Actions */}
