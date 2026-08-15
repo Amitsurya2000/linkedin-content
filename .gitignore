@@ -84,3 +84,4 @@ dev.err.log
 # more local render previews
 /public/visual-preview/
 /public/campaign-preview/
+/public/lab-preview/

@@ -7,6 +7,7 @@ import { ResumeOnboarding } from "@/components/resume-onboarding";
 import { SwipeDeck } from "@/components/swipe-deck";
 import { DeckLightbox } from "@/components/deck-lightbox";
 import { STYLE_META } from "@/lib/image-prompt";
+import { LAB_STYLES } from "@/lib/deck-lab-styles";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -133,7 +134,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
   // "swipe" = the minimalist creator deck (default — it is what wins on LinkedIn);
   // "attention" = swipe plus highlight chips, Q&A, bar charts and a follow CTA;
   // "editorial" = multi-colour with icons/charts; "koyopo" = the flat red brand deck.
-  const [deckStyle, setDeckStyle] = useState<"swipe" | "attention" | "editorial" | "koyopo" | "photo" | "visual" | "campaign">("swipe");
+  const [deckStyle, setDeckStyle] = useState<"swipe" | "attention" | "editorial" | "koyopo" | "photo" | "visual" | "campaign" | string>("swipe");
   // Illustrated deck: generate art for slides with no uploaded image. Off by
   // default — a 10-slide deck is 10 image calls.
   const [genArt, setGenArt] = useState(false);
@@ -479,6 +480,21 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                   {label}
                 </button>
               ))}
+              {/* Spec-driven styles: one button per row in LAB_STYLES, so the
+                  shelf grows without touching this file. */}
+              {Object.entries(LAB_STYLES).map(([k, spec]) => (
+                <button
+                  key={k}
+                  onClick={() => setDeckStyle(k)}
+                  disabled={carLoading}
+                  title={spec.blurb}
+                  className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
+                    deckStyle === k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/10" : "border-[#F5C5C7] text-[#6B6B6B]"
+                  }`}
+                >
+                  {spec.label}
+                </button>
+              ))}
               {carouselImages.length > 0 && (
                 <button
                   onClick={() => setLightbox(0)}
@@ -488,7 +504,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                   <Maximize2 className="w-3 h-3" /> Expand
                 </button>
               )}
-              {deckStyle === "visual" && (
+              {(deckStyle === "visual" || (deckStyle in LAB_STYLES && LAB_STYLES[deckStyle].imageFit !== "none")) && (
                 <button
                   onClick={() => setGenArt(!genArt)}
                   disabled={carLoading}
