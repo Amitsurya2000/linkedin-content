@@ -11,6 +11,7 @@ import { renderEditorialDeck } from "@/lib/deck-render";
 import { renderSwipeDeck } from "@/lib/deck-swipe";
 import { renderAttnDeck } from "@/lib/deck-attention";
 import { renderVisualDeck } from "@/lib/deck-visual";
+import { renderCampaignDeck } from "@/lib/deck-campaign";
 import { buildPptx } from "@/lib/koyopo-pptx";
 
 export const maxDuration = 300;
@@ -82,7 +83,7 @@ async function handle(
     const { postId } = await params;
     const canvas: CanvasName = input.canvas === "wide" ? "wide" : "tall";
     const format: "png" | "pptx" = input.format === "pptx" ? "pptx" : "png";
-    const STYLES = ["koyopo", "editorial", "swipe", "attention", "visual"] as const;
+    const STYLES = ["koyopo", "editorial", "swipe", "attention", "visual", "campaign"] as const;
     type Style = (typeof STYLES)[number];
     const style: Style = (STYLES as readonly string[]).includes(input.style ?? "")
       ? (input.style as Style)
@@ -156,7 +157,9 @@ async function handle(
     }
 
     const buffers =
-      style === "visual"
+      style === "campaign"
+        ? await renderCampaignDeck(slides, { seed: postId, brand: author })
+        : style === "visual"
         ? await renderVisualDeck(slides, {
             seed: postId, author, pageTotal: slides.length,
             generateArt: input.generateArt === true,

@@ -133,7 +133,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
   // "swipe" = the minimalist creator deck (default — it is what wins on LinkedIn);
   // "attention" = swipe plus highlight chips, Q&A, bar charts and a follow CTA;
   // "editorial" = multi-colour with icons/charts; "koyopo" = the flat red brand deck.
-  const [deckStyle, setDeckStyle] = useState<"swipe" | "attention" | "editorial" | "koyopo" | "photo" | "visual">("swipe");
+  const [deckStyle, setDeckStyle] = useState<"swipe" | "attention" | "editorial" | "koyopo" | "photo" | "visual" | "campaign">("swipe");
   // Illustrated deck: generate art for slides with no uploaded image. Off by
   // default — a 10-slide deck is 10 image calls.
   const [genArt, setGenArt] = useState(false);
@@ -467,7 +467,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                 </button>
               ))}
               {/* Style switch — same copy, four visual languages. */}
-              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"], ["visual", "Visual"], ["photo", "Photo"]] as const).map(([v, label]) => (
+              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"], ["visual", "Visual"], ["campaign", "Campaign"], ["photo", "Photo"]] as const).map(([v, label]) => (
                 <button
                   key={v}
                   onClick={() => setDeckStyle(v)}
