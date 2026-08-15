@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generatedPosts, postBatches, creatorProfiles, userApiKeys } from "@/lib/db/schema";
 import { decrypt } from "@/lib/crypto";
-import { generateImage } from "@/lib/gemini-image";
+import { generateBackground, hasImageEngine } from "@/lib/image-engine";
 import { buildStyledPrompt, STYLE_BY_ID, DEFAULT_STYLE_IDS } from "@/lib/image-prompt";
 import { composeCard } from "@/lib/compose";
 
@@ -79,28 +79,26 @@ export async function POST(
       styleId
     );
 
-    // Gemini image generation — the same key that writes the copy. The models
-    // take an aspect ratio rather than pixel dimensions, so the style's
-    // width/height is mapped to the nearest supported ratio and the exact size
-    // is settled by the overlay compositor afterwards.
+    // Text-free premium background. Gathos (server-side key, exact pixel size)
+    // is used when configured; otherwise it falls back to the user's own Gemini
+    // key. The overlay compositor settles the exact size afterwards either way.
     const [keyRow] = await db
       .select()
       .from(userApiKeys)
       .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
       .limit(1);
-    if (!keyRow) {
+    const geminiKey = keyRow
+      ? decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag)
+      : undefined;
+    if (!hasImageEngine(geminiKey)) {
       return NextResponse.json(
-        { error: "Add your Google Gemini API key in Settings first — it generates the image." },
+        { error: "No image engine configured — add your Google Gemini key in Settings, or set the server Gathos key." },
         { status: 400 }
       );
     }
 
     const t0 = Date.now();
-    const img = await generateImage(
-      decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag),
-      prompt,
-      { aspectRatio: aspectFor(width, height) }
-    );
+    const img = await generateBackground({ prompt, width, height, geminiKey });
     let outBuf: Buffer = img.buffer;
     if (overlay && overlay.text) {
       try {
@@ -134,16 +132,4 @@ export async function POST(
     console.error("Image generation error:", err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
-}
-
-/**
- * Gemini takes an aspect ratio, not pixels. Every style in image-prompt.ts is
- * one of square, portrait or landscape, so the nearest supported ratio is
- * exact rather than approximate.
- */
-function aspectFor(width: number, height: number): "1:1" | "4:5" | "16:9" {
-  const r = width / height;
-  if (r > 1.2) return "16:9";
-  if (r < 0.95) return "4:5";
-  return "1:1";
 }

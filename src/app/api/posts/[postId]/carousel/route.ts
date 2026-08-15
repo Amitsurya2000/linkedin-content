@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generatedPosts, postBatches, userApiKeys } from "@/lib/db/schema";
 import { decrypt } from "@/lib/crypto";
-import { generateImage } from "@/lib/gemini-image";
+import { generateBackground, hasImageEngine } from "@/lib/image-engine";
 import { buildStyledPrompt } from "@/lib/image-prompt";
 import { composeSlide, type SlideSpec, type OverlayTheme } from "@/lib/compose";
 
@@ -68,19 +68,19 @@ export async function POST(
       .from(userApiKeys)
       .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
       .limit(1);
-    if (!keyRow) {
+    const geminiKey = keyRow
+      ? decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag)
+      : undefined;
+    if (!hasImageEngine(geminiKey)) {
       return NextResponse.json(
-        { error: "Add your Google Gemini API key in Settings first — it generates the backgrounds." },
+        { error: "No image engine configured — add your Google Gemini key in Settings, or set the server Gathos key." },
         { status: 400 }
       );
     }
 
     // One shared, cohesive background for the whole carousel (fast + consistent).
-    const bg = await generateImage(
-      decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag),
-      built.prompt,
-      { aspectRatio: width / height > 1.2 ? "16:9" : width / height < 0.95 ? "4:5" : "1:1" }
-    );
+    // Gathos when configured server-side, else the user's Gemini key.
+    const bg = await generateBackground({ prompt: built.prompt, width, height, geminiKey });
     const bgBuf = bg.buffer;
 
     // One image per Gemini slide — nothing dropped, nothing truncated. Slide 1 =
