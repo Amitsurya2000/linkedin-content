@@ -40,7 +40,13 @@ export function markKeywords(text: string): string {
 
 /** A short eyebrow badge derived from the hook category (2 words max). */
 function badgeFrom(hookCategory?: string): string {
-  const c = (hookCategory || "").replace(/^the\s+/i, "").replace(/hook/i, "").trim();
+  const c = (hookCategory || "")
+    .replace(/^[A-Za-z0-9]{1,3}[.)]\s*/, "") // strip "A. " / "1) " archetype enumerators
+    .replace(/^the\s+/i, "")
+    .replace(/\bhook\b/i, "")
+    .replace(/\bclaim\b/i, "")
+    .replace(/\s*\/.*$/, "") // "Bold/counterintuitive" -> "Bold"
+    .trim();
   if (!c) return "Insight";
   return c.split(/\s+/).slice(0, 2).join(" ");
 }

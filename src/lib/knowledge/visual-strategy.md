@@ -88,10 +88,15 @@ work that typography cannot — which, for LinkedIn carousels, is rare.
 
 ## CURRENT CONFIGURATION
 
-Both Gathos keys are empty in `.env.local`, so paths 2 and 3 are inactive.
-Carousels are unaffected: the vector renderer needs no key, which is why
-carousel generation works today while single-image generation returns 503.
+Image generation runs through `src/lib/image-engine.ts`, which picks an engine
+automatically:
 
-To enable the paid paths, set `GATHOS_IMAGE_API_KEY` (and `GATHOS_I2I_API_KEY`
-for the best-effort face path) and restart the dev server so Next picks up the
-new environment.
+- **Gathos** (`GATHOS_IMAGE_API_KEY`, an `img_live_…` key) is the PRIMARY engine
+  when set — server-side, exact pixel sizing, the engine the app was built for.
+- **Gemini** (each user's own key from Settings) is the automatic FALLBACK when
+  the Gathos key is absent.
+
+So single-image posts and carousel backgrounds work as long as EITHER key is
+present. `GATHOS_IMAGE_API_KEY` is currently set in `.env.local`, so Gathos is
+active. Set `GATHOS_I2I_API_KEY` too if you want the best-effort face path.
+Restart the dev server after changing `.env.local` so Next picks it up.
