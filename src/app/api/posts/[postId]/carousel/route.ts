@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generatedPosts, postBatches, userApiKeys } from "@/lib/db/schema";
 import { decrypt } from "@/lib/crypto";
-import { generateImage } from "@/lib/gemini-image";
+import { generateBackground } from "@/lib/image-engine";
 import { buildStyledPrompt } from "@/lib/image-prompt";
 import { composeSlide, type SlideSpec, type OverlayTheme } from "@/lib/compose";
 
@@ -40,9 +40,17 @@ export async function POST(
       .limit(1);
     if (!post) return NextResponse.json({ error: "Post not found" }, { status: 404 });
 
-    // Render EVERY slide Gemini wrote (capped at 5, matching the generation rule).
+    // Render every slide Gemini wrote, or the requested subset. The old hard cap
+    // of 5 predated variable-length decks and silently threw away half of a
+    // 10-slide deck.
     const allSlides: Slide[] = post.carouselSlides ? safeParse(post.carouselSlides, []) : [];
-    const slides = allSlides.slice(0, 5);
+    const max = Number(body.maxSlides);
+    const slides =
+      max >= 1 && max < allSlides.length
+        ? max === 1
+          ? allSlides.slice(0, 1)
+          : [...allSlides.slice(0, max - 1), allSlides[allSlides.length - 1]]
+        : allSlides;
 
     const [batch] = await db
       .select({ topic: postBatches.topic, industry: postBatches.industry })
@@ -68,19 +76,13 @@ export async function POST(
       .from(userApiKeys)
       .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
       .limit(1);
-    if (!keyRow) {
-      return NextResponse.json(
-        { error: "Add your Google Gemini API key in Settings first — it generates the backgrounds." },
-        { status: 400 }
-      );
-    }
 
     // One shared, cohesive background for the whole carousel (fast + consistent).
-    const bg = await generateImage(
-      decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag),
-      built.prompt,
-      { aspectRatio: width / height > 1.2 ? "16:9" : width / height < 0.95 ? "4:5" : "1:1" }
-    );
+    const bg = await generateBackground(built.prompt, {
+      width,
+      height,
+      geminiKey: keyRow ? decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag) : undefined,
+    });
     const bgBuf = bg.buffer;
 
     // One image per Gemini slide — nothing dropped, nothing truncated. Slide 1 =

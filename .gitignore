@@ -78,3 +78,8 @@ dev.err.log
 
 # third-party course transcript — used locally as outreach knowledge, not ours to publish
 /src/lib/knowledge/relationship-building.md
+
+# client-uploaded reference images — their content, not the project's
+/public/uploads/
+# more local render previews
+/public/visual-preview/

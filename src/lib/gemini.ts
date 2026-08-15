@@ -114,6 +114,16 @@ interface GenerateLinkedInPostsParams {
   targetAudience?: string;
   tonePrefs?: string;
   profileContext?: string; // client's resume-derived Creator Profile (base context)
+  /** Slides per carousel. Defaults to the 8-10 the benchmarks favour. */
+  slidesCount?: number;
+  /**
+   * Optional reference material the post should be built from — a PDF report,
+   * a slide deck, a screenshot of a chart, a photo of a whiteboard. Gemini reads
+   * PDFs and images natively, so the bytes go straight into the request.
+   */
+  referenceDocs?: { data: string; mimeType: string; name?: string }[];
+  /** Optional free-text direction from the client on what they want back. */
+  customInstructions?: string;
 }
 
 interface LinkedInPost {
@@ -140,6 +150,15 @@ export async function generateLinkedInPosts(params: GenerateLinkedInPostsParams)
 
   const userMessage = buildUserPrompt(params);
 
+  // Reference documents lead the request: the model should read the source
+  // before it reads the brief about what to do with it.
+  const parts: Record<string, unknown>[] = [];
+  for (const doc of params.referenceDocs ?? []) {
+    parts.push({ inlineData: { mimeType: doc.mimeType, data: doc.data } });
+    parts.push({ text: `The file above is REFERENCE MATERIAL${doc.name ? ` ("${doc.name}")` : ""} supplied by the client.` });
+  }
+  parts.push({ text: userMessage });
+
   const response = await genai.models.generateContent({
     // gemini-3.6-flash, NOT a Pro model. Pro answers a one-off probe with 200 but
     // its sustained free-tier quota is limit:0 (GenerateRequestsPerDayPerProject
@@ -152,7 +171,7 @@ export async function generateLinkedInPosts(params: GenerateLinkedInPostsParams)
       temperature: 0.85,
       responseMimeType: "application/json",
     },
-    contents: [{ role: "user", parts: [{ text: userMessage }] }],
+    contents: [{ role: "user", parts }],
   });
 
   const text = response.text || "";
@@ -200,6 +219,23 @@ function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
   }
 
   prompt += `\n\n**Variations are real alternatives, not paraphrases.** Each of the 3 variations must be a COMPLETE, standalone post that opens with a different first line, uses its assigned structure, and lands at that skeleton's stated word count. If two versions of the same post could be swapped without a reader noticing, you have failed.`;
+  // Reference material and client direction go near the END of the brief, where
+  // they are freshest — a rule stated 18k tokens earlier gets averaged away
+  // against the knowledge base.
+  if (params.referenceDocs?.length) {
+    prompt += `
+
+**USE THE REFERENCE MATERIAL ABOVE AS THE PRIMARY SOURCE.** The client attached ${params.referenceDocs.length} file(s) — read them fully and build the content from what they actually contain: the real figures, findings, names, structure and wording. Pull exact numbers from the file rather than approximating them, and never contradict it. Where the file and the creator profile disagree on a fact, the file wins — it is the newer, more specific source. If the file is thin, say less rather than inventing around it.`;
+  }
+  if (params.customInstructions?.trim()) {
+    prompt += `
+
+**CLIENT DIRECTION — these instructions override the defaults above wherever they conflict** (except the anti-fabrication rule, which is absolute):
+"""
+${params.customInstructions.trim()}
+"""`;
+  }
+
   prompt += `\n\n**Never invent numbers.** Do not write a statistic, percentage, currency figure, funding amount, study or benchmark unless it appears in the creator profile or the brief above. Real numbers are powerful; fabricated ones are a liability the creator has to defend in the comments and cannot. When you have no real figure, make the point qualitatively — "we rebuilt it twice before it held" beats an invented "28% lift".`;
   prompt += `\n\n**Hook discipline:** the opening line is a standalone sentence under 12 words. In the top-performing posts in your knowledge base, the best hooks average ~40 characters and the worst average ~77. Write short. One idea per line, blank line between beats.`;
   prompt += `\n\n**Important:** Generate exactly ${params.postsCount} unique post(s). Set "hookCategory" to the assigned archetype letter and name. Return a JSON array of post objects.`;
@@ -208,7 +244,12 @@ function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
     // 8-10 slides. Published 2026 benchmarks put the sweet spot at 8-12 with sharp
     // completion drop-off past 12; the original cap of 5 also fought the templates,
     // since a cardGrid holds four items and a numbered slide five.
-    prompt += `\n\nFor each carousel post, produce the carouselSlides array with 8 to 10 slides. Slide 1 = the cover; the final slide = a clear call-to-action; everything between carries the substance.`;
+    // The 8-10 default comes from completion benchmarks, but the user can ask
+    // for anything from a 3-slide micro-deck to a 15-slide guide.
+    const n = params.slidesCount && params.slidesCount >= 3 && params.slidesCount <= 15 ? params.slidesCount : 0;
+    prompt += n
+      ? `\n\nFor each carousel post, produce the carouselSlides array with EXACTLY ${n} slides — not ${n - 1}, not ${n + 1}. Slide 1 = the cover; slide ${n} = a clear call-to-action; the ${n - 2} slides between carry the substance. If the topic cannot fill ${n} slides with real material, go deeper on the mechanism rather than padding with restatement.`
+      : `\n\nFor each carousel post, produce the carouselSlides array with 8 to 10 slides. Slide 1 = the cover; the final slide = a clear call-to-action; everything between carries the substance.`;
 
     // Assigning a distinct deck type per post is what stops a batch of three
     // from coming back as three listicles. Same reasoning as the hook rotation.

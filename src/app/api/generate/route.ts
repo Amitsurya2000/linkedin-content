@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs/promises";
+import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { postBatches, generatedPosts, userApiKeys, creatorProfiles } from "@/lib/db/schema";
@@ -17,8 +19,57 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const body = await req.json();
-    const { topic, postType, postsCount, industry, targetAudience, tonePrefs } = body;
+    // Two request shapes. JSON is the plain path; multipart carries optional
+    // reference files (a PDF report, a chart screenshot, a photo of a
+    // whiteboard) that the post should be built from.
+    const contentType = req.headers.get("content-type") || "";
+    // Matches what req.json() returned before multipart support; the fields are
+    // validated individually below.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let body: Record<string, any> = {};
+    const referenceDocs: { data: string; mimeType: string; name?: string }[] = [];
+    const referenceImages: string[] = [];
+
+    if (contentType.includes("multipart/form-data")) {
+      const form = await req.formData();
+      for (const [k, v] of form.entries()) {
+        if (typeof v === "string") body[k] = v;
+      }
+      for (const file of form.getAll("reference")) {
+        if (!(file instanceof File)) continue;
+        const buf = Buffer.from(await file.arrayBuffer());
+        // 12MB matches the resume uploader. Beyond that the inline request body
+        // starts failing at the API rather than here, which is a worse error.
+        if (buf.length > 12 * 1024 * 1024) {
+          return NextResponse.json({ error: `"${file.name}" is over 12MB.` }, { status: 400 });
+        }
+        const mt = file.type || "";
+        const mimeType = mt.startsWith("image/") || mt === "application/pdf"
+          ? mt
+          : /\.pdf$/i.test(file.name) ? "application/pdf"
+          : /\.(png|jpe?g|webp|gif)$/i.test(file.name) ? `image/${file.name.split(".").pop()!.replace("jpg", "jpeg")}`
+          // Anything else (docx, txt, md) is handed over as a document; Gemini
+          // reads most of them, and a rejected file is a clearer failure than a
+          // silently ignored one.
+          : "application/pdf";
+        referenceDocs.push({ data: buf.toString("base64"), mimeType, name: file.name });
+        // Images are also kept on disk: the illustrated deck renders WITH them,
+        // so a client-supplied photo can appear in the slides rather than only
+        // informing the copy.
+        if (mimeType.startsWith("image/")) {
+          const dir = path.join(process.cwd(), "public", "uploads");
+          await fs.mkdir(dir, { recursive: true });
+          const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(-60);
+          const filename = `${Date.now()}-${referenceImages.length}-${safe}`;
+          await fs.writeFile(path.join(dir, filename), buf);
+          referenceImages.push(`/uploads/${filename}`);
+        }
+      }
+    } else {
+      body = await req.json();
+    }
+
+    const { topic, postType, postsCount, industry, targetAudience, tonePrefs, slidesCount, customInstructions } = body;
 
     // Validate required fields
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
@@ -88,6 +139,7 @@ export async function POST(req: NextRequest) {
         tonePrefs: tonePrefs || null,
         postType,
         postsCount: count,
+        referenceImages: referenceImages.length ? JSON.stringify(referenceImages) : null,
         status: "generating_briefs",
       })
       .returning();
@@ -103,6 +155,13 @@ export async function POST(req: NextRequest) {
         targetAudience: targetAudience || undefined,
         tonePrefs: tonePrefs || undefined,
         profileContext,
+        // Clamped rather than rejected: an out-of-range value should fall back
+        // to the benchmark default, not fail the whole generation.
+        slidesCount:
+          Number(slidesCount) >= 3 && Number(slidesCount) <= 15 ? Number(slidesCount) : undefined,
+        referenceDocs: referenceDocs.length ? referenceDocs : undefined,
+        customInstructions:
+          typeof customInstructions === "string" && customInstructions.trim() ? customInstructions.trim() : undefined,
       });
 
       // Create generated post records — defensively default every field, since

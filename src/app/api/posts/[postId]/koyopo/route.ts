@@ -4,11 +4,13 @@ import fs from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { creatorProfiles, generatedPosts } from "@/lib/db/schema";
+import { creatorProfiles, generatedPosts, postBatches, userApiKeys } from "@/lib/db/schema";
+import { decrypt } from "@/lib/crypto";
 import { renderDeck, toKoyopoSlides, type RawSlide, type CanvasName } from "@/lib/koyopo";
 import { renderEditorialDeck } from "@/lib/deck-render";
 import { renderSwipeDeck } from "@/lib/deck-swipe";
 import { renderAttnDeck } from "@/lib/deck-attention";
+import { renderVisualDeck } from "@/lib/deck-visual";
 import { buildPptx } from "@/lib/koyopo-pptx";
 
 export const maxDuration = 300;
@@ -39,6 +41,7 @@ export async function GET(
     canvas: url.searchParams.get("canvas") ?? undefined,
     format: url.searchParams.get("format") ?? "pptx",
     style: url.searchParams.get("style") ?? undefined,
+    maxSlides: Number(url.searchParams.get("maxSlides")) || undefined,
   });
 }
 
@@ -47,12 +50,30 @@ export async function POST(
   ctx: { params: Promise<{ postId: string }> }
 ) {
   const body = await req.json().catch(() => ({}));
-  return handle(ctx, { canvas: body.canvas, format: body.format, style: body.style });
+  return handle(ctx, {
+    canvas: body.canvas, format: body.format, style: body.style,
+    maxSlides: body.maxSlides, generateArt: body.generateArt,
+  });
+}
+
+/**
+ * Trim a deck to `max` slides while keeping its shape.
+ *
+ * A plain `slice` would drop the closing CTA, which is the slide every deck is
+ * built to arrive at — so the cover and the final slide are always kept and the
+ * middle is what gets cut.
+ */
+function limitSlides(raw: RawSlide[], max?: number): RawSlide[] {
+  if (!max || max >= raw.length) return raw;
+  // 1 slide = the cover alone; 2 = cover + CTA. Below 3 there is no middle to
+  // keep, so the "cover + … + CTA" rule does not apply.
+  if (max === 1) return raw.slice(0, 1);
+  return [...raw.slice(0, max - 1), raw[raw.length - 1]];
 }
 
 async function handle(
   { params }: { params: Promise<{ postId: string }> },
-  input: { canvas?: string; format?: string; style?: string }
+  input: { canvas?: string; format?: string; style?: string; maxSlides?: number; generateArt?: boolean }
 ) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -61,7 +82,7 @@ async function handle(
     const { postId } = await params;
     const canvas: CanvasName = input.canvas === "wide" ? "wide" : "tall";
     const format: "png" | "pptx" = input.format === "pptx" ? "pptx" : "png";
-    const STYLES = ["koyopo", "editorial", "swipe", "attention"] as const;
+    const STYLES = ["koyopo", "editorial", "swipe", "attention", "visual"] as const;
     type Style = (typeof STYLES)[number];
     const style: Style = (STYLES as readonly string[]).includes(input.style ?? "")
       ? (input.style as Style)
@@ -83,7 +104,7 @@ async function handle(
     }
 
     const deckTitle = "1Cr+ Career OS";
-    const slides = toKoyopoSlides(raw);
+    const slides = toKoyopoSlides(limitSlides(raw, input.maxSlides));
 
     if (format === "pptx") {
       const buf = await buildPptx(slides, { canvas, deckTitle });
@@ -106,8 +127,42 @@ async function handle(
     // pptx export stays on the KOYOPO layout engine for now; the editorial and
     // swipe styles are PNG-only until their templates are ported to pptxgenjs.
     const author = profile?.fullName ?? undefined;
+
+    // The illustrated deck needs three things the others do not: the client's
+    // uploaded images, the per-slide art briefs, and a key to generate the rest.
+    let visualExtras: {
+      referenceImages?: string[];
+      designDirections?: (string | undefined)[];
+      geminiKey?: string;
+      topic?: string;
+    } = {};
+    if (style === "visual") {
+      const [batch] = await db
+        .select({ referenceImages: postBatches.referenceImages, topic: postBatches.topic })
+        .from(postBatches)
+        .where(eq(postBatches.id, post.batchId))
+        .limit(1);
+      const [keyRow] = await db
+        .select()
+        .from(userApiKeys)
+        .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
+        .limit(1);
+      visualExtras = {
+        referenceImages: batch?.referenceImages ? safeParse<string[]>(batch.referenceImages, []) : [],
+        designDirections: limitSlides(raw, input.maxSlides).map((s2) => (s2 as RawSlide & { designDirection?: string }).designDirection),
+        geminiKey: keyRow ? decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag) : undefined,
+        topic: batch?.topic,
+      };
+    }
+
     const buffers =
-      style === "attention"
+      style === "visual"
+        ? await renderVisualDeck(slides, {
+            seed: postId, author, pageTotal: slides.length,
+            generateArt: input.generateArt === true,
+            ...visualExtras,
+          })
+        : style === "attention"
         ? await renderAttnDeck(slides, {
             canvas, seed: postId, author,
             cta: author ? { line: `Repost and Follow *${author}* for more content like this` } : undefined,

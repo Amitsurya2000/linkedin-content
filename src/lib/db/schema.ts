@@ -104,6 +104,10 @@ export const postBatches = sqliteTable("post_batches", {
   // Status: pending | generating_briefs | generating_images | completed | failed
   status: text("status").notNull().default("pending"),
   designBriefs: text("design_briefs"), // JSON string
+  // Reference images the client uploaded with the brief, as a JSON array of
+  // public paths. Kept because the illustrated deck renders WITH them, not just
+  // from them — a photo the client supplied beats anything a model invents.
+  referenceImages: text("reference_images"),
   errorMessage: text("error_message"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .$defaultFn(() => new Date()),

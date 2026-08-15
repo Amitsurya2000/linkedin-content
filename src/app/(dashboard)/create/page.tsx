@@ -72,6 +72,11 @@ const TONES = [
 
 const COUNTS = [1, 2, 3, 5];
 
+// Reference files per generation. Gemini takes them all inline, so the ceiling
+// is request size rather than the model — 8 files at 12MB each is the practical
+// limit before the request itself becomes the problem.
+const MAX_REF_FILES = 8;
+
 // The create flow is a wizard rather than one long form: the resume gates
 // everything (posts are written from it), and showing every field at once buried
 // the one required field — the topic — among six optional ones.
@@ -117,7 +122,6 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
   const [imgStyleName, setImgStyleName] = useState<string | null>(null);
   const [imgLoading, setImgLoading] = useState(false);
   const [imgError, setImgError] = useState<string | null>(null);
-  const autoStarted = useRef(false);
 
   const isCarousel = post.postType === "carousel";
   const [carouselImages, setCarouselImages] = useState<string[]>(post.carouselImages ?? []);
@@ -127,19 +131,41 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
   // "swipe" = the minimalist creator deck (default — it is what wins on LinkedIn);
   // "attention" = swipe plus highlight chips, Q&A, bar charts and a follow CTA;
   // "editorial" = multi-colour with icons/charts; "koyopo" = the flat red brand deck.
-  const [deckStyle, setDeckStyle] = useState<"swipe" | "attention" | "editorial" | "koyopo">("swipe");
+  const [deckStyle, setDeckStyle] = useState<"swipe" | "attention" | "editorial" | "koyopo" | "photo" | "visual">("swipe");
+  // Illustrated deck: generate art for slides with no uploaded image. Off by
+  // default — a 10-slide deck is 10 image calls.
+  const [genArt, setGenArt] = useState(false);
+  // How many slides to render. 0 = every slide the model wrote. Trimming keeps
+  // the cover and the closing CTA and cuts the middle, so a shorter deck still
+  // opens and closes properly.
+  const [deckCount, setDeckCount] = useState<number>(0);
   const [carError, setCarError] = useState<string | null>(null);
+  const slideTotal = post.carouselSlides?.length ?? 0;
 
   async function generateCarousel() {
     setCarLoading(true);
     setCarError(null);
     try {
-      // KOYOPO renderer, not the image one: it draws the brand's flat colours
-      // directly, so it needs no image API key and costs nothing per deck.
-      const res = await fetch(`/api/posts/${post.id}/koyopo`, {
+      // Two engines behind one button. The vector styles draw flat colour and
+      // type directly — no key, nothing per deck. "Photo" composes the same copy
+      // over a generated photographic background, which is how a carousel gets a
+      // premium image: a LinkedIn document post is ONE upload, so the visual has
+      // to live inside the deck rather than beside it.
+      const isPhoto = deckStyle === "photo";
+      const res = await fetch(`/api/posts/${post.id}/${isPhoto ? "carousel" : "koyopo"}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ canvas: deckShape, format: "png", style: deckStyle }),
+        body: JSON.stringify(
+          isPhoto
+            ? { maxSlides: deckCount || undefined }
+            : {
+                canvas: deckShape,
+                format: "png",
+                style: deckStyle,
+                maxSlides: deckCount || undefined,
+                generateArt: deckStyle === "visual" ? genArt : undefined,
+              }
+        ),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -148,6 +174,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
       }
       setCarouselImages(data.images || []);
       post.carouselImages = data.images || [];
+      renderedKey.current = settingsKey;
     } catch {
       setCarError("Network error — try again");
     } finally {
@@ -182,18 +209,16 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
     }
   }
 
-  // Auto-generate on first appearance: a full carousel deck for carousel posts,
-  // otherwise a single premium image.
-  useEffect(() => {
-    if (autoStarted.current) return;
-    autoStarted.current = true;
-    if (isCarousel) {
-      if (carouselImages.length === 0) generateCarousel();
-    } else if (!imageUrl) {
-      generateImage("auto");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // NOTHING generates on its own. Rendering a deck or an image happens only when
+  // the user clicks a button — previously both auto-started, which meant a
+  // generation the user never asked for (and, on the Photo style, quota spent
+  // before they had chosen anything).
+
+  // Changing style/shape/slide-count marks the deck on screen as stale rather
+  // than re-rendering behind the user's back. They press Render when ready.
+  const renderedKey = useRef<string | null>(null);
+  const settingsKey = `${deckStyle}:${deckShape}:${deckCount}:${genArt}`;
+  const deckStale = carouselImages.length > 0 && renderedKey.current !== null && renderedKey.current !== settingsKey;
 
   function buildFullPost(hook: string, body: string, hashtags: string[]) {
     const hashtagStr = hashtags.map((h) => `#${h.replace(/^#/, "")}`).join(" ");
@@ -396,9 +421,34 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
               <Layers className="w-3.5 h-3.5 text-[#ED383B]" />
               Carousel {carouselImages.length > 0 && <span className="text-[#6B6B6B]">· {carouselImages.length} slides</span>}
             </p>
-            <div className="flex items-center gap-1.5">
-              {/* Shape picker — tall renders 1080x1350, wide renders 2000x1125. */}
-              {(["tall", "wide"] as const).map((s) => (
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              {/* Render 1-15 slides. Counts above what the model wrote are
+                  disabled rather than hidden, so it is clear the ceiling is the
+                  deck's own length — rendering cannot invent a slide. Set the
+                  higher number on the Format step to get a longer deck. */}
+              {slideTotal > 1 && (
+                <span className="flex items-center gap-1">
+                  <span className="text-[10px] text-[#6B6B6B]">Slides</span>
+                  <select
+                    value={deckCount}
+                    onChange={(e) => setDeckCount(Number(e.target.value))}
+                    disabled={carLoading}
+                    className="text-[10px] rounded-lg border border-[#F5C5C7] bg-white text-[#1A1A1A] px-1.5 py-1 font-medium focus:border-[#ED383B] outline-none disabled:opacity-50"
+                    title="How many slides to render"
+                  >
+                    <option value={0}>All {slideTotal}</option>
+                    {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={n} disabled={n > slideTotal}>
+                        {n}
+                        {n > slideTotal ? " — needs a longer deck" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              )}
+              {/* Shape picker — tall renders 1080x1350, wide renders 2000x1125.
+                  Hidden for Photo, whose size comes from the image style preset. */}
+              {deckStyle !== "photo" && (["tall", "wide"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => setDeckShape(s)}
@@ -413,7 +463,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                 </button>
               ))}
               {/* Style switch — same copy, four visual languages. */}
-              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"]] as const).map(([v, label]) => (
+              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"], ["visual", "Visual"], ["photo", "Photo"]] as const).map(([v, label]) => (
                 <button
                   key={v}
                   onClick={() => setDeckStyle(v)}
@@ -425,8 +475,20 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                   {label}
                 </button>
               ))}
+              {deckStyle === "visual" && (
+                <button
+                  onClick={() => setGenArt(!genArt)}
+                  disabled={carLoading}
+                  className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
+                    genArt ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/10" : "border-[#F5C5C7] text-[#6B6B6B]"
+                  }`}
+                  title="Generate an image for slides with no uploaded picture (slow, uses quota)"
+                >
+                  {genArt ? "AI art on" : "AI art off"}
+                </button>
+              )}
               <a
-                href={`/api/posts/${post.id}/koyopo?format=pptx&canvas=${deckShape}`}
+                href={`/api/posts/${post.id}/koyopo?format=pptx&canvas=${deckShape}${deckCount ? `&maxSlides=${deckCount}` : ""}`}
                 className="text-[10px] rounded-lg border border-[#F5C5C7] text-[#1A1A1A] px-2 py-1 font-medium hover:border-[#ED383B]"
               >
                 .pptx
@@ -446,7 +508,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                 className="text-[11px] rounded-lg bg-[#ED383B] text-white px-2.5 py-1 font-medium disabled:opacity-50 flex items-center gap-1"
               >
                 {carLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                {carouselImages.length > 0 ? "Regenerate" : "Generate"}
+                {carouselImages.length === 0 ? "Render deck" : deckStale ? "Apply changes" : "Re-render"}
               </button>
             </div>
           </div>
@@ -455,10 +517,22 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
               <div className="text-center px-4">
                 <Loader2 className="w-7 h-7 text-[#ED383B] animate-spin mx-auto mb-2" />
                 <p className="text-xs text-[#6B6B6B]">Designing your carousel slides…</p>
-                <p className="text-[10px] text-[#6B6B6B] mt-0.5">Gemini · ~30–90s</p>
+                <p className="text-[10px] text-[#6B6B6B] mt-0.5">
+                  {deckStyle === "photo"
+                    ? "Gathos / Gemini · ~40–90s"
+                    : deckStyle === "visual" && genArt
+                      ? "One image per slide · this takes minutes"
+                      : "Local render · a few seconds"}
+                </p>
               </div>
             </div>
           ) : carouselImages.length > 0 ? (
+            <>
+              {deckStale && (
+                <p className="text-[11px] text-[#ED383B] bg-[#ED383B]/10 border border-[#ED383B]/30 rounded-lg px-2.5 py-1.5 mb-2">
+                  Settings changed — press <span className="font-semibold">Apply changes</span> to re-render.
+                </p>
+              )}
             <SwipeDeck slideClassName="w-[70%]" label="Carousel slides">
               {carouselImages.map((url, i) => (
                 <div key={i} className="relative rounded-xl overflow-hidden border border-[#F5C5C7] bg-[#FCEBEC]">
@@ -473,6 +547,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
                 </div>
               ))}
             </SwipeDeck>
+            </>
           ) : (
             <div className="rounded-xl border border-dashed border-[#F5C5C7] bg-[#FCEBEC] p-6 text-center">
               <Layers className="w-7 h-7 text-[#6B6B6B] mx-auto mb-2" />
@@ -485,7 +560,9 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
         </div>
       )}
 
-      {/* Premium image (Gemini) — single image for non-carousel posts */}
+      {/* Standalone image — text/article/poll only. A carousel is a document
+          post and takes ONE upload, so its visual belongs inside the deck: use
+          the "Photo" deck style above. */}
       {!isCarousel && (
       <div className="px-5 mt-3">
         <div className="flex items-center justify-between mb-2">
@@ -516,7 +593,7 @@ function PostCard({ post, userName, index }: { post: GeneratedPost; userName: st
             <div className="text-center px-4">
               <Loader2 className="w-7 h-7 text-[#ED383B] animate-spin mx-auto mb-2" />
               <p className="text-xs text-[#6B6B6B]">Designing your premium visual…</p>
-              <p className="text-[10px] text-[#6B6B6B] mt-0.5">Gemini · ~15–40s</p>
+              <p className="text-[10px] text-[#6B6B6B] mt-0.5">Gathos / Gemini · ~20–60s</p>
             </div>
           ) : imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -695,6 +772,14 @@ export default function CreatePage() {
   const [topic, setTopic] = useState("");
   const [postType, setPostType] = useState<PostType>("text");
   const [postsCount, setPostsCount] = useState(3);
+  // Slides per carousel. 0 = let the model choose (8-10, the benchmark range).
+  const [slidesCount, setSlidesCount] = useState(0);
+  // Optional: source files the post should be built from, and free-text
+  // direction on what the client wants back. Both are additive — leaving them
+  // empty gives exactly the previous behaviour.
+  const [refFiles, setRefFiles] = useState<File[]>([]);
+  const [customInstructions, setCustomInstructions] = useState("");
+  const refInput = useRef<HTMLInputElement>(null);
   const [industry, setIndustry] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [tone, setTone] = useState("");
@@ -706,8 +791,8 @@ export default function CreatePage() {
   const [posts, setPosts] = useState<GeneratedPost[]>([]);
   const [batchId, setBatchId] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(e?: React.FormEvent) {
+    e?.preventDefault();
     if (!topic.trim()) {
       toast.error("Please enter a topic");
       return;
@@ -715,18 +800,32 @@ export default function CreatePage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: topic.trim(),
-          postType,
-          postsCount,
-          industry: industry || undefined,
-          targetAudience: targetAudience || undefined,
-          tonePrefs: tone || undefined,
-        }),
-      });
+      const fields: Record<string, string> = {
+        topic: topic.trim(),
+        postType,
+        postsCount: String(postsCount),
+      };
+      if (industry) fields.industry = industry;
+      if (targetAudience) fields.targetAudience = targetAudience;
+      if (tone) fields.tonePrefs = tone;
+      if (postType === "carousel" && slidesCount) fields.slidesCount = String(slidesCount);
+      if (customInstructions.trim()) fields.customInstructions = customInstructions.trim();
+
+      // Multipart only when there is a file to carry — JSON stays the common
+      // path and keeps the request small.
+      let res: Response;
+      if (refFiles.length) {
+        const fd = new FormData();
+        Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+        refFiles.forEach((f) => fd.append("reference", f));
+        res = await fetch("/api/generate", { method: "POST", body: fd });
+      } else {
+        res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(fields),
+        });
+      }
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: "Generation failed" }));
@@ -810,7 +909,17 @@ export default function CreatePage() {
           })}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {/* The form NEVER submits itself. Choosing a file in the OS dialog can
+            land the closing Enter keypress on the form, and any stray Enter in a
+            text field would do the same — both fired a generation the user never
+            asked for. Generation happens on one path only: clicking Generate. */}
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") e.preventDefault();
+          }}
+          className="space-y-6"
+        >
           {/* STEP 1 — Resume. Every post is written from this, so it comes first. */}
           {wizardStep === 1 && (
             <div className="space-y-3">
@@ -899,6 +1008,49 @@ export default function CreatePage() {
                   Each post also comes with 3 alternative versions, so {postsCount} gives you {postsCount * 4} to choose from.
                 </p>
               </div>
+
+              {/* Slides per deck. Only the generator can create slides, so this
+                  belongs here rather than on the rendered deck — the render-time
+                  control can trim a deck but never extend one. */}
+              {postType === "carousel" && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#1A1A1A]">Slides per carousel</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setSlidesCount(0)}
+                      className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                        slidesCount === 0
+                          ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
+                          : "bg-[#FFFFFF] text-[#6B6B6B] border border-[#F5C5C7] hover:border-[#ED383B]"
+                      }`}
+                    >
+                      Auto
+                    </button>
+                    {Array.from({ length: 13 }, (_, i) => i + 3).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setSlidesCount(n)}
+                        className={`w-10 py-2 rounded-xl text-sm font-medium transition-all ${
+                          slidesCount === n
+                            ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
+                            : "bg-[#FFFFFF] text-[#6B6B6B] border border-[#F5C5C7] hover:border-[#ED383B]"
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-[#6B6B6B]">
+                    {slidesCount === 0
+                      ? "Auto picks 8–10, where completion rates peak."
+                      : slidesCount > 12
+                        ? `${slidesCount} slides. Completion drops off past 12 — worth it only if every slide carries real material.`
+                        : `${slidesCount} slides: a cover, ${slidesCount - 2} content slide${slidesCount - 2 === 1 ? "" : "s"}, and a closing CTA.`}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -950,6 +1102,82 @@ export default function CreatePage() {
                 </div>
               </div>
 
+              {/* Optional source material. A client often already has the
+                  substance — a report, a deck, a chart, a photo of a whiteboard.
+                  Gemini reads PDFs and images natively, so the file goes into
+                  the request as-is and becomes the primary source. */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[#1A1A1A]">
+                  Reference file <span className="text-[#6B6B6B] font-normal">(optional)</span>
+                </Label>
+                <div
+                  onClick={() => refInput.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const f = Array.from(e.dataTransfer.files || []);
+                    if (f.length) setRefFiles((prev) => [...prev, ...f].slice(0, MAX_REF_FILES));
+                  }}
+                  className="border-2 border-dashed border-[#F5C5C7] hover:border-[#ED383B]/50 rounded-xl p-4 text-center cursor-pointer transition-colors"
+                >
+                  <input
+                    ref={refInput}
+                    type="file"
+                    multiple
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.md,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = Array.from(e.target.files || []);
+                      if (f.length) setRefFiles((prev) => [...prev, ...f].slice(0, MAX_REF_FILES));
+                    }}
+                  />
+                  <FileText className="w-5 h-5 text-[#6B6B6B] mx-auto mb-1" />
+                  <p className="text-xs text-[#1A1A1A] font-medium">Build the post from a file</p>
+                  <p className="text-[11px] text-[#6B6B6B] mt-0.5">
+                    PDF, image, or doc · up to {MAX_REF_FILES} files · select or drop several at once
+                  </p>
+                </div>
+                {refFiles.length > 0 && (
+                  <div className="space-y-1.5">
+                    {refFiles.map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs bg-[#FCEBEC] border border-[#F5C5C7] rounded-lg px-3 py-2">
+                        <FileText className="w-3.5 h-3.5 text-[#ED383B] shrink-0" />
+                        <span className="text-[#1A1A1A] truncate flex-1">{f.name}</span>
+                        <span className="text-[#6B6B6B] shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+                        <button
+                          type="button"
+                          onClick={() => setRefFiles((prev) => prev.filter((_, j) => j !== i))}
+                          className="text-[#6B6B6B] hover:text-[#ED383B] shrink-0"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    <p className="text-[11px] text-[#6B6B6B]">
+                      The file becomes the primary source — figures and findings come from it, not from guesswork.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Free-text direction. Overrides the built-in defaults, which is
+                  what makes the same engine produce different work per client. */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-[#1A1A1A]">
+                  Describe the output you want <span className="text-[#6B6B6B] font-normal">(optional)</span>
+                </Label>
+                <Textarea
+                  value={customInstructions}
+                  onChange={(e) => setCustomInstructions(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. Make slide 1 a bold contrarian claim. Keep every slide under 25 words. Use the numbers from the attached report. End with a CTA to download the template. No emojis."
+                  className="bg-[#FFFFFF] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#6B6B6B] rounded-xl text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
+                />
+                <p className="text-xs text-[#6B6B6B]">
+                  These instructions override the defaults — structure, length, tone, what to emphasise, what to avoid.
+                </p>
+              </div>
+
               {/* Recap, so the earlier steps can be checked without navigating back. */}
               <div className="rounded-xl border border-[#F5C5C7] bg-[#FCEBEC] p-4 space-y-1.5">
                 <p className="text-[11px] uppercase tracking-wider text-[#6B6B6B] font-semibold">Ready to generate</p>
@@ -959,7 +1187,15 @@ export default function CreatePage() {
                 <p className="text-xs text-[#1A1A1A]">
                   <span className="text-[#6B6B6B]">Format:</span>{" "}
                   {POST_TYPES.find((p) => p.value === postType)?.label} · {postsCount} post{postsCount !== 1 ? "s" : ""}
+                  {postType === "carousel" && slidesCount ? ` · ${slidesCount} slides` : ""}
                 </p>
+                {(refFiles.length > 0 || customInstructions.trim()) && (
+                  <p className="text-xs text-[#1A1A1A]">
+                    <span className="text-[#6B6B6B]">Source:</span>{" "}
+                    {refFiles.length > 0 ? `${refFiles.length} file${refFiles.length !== 1 ? "s" : ""}` : "—"}
+                    {customInstructions.trim() ? " · custom direction" : ""}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -993,7 +1229,8 @@ export default function CreatePage() {
               </Button>
             ) : (
               <Button
-                type="submit"
+                type="button"
+                onClick={() => handleSubmit()}
                 disabled={submitting}
                 className="flex-1 h-12 bg-[#ED383B] hover:bg-[#ED383B]/90 text-white font-semibold rounded-xl text-base gap-2 shadow-lg shadow-[#ED383B]/25 disabled:opacity-50"
               >
