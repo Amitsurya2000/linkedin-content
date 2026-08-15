@@ -40,6 +40,10 @@ const carouselPatterns = loadKnowledge("src/lib/knowledge/carousel-design-patter
 // produce a framework deck or a myth-buster rather than defaulting to a list
 // every time.
 const carouselMaster = loadKnowledge("src/lib/knowledge/carousel-master.md");
+// The scorecard a finished deck is graded against: hook formulas, save-rate
+// thresholds, and the four failure modes. Used twice — once as guidance during
+// generation, once as the rubric for the revision pass.
+const winningPlaybook = loadKnowledge("src/lib/knowledge/winning-carousel-playbook.md");
 
 /**
  * The 18 deck types from carousel-master.md. Assigned per post the same way
@@ -124,6 +128,8 @@ interface GenerateLinkedInPostsParams {
   referenceDocs?: { data: string; mimeType: string; name?: string }[];
   /** Optional free-text direction from the client on what they want back. */
   customInstructions?: string;
+  /** Second editing pass against the winning-carousel scorecard. On by default. */
+  refine?: boolean;
 }
 
 interface LinkedInPost {
@@ -180,6 +186,68 @@ export async function generateLinkedInPosts(params: GenerateLinkedInPostsParams)
   const posts: LinkedInPost[] = JSON.parse(cleanText);
 
   return posts;
+}
+
+/**
+ * Second pass: grade the drafted decks against the playbook scorecard and
+ * rewrite what fails.
+ *
+ * One-shot generation reliably produces decks that are *fine* — the hook names
+ * the topic instead of the payoff, the takeaway restates the title, the closing
+ * slide says "thanks for reading". Those are exactly the faults a model can spot
+ * in finished work but rarely avoids while writing it, which is why this is a
+ * separate call with the draft in front of it rather than more instructions in
+ * the first prompt.
+ *
+ * Returns the original posts unchanged if the pass fails for any reason: a
+ * refinement that errors must never cost the user the deck they already have.
+ */
+async function refineCarousels(
+  genai: GoogleGenAI,
+  posts: LinkedInPost[],
+  topic: string
+): Promise<LinkedInPost[]> {
+  const carousels = posts.filter((p) => p.carouselSlides?.length);
+  if (!carousels.length || !winningPlaybook) return posts;
+
+  const system = `You are a LinkedIn carousel editor. You are handed finished decks and the standard they are judged against. Your job is to REWRITE what fails that standard, not to comment on it.
+
+${winningPlaybook}
+
+Work through every deck against the seven-point scorecard. For each one:
+- If slide 1 names a topic rather than a payoff, rewrite it as a specific-outcome hook using one of the ten hook categories. Put the real number in it where the deck contains one.
+- If slide 2 is background, a contents list or an introduction, replace it with the proof the cover promised.
+- If any slide is generic advice, rewrite it in the confession voice: what they used to do, why it broke, what they do now, what it produced.
+- If a takeaway restates its title, rewrite it to explain WHY the rule is true.
+- If the closing slide does not make one specific ask, rewrite it so it does.
+- If the deck teaches a repeatable method that has no name, name it and use that name on the cover.
+
+ABSOLUTE RULES:
+- Never invent a number, company, client or outcome. You may only reuse figures already present in the deck. If a slide is weak and you have no real specific to strengthen it with, make it sharper and shorter rather than inventing evidence.
+- Keep the same number of slides and the same slideTemplate on each.
+- Preserve every field: slideNumber, title, body, takeaway, slideTemplate, sectionTag, designDirection.
+- Keep the *asterisk* highlight marker on exactly one phrase per title.
+
+Return ONLY a JSON array of the revised posts, in the same order and the same shape as the input. No commentary.`;
+
+  const res = await genai.models.generateContent({
+    model: "gemini-3.6-flash",
+    config: { systemInstruction: system, temperature: 0.7, responseMimeType: "application/json" },
+    contents: [{
+      role: "user",
+      parts: [{ text: `TOPIC: ${topic}
+
+DECKS TO EDIT:
+${JSON.stringify(posts)}` }],
+    }],
+  });
+
+  const raw = (res.text || "").replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+  const revised = JSON.parse(raw) as LinkedInPost[];
+
+  // A pass that returns the wrong shape is a failed pass, not a new answer.
+  if (!Array.isArray(revised) || revised.length !== posts.length) return posts;
+  return revised.map((r, i) => (r?.carouselSlides?.length ? r : posts[i]));
 }
 
 function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
