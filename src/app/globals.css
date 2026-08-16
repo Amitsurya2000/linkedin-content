@@ -271,6 +271,24 @@ body::after {
 .d3 { transition-delay: 0.24s; }
 .d4 { transition-delay: 0.32s; }
 
+/* Native select popups do NOT inherit the select's colours on Windows — the
+   closed control renders dark while the open list stays system-white, so white
+   option text becomes white-on-white and only the highlighted row is legible.
+   Styling the options globally fixes every dropdown in the app at once, and
+   stops the next one being written with the same fault. */
+select {
+  color-scheme: dark;
+}
+select option,
+select optgroup {
+  background-color: #14141A;
+  color: #FFFFFF;
+}
+select option:checked {
+  background-color: var(--red);
+  color: #FFFFFF;
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--w-10); border-radius: 3px; }

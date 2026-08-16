@@ -1112,7 +1112,7 @@ export default function CreatePage() {
                   <select
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
-                    className="w-full h-10 px-3 rounded-xl bg-white/[.045] border border-white/10 text-white text-sm focus:ring-[#ED383B]/30 focus:border-[#ED383B] outline-none"
+                    className="w-full h-10 px-3 rounded-xl bg-[#14141A] border border-white/10 text-white text-sm focus:ring-[#ED383B]/30 focus:border-[#ED383B] outline-none"
                   >
                     <option value="">Select industry...</option>
                     {INDUSTRIES.map((i) => (
