@@ -53,9 +53,14 @@ export async function POST(
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // Pull the batch topic/industry for richer prompting
+    // Pull the batch topic/industry for richer prompting, and any images the
+    // client uploaded with the brief.
     const [batch] = await db
-      .select({ topic: postBatches.topic, industry: postBatches.industry })
+      .select({
+        topic: postBatches.topic,
+        industry: postBatches.industry,
+        referenceImages: postBatches.referenceImages,
+      })
       .from(postBatches)
       .where(eq(postBatches.id, post.batchId))
       .limit(1);
@@ -87,6 +92,36 @@ export async function POST(
       .from(userApiKeys)
       .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
       .limit(1);
+
+    // An uploaded screenshot beats a generated one outright: it is the real
+    // thing, it is free, and it is instant. Generate only when the client
+    // supplied nothing, or explicitly asked for a fresh visual.
+    const uploads: string[] = batch?.referenceImages ? safeParse(batch.referenceImages, []) : [];
+    if (uploads.length && body.useUpload !== false) {
+      const pick = uploads[Math.abs(Number(body.index) || 0) % uploads.length];
+      try {
+        const raw = await fs.readFile(path.join(process.cwd(), "public", pick.replace(/^\//, "")));
+        let buf: Buffer = raw;
+        if (overlay?.text) {
+          try {
+            buf = await composeCard(raw, { width, height, text: overlay.text, theme: overlay.theme });
+          } catch (e) {
+            console.error("overlay failed on the upload, using it raw:", e);
+          }
+        }
+        const upDir = path.join(process.cwd(), "public", "generated");
+        await fs.mkdir(upDir, { recursive: true });
+        const upName = `${postId}-upload-${Date.now()}.png`;
+        await fs.writeFile(path.join(upDir, upName), buf);
+        const upUrl = `/generated/${upName}`;
+        await db.update(generatedPosts).set({ imageUrl: upUrl }).where(eq(generatedPosts.id, postId));
+        return NextResponse.json({ imageUrl: upUrl, style: styleId, styleName, engine: "upload", elapsedMs: 0 });
+      } catch (e) {
+        // A missing or unreadable upload falls through to generation rather
+        // than failing the request.
+        console.error("Could not use the uploaded image, generating instead:", e);
+      }
+    }
 
     const img = await generateBackground(prompt, {
       width,
@@ -129,3 +164,7 @@ export async function POST(
   }
 }
 
+
+function safeParse<T>(v: string, fb: T): T {
+  try { return JSON.parse(v); } catch { return fb; }
+}

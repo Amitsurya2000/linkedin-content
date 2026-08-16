@@ -87,7 +87,7 @@ function PostMini({
       className="w-full flex items-center gap-1.5 px-1.5 py-1 rounded-lg hover:bg-red-50 transition-colors text-left cursor-grab active:cursor-grabbing group"
     >
       {post.imageUrl ? (
-        <div className="w-6 h-6 rounded shrink-0 relative overflow-hidden bg-[#FCEBEC]">
+        <div className="w-6 h-6 rounded shrink-0 relative overflow-hidden bg-white/[.04]">
           <Image
             src={post.imageUrl}
             alt=""
@@ -97,11 +97,11 @@ function PostMini({
           />
         </div>
       ) : (
-        <div className="w-6 h-6 rounded shrink-0 bg-[#FCEBEC] flex items-center justify-center">
-          <ImageIcon className="w-3 h-3 text-[#6B6B6B]" />
+        <div className="w-6 h-6 rounded shrink-0 bg-white/[.04] flex items-center justify-center">
+          <ImageIcon className="w-3 h-3 text-white/62" />
         </div>
       )}
-      <span className="text-xs text-[#6B6B6B] truncate flex-1 group-hover:text-red-700">
+      <span className="text-xs text-white/62 truncate flex-1 group-hover:text-red-700">
         {post.hook || "Untitled"}
       </span>
       {post.publishedAt && <CheckCircle2 className="w-3 h-3 text-red-500 shrink-0" />}
@@ -270,12 +270,12 @@ function PostDetail({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto"
+        className="bg-white/[.045] rounded-2xl shadow-xl max-w-lg w-full mx-4 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Image */}
         {post.imageUrl && (
-          <div className="aspect-square relative bg-[#FCEBEC] rounded-t-2xl overflow-hidden">
+          <div className="aspect-square relative bg-white/[.04] rounded-t-2xl overflow-hidden">
             <Image src={post.imageUrl} alt="" fill className="object-cover" sizes="512px" />
           </div>
         )}
@@ -304,12 +304,12 @@ function PostDetail({
                   <CheckCircle2 className="w-3 h-3" /> Approved
                 </span>
               ) : (
-                <span className="text-xs font-medium text-[#6B6B6B] bg-[#FCEBEC] px-2 py-0.5 rounded-lg">
+                <span className="text-xs font-medium text-white/62 bg-white/[.04] px-2 py-0.5 rounded-lg">
                   Draft
                 </span>
               )}
             </div>
-            <button onClick={onClose} className="text-[#6B6B6B] hover:text-[#6B6B6B] cursor-pointer">
+            <button onClick={onClose} className="text-white/62 hover:text-white/62 cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -320,7 +320,7 @@ function PostDetail({
               <button
                 onClick={() => patchApprovalStatus("approved")}
                 disabled={statusSaving}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-600 text-[#1A1A1A] hover:bg-red-700 cursor-pointer disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-600 text-white hover:bg-red-700 cursor-pointer disabled:opacity-50 transition-colors"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 {statusSaving ? "Saving..." : "Approve"}
@@ -331,7 +331,7 @@ function PostDetail({
                 <button
                   onClick={() => patchSchedule()}
                   disabled={statusSaving || !scheduleDate || !scheduleTime}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-amber-500 text-[#1A1A1A] hover:bg-amber-600 cursor-pointer disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-amber-500 text-white hover:bg-amber-600 cursor-pointer disabled:opacity-50 transition-colors"
                 >
                   <CalendarIcon className="w-3.5 h-3.5" />
                   {statusSaving ? "Saving..." : "Schedule"}
@@ -339,7 +339,7 @@ function PostDetail({
                 <button
                   onClick={handlePublishNow}
                   disabled={statusSaving}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-600 text-[#1A1A1A] hover:bg-red-700 cursor-pointer disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-600 text-white hover:bg-red-700 cursor-pointer disabled:opacity-50 transition-colors"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {statusSaving ? "Saving..." : "Publish Now"}
@@ -350,7 +350,7 @@ function PostDetail({
               <button
                 onClick={() => patchApprovalStatus("approved", { scheduledAt: null })}
                 disabled={statusSaving}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-500 text-[#1A1A1A] hover:bg-red-600 cursor-pointer disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-500 text-white hover:bg-red-600 cursor-pointer disabled:opacity-50 transition-colors"
               >
                 <Ban className="w-3.5 h-3.5" />
                 {statusSaving ? "Saving..." : "Cancel Schedule"}
@@ -361,31 +361,31 @@ function PostDetail({
           {/* Schedule Date/Time Picker */}
           {(post.approvalStatus === "approved" || post.approvalStatus === "scheduled") && (
             <div className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-[#6B6B6B] shrink-0" />
+              <CalendarIcon className="w-4 h-4 text-white/62 shrink-0" />
               <input
                 type="date"
                 value={scheduleDate}
                 onChange={(e) => setScheduleDate(e.target.value)}
-                className="text-xs px-2.5 py-1.5 rounded-lg border border-[#F5C5C7] bg-white text-[#6B6B6B] focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
+                className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[.045] text-white/62 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
               />
               <input
                 type="time"
                 value={scheduleTime}
                 onChange={(e) => setScheduleTime(e.target.value)}
-                className="text-xs px-2.5 py-1.5 rounded-lg border border-[#F5C5C7] bg-white text-[#6B6B6B] focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
+                className="text-xs px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/[.045] text-white/62 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
               />
             </div>
           )}
 
           {/* Hook Category */}
           <div>
-            <label className="text-xs text-[#6B6B6B] font-medium uppercase tracking-wider">Hook Category</label>
+            <label className="text-xs text-white/62 font-medium uppercase tracking-wider">Hook Category</label>
             {editingField === "hookCategory" ? (
               <div className="flex gap-2 mt-1">
                 <input
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
-                  className="flex-1 text-sm px-3 py-1.5 rounded-lg border border-red-300 bg-white text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  className="flex-1 text-sm px-3 py-1.5 rounded-lg border border-red-300 bg-white/[.045] text-white focus:outline-none focus:ring-2 focus:ring-red-500/20"
                   autoFocus
                 />
                 <button
@@ -397,7 +397,7 @@ function PostDetail({
                 </button>
                 <button
                   onClick={() => setEditingField(null)}
-                  className="text-[#6B6B6B] hover:text-[#6B6B6B] cursor-pointer"
+                  className="text-white/62 hover:text-white/62 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -410,7 +410,7 @@ function PostDetail({
                 </span>
                 <button
                   onClick={() => startEdit("hookCategory")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-red-600 cursor-pointer transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 text-white/62 hover:text-red-600 cursor-pointer transition-opacity"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -420,27 +420,27 @@ function PostDetail({
 
           {/* Hook */}
           <div>
-            <label className="text-xs text-[#6B6B6B] font-medium uppercase tracking-wider">Hook</label>
+            <label className="text-xs text-white/62 font-medium uppercase tracking-wider">Hook</label>
             {editingField === "hook" ? (
               <div className="mt-1 space-y-2">
                 <textarea
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                   rows={3}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-red-300 bg-white text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-red-300 bg-white/[.045] text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none"
                   autoFocus
                 />
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setEditingField(null)}
-                    className="text-xs text-[#6B6B6B] hover:text-[#6B6B6B] cursor-pointer px-2 py-1"
+                    className="text-xs text-white/62 hover:text-white/62 cursor-pointer px-2 py-1"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => saveEdit("hook")}
                     disabled={saving}
-                    className="text-xs text-[#1A1A1A] bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
+                    className="text-xs text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
@@ -448,12 +448,12 @@ function PostDetail({
               </div>
             ) : (
               <div className="flex items-start gap-2 mt-1 group">
-                <p className="text-[#1A1A1A] text-sm font-medium leading-snug flex-1">
+                <p className="text-white text-sm font-medium leading-snug flex-1">
                   {post.hook || "No hook"}
                 </p>
                 <button
                   onClick={() => startEdit("hook")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-white/62 hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -463,27 +463,27 @@ function PostDetail({
 
           {/* Body */}
           <div>
-            <label className="text-xs text-[#6B6B6B] font-medium uppercase tracking-wider">Post Body</label>
+            <label className="text-xs text-white/62 font-medium uppercase tracking-wider">Post Body</label>
             {editingField === "body" ? (
               <div className="mt-1 space-y-2">
                 <textarea
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                   rows={5}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-red-300 bg-white text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-red-300 bg-white/[.045] text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none"
                   autoFocus
                 />
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setEditingField(null)}
-                    className="text-xs text-[#6B6B6B] hover:text-[#6B6B6B] cursor-pointer px-2 py-1"
+                    className="text-xs text-white/62 hover:text-white/62 cursor-pointer px-2 py-1"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => saveEdit("body")}
                     disabled={saving}
-                    className="text-xs text-[#1A1A1A] bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
+                    className="text-xs text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
@@ -491,12 +491,12 @@ function PostDetail({
               </div>
             ) : (
               <div className="flex items-start gap-2 mt-1 group">
-                <p className="text-[#6B6B6B] text-sm leading-relaxed flex-1 whitespace-pre-wrap">
+                <p className="text-white/62 text-sm leading-relaxed flex-1 whitespace-pre-wrap">
                   {post.body || "No body text"}
                 </p>
                 <button
                   onClick={() => startEdit("body")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-white/62 hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -506,7 +506,7 @@ function PostDetail({
 
           {/* Hashtags */}
           <div>
-            <label className="text-xs text-[#6B6B6B] font-medium uppercase tracking-wider">Hashtags</label>
+            <label className="text-xs text-white/62 font-medium uppercase tracking-wider">Hashtags</label>
             {editingField === "hashtags" ? (
               <div className="mt-1 space-y-2">
                 <textarea
@@ -514,21 +514,21 @@ function PostDetail({
                   onChange={(e) => setEditValue(e.target.value)}
                   rows={4}
                   placeholder={"#hashtag1\n#hashtag2\n#hashtag3"}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-red-300 bg-white text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none font-mono"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-red-300 bg-white/[.045] text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none font-mono"
                   autoFocus
                 />
-                <p className="text-[10px] text-[#6B6B6B]">One hashtag per line, or comma-separated. The # prefix is optional.</p>
+                <p className="text-[10px] text-white/62">One hashtag per line, or comma-separated. The # prefix is optional.</p>
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setEditingField(null)}
-                    className="text-xs text-[#6B6B6B] hover:text-[#6B6B6B] cursor-pointer px-2 py-1"
+                    className="text-xs text-white/62 hover:text-white/62 cursor-pointer px-2 py-1"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => saveEdit("hashtags")}
                     disabled={saving}
-                    className="text-xs text-[#1A1A1A] bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
+                    className="text-xs text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
@@ -547,12 +547,12 @@ function PostDetail({
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-[#6B6B6B]">No hashtags</span>
+                    <span className="text-xs text-white/62">No hashtags</span>
                   )}
                 </div>
                 <button
                   onClick={() => startEdit("hashtags")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-white/62 hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -562,27 +562,27 @@ function PostDetail({
 
           {/* Why this works */}
           <div>
-            <label className="text-xs text-[#6B6B6B] font-medium uppercase tracking-wider">Why This Works</label>
+            <label className="text-xs text-white/62 font-medium uppercase tracking-wider">Why This Works</label>
             {editingField === "whyThisWorks" ? (
               <div className="mt-1 space-y-2">
                 <textarea
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                   rows={3}
-                  className="w-full text-sm px-3 py-2 rounded-lg border border-red-300 bg-white text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none"
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-red-300 bg-white/[.045] text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none"
                   autoFocus
                 />
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setEditingField(null)}
-                    className="text-xs text-[#6B6B6B] hover:text-[#6B6B6B] cursor-pointer px-2 py-1"
+                    className="text-xs text-white/62 hover:text-white/62 cursor-pointer px-2 py-1"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => saveEdit("whyThisWorks")}
                     disabled={saving}
-                    className="text-xs text-[#1A1A1A] bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
+                    className="text-xs text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
@@ -590,12 +590,12 @@ function PostDetail({
               </div>
             ) : (
               <div className="flex items-start gap-2 mt-1 group">
-                <p className="text-[#6B6B6B] text-xs leading-relaxed flex-1">
+                <p className="text-white/62 text-xs leading-relaxed flex-1">
                   {post.whyThisWorks || "No description"}
                 </p>
                 <button
                   onClick={() => startEdit("whyThisWorks")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-white/62 hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -604,7 +604,7 @@ function PostDetail({
           </div>
 
           {/* Created date */}
-          <p className="text-xs text-[#6B6B6B]">
+          <p className="text-xs text-white/62">
             Created{" "}
             {new Date(post.createdAt).toLocaleDateString(undefined, {
               month: "long",
@@ -720,8 +720,8 @@ export default function CalendarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[#1A1A1A] tracking-tight">Calendar</h1>
-          <p className="text-[#6B6B6B] text-sm mt-1">
+          <h1 className="text-3xl font-bold text-white tracking-tight">Calendar</h1>
+          <p className="text-white/62 text-sm mt-1">
             View and manage your scheduled, published, and draft posts.
           </p>
         </div>
@@ -730,28 +730,28 @@ export default function CalendarPage() {
             variant="outline"
             size="sm"
             onClick={goToday}
-            className="rounded-xl text-sm border-[#F5C5C7] text-[#6B6B6B] hover:bg-red-50 hover:border-red-300 cursor-pointer"
+            className="rounded-xl text-sm border-white/10 text-white/62 hover:bg-red-50 hover:border-red-300 cursor-pointer"
           >
             Today
           </Button>
-          <div className="flex items-center gap-1 bg-white border border-[#F5C5C7] rounded-xl px-1">
-            <button onClick={prevMonth} className="p-1.5 hover:bg-[#FCEBEC] rounded-lg cursor-pointer">
-              <ChevronLeft className="w-4 h-4 text-[#6B6B6B]" />
+          <div className="flex items-center gap-1 bg-white/[.045] border border-white/10 rounded-xl px-1">
+            <button onClick={prevMonth} className="p-1.5 hover:bg-white/[.04] rounded-lg cursor-pointer">
+              <ChevronLeft className="w-4 h-4 text-white/62" />
             </button>
-            <span className="text-sm font-semibold text-[#1A1A1A] px-3 min-w-[140px] text-center">
+            <span className="text-sm font-semibold text-white px-3 min-w-[140px] text-center">
               {MONTH_NAMES[month]} {year}
             </span>
-            <button onClick={nextMonth} className="p-1.5 hover:bg-[#FCEBEC] rounded-lg cursor-pointer">
-              <ChevronRight className="w-4 h-4 text-[#6B6B6B]" />
+            <button onClick={nextMonth} className="p-1.5 hover:bg-white/[.04] rounded-lg cursor-pointer">
+              <ChevronRight className="w-4 h-4 text-white/62" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-[#6B6B6B]">
+      <div className="flex items-center gap-4 text-xs text-white/62">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#F5C5C7]" /> Draft
+          <span className="w-2 h-2 rounded-full bg-white/[.08]" /> Draft
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-500" /> Scheduled
@@ -762,11 +762,11 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar grid */}
-      <div className="rounded-2xl bg-white border border-[#F5C5C7] shadow-sm overflow-hidden">
+      <div className="rounded-2xl bg-white/[.045] border border-white/10 shadow-sm overflow-hidden">
         {/* Day headers */}
-        <div className="grid grid-cols-7 border-b border-[#F5C5C7] bg-slate-50">
+        <div className="grid grid-cols-7 border-b border-white/10 bg-slate-50">
           {DAY_NAMES.map((day) => (
-            <div key={day} className="py-2.5 text-center text-xs font-medium text-[#6B6B6B] uppercase tracking-wider">
+            <div key={day} className="py-2.5 text-center text-xs font-medium text-white/62 uppercase tracking-wider">
               {day}
             </div>
           ))}
@@ -785,8 +785,8 @@ export default function CalendarPage() {
                 onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOverKey(key); }}
                 onDragLeave={() => setDragOverKey(null)}
                 onDrop={(e) => { e.preventDefault(); setDragOverKey(null); const postId = e.dataTransfer.getData("text/plain"); if (postId) handleDrop(date, postId); }}
-                className={`min-h-[120px] border-b border-r border-[#F5C5C7] p-1.5 transition-colors ${
-                  inMonth ? "bg-white" : "bg-slate-50/50"
+                className={`min-h-[120px] border-b border-r border-white/10 p-1.5 transition-colors ${
+                  inMonth ? "bg-white/[.045]" : "bg-slate-50/50"
                 } ${isToday ? "ring-2 ring-inset ring-red-400/40" : ""} ${dragOverKey === key ? "bg-red-50 ring-2 ring-inset ring-red-300" : ""}`}
               >
                 {/* Day number */}
@@ -794,16 +794,16 @@ export default function CalendarPage() {
                   <span
                     className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${
                       isToday
-                        ? "bg-red-600 text-[#1A1A1A]"
+                        ? "bg-red-600 text-white"
                         : inMonth
-                        ? "text-[#6B6B6B]"
-                        : "text-[#1A1A1A]"
+                        ? "text-white/62"
+                        : "text-white"
                     }`}
                   >
                     {date.getDate()}
                   </span>
                   {dayPosts.length > 0 && (
-                    <span className="text-[10px] text-[#6B6B6B] font-medium">
+                    <span className="text-[10px] text-white/62 font-medium">
                       {dayPosts.length}
                     </span>
                   )}
@@ -819,7 +819,7 @@ export default function CalendarPage() {
                     />
                   ))}
                   {dayPosts.length > 3 && (
-                    <p className="text-[10px] text-[#6B6B6B] pl-1.5">
+                    <p className="text-[10px] text-white/62 pl-1.5">
                       +{dayPosts.length - 3} more
                     </p>
                   )}
@@ -831,9 +831,9 @@ export default function CalendarPage() {
       </div>
 
       {/* Stats bar */}
-      <div className="flex items-center gap-6 text-sm text-[#6B6B6B]">
+      <div className="flex items-center gap-6 text-sm text-white/62">
         <span>
-          <strong className="text-[#1A1A1A]">{posts.length}</strong> posts this month
+          <strong className="text-white">{posts.length}</strong> posts this month
         </span>
         <span>
           <strong className="text-red-600">
@@ -848,7 +848,7 @@ export default function CalendarPage() {
           scheduled
         </span>
         <span>
-          <strong className="text-[#6B6B6B]">
+          <strong className="text-white/62">
             {posts.filter((p) => !p.scheduledAt && !p.publishedAt).length}
           </strong>{" "}
           drafts

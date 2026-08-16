@@ -93,13 +93,15 @@ export interface LabOptions {
   pageNumber?: number;
   pageTotal?: number;
   badgeNumber?: number;
-  /** Public paths of images the client uploaded. Used first, cycled. */
+  /** Public paths of images the client uploaded. Used when art is off, or as
+   *  the fallback when a generation fails. Cycled across slides. */
   referenceImages?: string[];
   /** Per-slide art briefs from the generator, index-aligned with the slides. */
   designDirections?: (string | undefined)[];
   geminiKey?: string;
   topic?: string;
-  /** Generate art for slides with no uploaded image. Off by default. */
+  /** Draw every slide with the image model. Off by default — a 10-slide deck
+   *  is 10 image calls. */
   generateArt?: boolean;
   /** Pre-resolved picture for this slide, supplied by renderLabDeck. */
   art?: Buffer | null;
@@ -155,6 +157,9 @@ export async function renderLabSlide(slide: KoyopoSlide, opts: LabOptions): Prom
   const art = fit_ === "none" ? null : opts.art ?? null;
   const bleed = !!art && fit_ === "bleed";
   const bandH = art && fit_ === "band" ? Math.round(H * 0.42) : 0;
+  // A bottom band takes more of the frame than a top one: a screenshot is
+  // evidence, and evidence cropped to a strip proves nothing.
+  const botH = art && fit_ === "bottom" ? Math.round(H * 0.46) : 0;
 
   // On a bleed the copy sits over the photo, so it takes the cover's palette —
   // body ink chosen for a pale card would vanish against a dark image.
@@ -163,18 +168,26 @@ export async function renderLabSlide(slide: KoyopoSlide, opts: LabOptions): Prom
 
   if (!isHero && !bleed && S.texture && S.texture !== "none") parts.push(texture(S, W, H));
 
-  const footTop = H - 150;
+  const footTop = botH ? H - botH - 40 : H - 150;
   let y = bandH ? bandH + 96 : 200;
+
+  if (S.wordmark && opts.author) {
+    parts.push(T(opts.author.toUpperCase(), pad, 92, 17, S.bodyFace, {
+      fill: isHero ? "rgba(255,255,255,.65)" : S.muted, weight: 700, tracking: 2.4,
+    }));
+  }
 
   // ── Slide marker ──
   const n = String(opts.badgeNumber ?? opts.pageNumber ?? 1);
-  if (!isHero && S.marker !== "none") {
+  if (!isHero && S.marker !== "none" && S.marker !== "inline") {
     if (S.marker === "chip" || S.marker === "square") {
-      const size = 76;
+      const size = 72;
       const mx = centre ? W / 2 - size / 2 : pad;
-      parts.push(rect(mx, y - 62, size, size, S.marker === "chip" ? size / 2 : S.radius, S.accent));
-      parts.push(T(n, mx + size / 2, y - 62 + size * 0.66, 34, S.headFace, { fill: S.bg, weight: 700, anchor: "middle" }));
-      y += 36;
+      // Sits ABOVE the heading and clears its own height. Drawing it on the
+      // heading's own baseline put the number behind the first word.
+      parts.push(rect(mx, y - size, size, size, S.marker === "chip" ? size / 2 : S.radius, S.accent));
+      parts.push(T(n, mx + size / 2, y - size + size * 0.68, 34, S.headFace, { fill: S.bg, weight: 700, anchor: "middle" }));
+      y += 54; // clears the heading's ascender, not just the chip
     } else if (S.marker === "bracket") {
       // Sits ABOVE the heading, so it needs the marker's own height cleared —
       // 22px left it colliding with the first line of the title.
@@ -189,12 +202,13 @@ export async function renderLabSlide(slide: KoyopoSlide, opts: LabOptions): Prom
   }
 
   // ── Heading ──
-  const rawTitle = plain(slide.title ?? "");
+  const numbered = !isHero && S.marker === "inline";
+  const rawTitle = (numbered ? `${n}. ` : "") + plain(slide.title ?? "");
   const title = S.headUpper ? rawTitle.toUpperCase() : rawTitle;
-  const head = fit(title, boxW, isHero ? 92 : 62, 34, isHero ? 5 : 3, S.headFace, "bold");
+  const head = fit(title, boxW, isHero ? 76 : 58, 32, isHero ? 5 : 3, S.headFace, "bold");
   const lh = Math.round(head.px * 1.16);
 
-  if (isHero) y = Math.round(H * 0.42) - Math.round(((head.lines.length - 1) * lh) / 2);
+  if (isHero) y = Math.round(H * 0.46) - Math.round(((head.lines.length - 1) * lh) / 2);
 
   head.lines.forEach((ln) => {
     parts.push(T(ln, tx, y, head.px, S.headFace, {
@@ -224,9 +238,17 @@ export async function renderLabSlide(slide: KoyopoSlide, opts: LabOptions): Prom
     }
   } else {
     // ── Body paragraphs, in a card when the spec has one ──
-    const paras = slide.items?.length
-      ? slide.items.slice(0, 4)
-      : (slide.body ?? "").split("\n").map((l) => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean).slice(0, 4);
+    // bigStat and twoColumn keep their content in dedicated fields. Reading only
+    // items/body rendered those slides as an empty white box — the fault that
+    // made the whole deck look unfinished.
+    const isStat = slide.template === "bigStat" && !!slide.stat;
+    const paras = isStat
+      ? [slide.stat!, slide.statLabel, slide.body].filter(Boolean).map(String)
+      : slide.template === "twoColumn" && slide.columns?.length
+        ? slide.columns.slice(0, 2).flatMap((c) => [`${c.heading}`, ...c.items.slice(0, 4).map((it) => `— ${it}`)])
+        : slide.items?.length
+          ? slide.items.slice(0, 4)
+          : (slide.body ?? "").split("\n").map((l) => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean).slice(0, 4);
 
     const takeaway = slide.subtitle?.trim();
     const tk = takeaway ? fit(takeaway, boxW - 80, 27, 19, 3, S.bodyFace, "bold") : null;
@@ -244,18 +266,35 @@ export async function renderLabSlide(slide: KoyopoSlide, opts: LabOptions): Prom
       px -= 1;
     }
 
-    const bodyH = lines.reduce((a, l, i) => a + l.length * Math.round(px * 1.45) + (i ? 24 : 0), 0) + innerPad * 2;
-    if (S.card && !bleed) parts.push(rect(pad, y, boxW, Math.min(bodyH, limit - y), S.radius, S.card));
+    const rawH = lines.reduce((a, l, i) => a + l.length * Math.round(px * 1.45) + (i ? 24 : 0), 0);
+    const statH = isStat ? Math.round(Math.min(96, px * 3.2) * 1.35) : 0;
+    const bodyH = rawH + statH + innerPad * 2;
 
-    let ty = y + innerPad + Math.round(px * 1.05);
+    // Short copy was pinned under the heading, leaving a dead band above the
+    // takeaway. Centring the block in its available space reads as designed.
+    const slack = Math.max(0, limit - y - bodyH);
+    const top = y + Math.round(slack * 0.38);
+
+    // An empty card is worse than no card — it reads as a rendering fault.
+    if (S.card && !bleed && paras.length) parts.push(rect(pad, top, boxW, Math.min(bodyH, limit - top), S.radius, S.card));
+
+    let ty = top + innerPad + Math.round(px * 1.05);
     for (let i = 0; i < lines.length; i++) {
       const para = lines[i];
       const paraH = para.length * Math.round(px * 1.45) + (i ? 24 : 0);
       if (ty + paraH > limit) break;
       if (i) ty += 24;
+      // The headline figure on a bigStat slide is the whole point of the slide;
+      // rendering it at body size wastes it.
+      const statLine = isStat && i === 0;
+      const size = statLine ? Math.min(96, px * 3.2) : px;
       para.forEach((ln) => {
-        parts.push(T(ln, centre ? W / 2 : pad + innerPad, ty, px, S.bodyFace, { fill: bodyInk, anchor }));
-        ty += Math.round(px * 1.45);
+        parts.push(T(ln, centre ? W / 2 : pad + innerPad, ty + (statLine ? size * 0.5 : 0), size, S.headFace, {
+          fill: statLine ? S.accent : bodyInk,
+          weight: statLine ? S.headWeight : 400,
+          anchor,
+        }));
+        ty += Math.round((statLine ? size * 1.35 : px * 1.45));
       });
     }
 
@@ -278,8 +317,11 @@ export async function renderLabSlide(slide: KoyopoSlide, opts: LabOptions): Prom
   if (opts.pageNumber && opts.pageTotal) {
     parts.push(T(`${opts.pageNumber}/${opts.pageTotal}`, pad, H - 62, 20, "mono", { fill: footInk }));
   }
-  if (opts.author) {
-    parts.push(`<text x="${W - pad}" y="${H - 62}" text-anchor="end" font-family="${FACE[S.bodyFace]}" font-size="20" fill="${footInk}">${esc(opts.author)}</text>`);
+  if (opts.author && !botH) {
+    const sigInk = S.signature ? S.accent : footInk;
+    const style = S.signature ? ' font-style="italic"' : "";
+    const size = S.signature ? 26 : 20;
+    parts.push(`<text x="${W - pad}" y="${H - 62}" text-anchor="end" font-family="${FACE[S.signature ? "serif" : S.bodyFace]}" font-size="${size}"${style} fill="${sigInk}">${esc(opts.author)}</text>`);
   }
 
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
@@ -293,11 +335,12 @@ export async function renderLabSlide(slide: KoyopoSlide, opts: LabOptions): Prom
   // rather than the other way round. A bleed gets a scrim first — copy over an
   // un-dimmed photograph is unreadable at any type size.
   const picture = await sharp(art)
-    .resize(W, bleed ? H : bandH, { fit: "cover", position: "attention" })
+    .resize(W, bleed ? H : bandH || botH, { fit: "cover", position: botH ? "top" : "attention" })
     .png()
     .toBuffer();
 
-  const layers: sharp.OverlayOptions[] = [{ input: picture, left: 0, top: 0 }];
+  // A bottom band is anchored to the foot of the slide, not the head.
+  const layers: sharp.OverlayOptions[] = [{ input: picture, left: 0, top: botH ? H - botH : 0 }];
   if (bleed) {
     layers.push({
       input: Buffer.from(
@@ -325,21 +368,25 @@ export async function renderLabDeck(slides: KoyopoSlide[], opts: LabOptions): Pr
   for (let i = 0; i < slides.length; i++) {
     if (!HERO.has(slides[i].template)) badge++;
 
-    // Uploads first — a real photo of the real thing beats anything generated.
+    // "AI art on" means generate — for EVERY slide, not only the ones with no
+    // upload. Priority used to run the other way, which meant a client with
+    // uploads never saw a generated image at all no matter what they toggled.
+    // Uploads become the fallback when generation fails.
     let art: Buffer | null = null;
-    if (wantsArt && uploads.length) art = await loadUpload(uploads[i % uploads.length]);
-    if (wantsArt && !art && opts.generateArt) {
+    const fit = spec?.imageFit ?? "band";
+    if (wantsArt && opts.generateArt) {
       try {
         const img = await generateBackground(artPrompt(opts.designDirections?.[i], opts.topic ?? ""), {
           width: LAB_CANVAS.width,
-          height: (spec?.imageFit ?? "band") === "bleed" ? LAB_CANVAS.height : Math.round(LAB_CANVAS.height * 0.42),
+          height: fit === "bleed" ? LAB_CANVAS.height : Math.round(LAB_CANVAS.height * (fit === "bottom" ? 0.46 : 0.42)),
           geminiKey: opts.geminiKey,
         });
         art = img.buffer;
       } catch {
-        art = null; // one failed image must not cost the deck
+        art = null; // fall through to the upload rather than losing the slide
       }
     }
+    if (wantsArt && !art && uploads.length) art = await loadUpload(uploads[i % uploads.length]);
 
     out.push(await renderLabSlide(slides[i], {
       ...opts, art, pageNumber: i + 1, pageTotal: slides.length, badgeNumber: badge,

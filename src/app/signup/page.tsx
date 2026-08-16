@@ -54,39 +54,39 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FCEBEC] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white/[.04] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Top-left branding */}
       <div className="absolute top-6 left-6 flex items-center gap-2">
         <div className="w-7 h-7 rounded-lg bg-[#ED383B] flex items-center justify-center">
-          <Linkedin className="w-3.5 h-3.5 text-[#1A1A1A]" />
+          <Linkedin className="w-3.5 h-3.5 text-white" />
         </div>
-        <span className="text-base font-bold text-[#1A1A1A] tracking-tight">LI Post Gen</span>
+        <span className="text-base font-bold text-white tracking-tight">LI Post Gen</span>
       </div>
 
       {/* Background glow */}
-      <div className="absolute -top-48 -right-48 w-96 h-96 bg-[#ED383B]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-[#ED383B]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-48 -right-48 w-96 h-96 bg-[#ED383B]/[.18] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-[#ED383B]/[.10] rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-[420px] relative">
         {/* Logo */}
         <div className="flex flex-col items-center gap-2 mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-[#ED383B]/10 border border-[#ED383B]/20 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
             <Linkedin className="w-6 h-6 text-[#ED383B]" />
           </div>
         </div>
 
         {/* Card */}
-        <div className="bg-[#FFFFFF] border border-[#F5C5C7] rounded-2xl p-8 shadow-xl">
+        <div className="bg-white/[.045] border border-white/10 rounded-2xl p-8 shadow-xl">
           <div className="mb-6 text-center">
-            <h2 className="text-xl font-semibold text-[#1A1A1A]">Create account</h2>
-            <p className="text-[#94a3b8] text-sm mt-1">Start generating viral LinkedIn posts</p>
+            <h2 className="text-xl font-semibold text-white">Create account</h2>
+            <p className="text-white/62 text-sm mt-1">Start generating viral LinkedIn posts</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-sm text-[#94a3b8] font-medium">Full Name</Label>
+              <Label htmlFor="name" className="text-sm text-white/62 font-medium">Full Name</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/52" />
                 <Input
                   id="name"
                   type="text"
@@ -95,15 +95,15 @@ export default function SignupPage() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   autoComplete="name"
-                  className="bg-[#FCEBEC] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#64748b] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
+                  className="bg-white/[.04] border-white/10 text-white placeholder:text-white/52 focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm text-[#94a3b8] font-medium">Email</Label>
+              <Label htmlFor="email" className="text-sm text-white/62 font-medium">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/52" />
                 <Input
                   id="email"
                   type="email"
@@ -112,15 +112,15 @@ export default function SignupPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="bg-[#FCEBEC] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#64748b] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
+                  className="bg-white/[.04] border-white/10 text-white placeholder:text-white/52 focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm text-[#94a3b8] font-medium">Password</Label>
+              <Label htmlFor="password" className="text-sm text-white/62 font-medium">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/52" />
                 <Input
                   id="password"
                   type="password"
@@ -130,10 +130,10 @@ export default function SignupPage() {
                   required
                   minLength={6}
                   autoComplete="new-password"
-                  className="bg-[#FCEBEC] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#64748b] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
+                  className="bg-white/[.04] border-white/10 text-white placeholder:text-white/52 focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
                 />
               </div>
-              <p className="text-xs text-[#64748b]">Must be at least 6 characters</p>
+              <p className="text-xs text-white/52">Must be at least 6 characters</p>
             </div>
 
             <Button
@@ -153,18 +153,18 @@ export default function SignupPage() {
           </form>
         </div>
 
-        <p className="text-center text-[#94a3b8] text-sm mt-6">
+        <p className="text-center text-white/62 text-sm mt-6">
           Already have an account?{" "}
-          <Link href="/login" className="text-[#ED383B] hover:text-[#DB272A] font-medium transition-colors">
+          <Link href="/login" className="text-[#ED383B] hover:text-[#FF6A3D] font-medium transition-colors">
             Sign in
           </Link>
         </p>
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-6 flex items-center gap-6 text-xs text-[#64748b]">
-        <span className="hover:text-[#1A1A1A]/60 cursor-pointer">Privacy Policy</span>
-        <span className="hover:text-[#1A1A1A]/60 cursor-pointer">Terms of Service</span>
+      <div className="absolute bottom-6 flex items-center gap-6 text-xs text-white/52">
+        <span className="hover:text-white/60 cursor-pointer">Privacy Policy</span>
+        <span className="hover:text-white/60 cursor-pointer">Terms of Service</span>
       </div>
     </div>
   );

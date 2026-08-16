@@ -3,80 +3,295 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* KOYOPO / 1Cr+ CAREER OS palette — the same six colours the slide renderer uses
-   (src/lib/koyopo.ts). The app previously ran a dark slate theme that shared
-   nothing with the decks it produced; these tokens make the product and its
-   output one brand. No colours outside this set. */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Koyopo · CX-AI Strategist design system.
+   Implements DESIGN-SYSTEM.md §10.3 — the token file the CSS was already using
+   implicitly — plus the fixes that document flags as priority work: --dim raised
+   from .42 to .52 to clear WCAG AA (§1.4), and a real :focus-visible ring, which
+   the audit calls the highest-priority gap (§9).
+
+   Two principles drive everything below:
+   · Depth reads through alpha and blur, never through a lighter grey fill.
+   · Red is a state, not a decoration — neutral hairline at rest, red on active.
+   ───────────────────────────────────────────────────────────────────────────── */
+
 @theme inline {
-  --color-background: #FFFFFF;
-  --color-foreground: #1A1A1A;
-  --color-card: #FCEBEC;
-  --color-card-foreground: #1A1A1A;
+  /* ---- brand ramp ---- */
+  --color-red-100: #FFB07A;
+  --color-red-200: #FF8A4C;
+  --color-red-300: #FF7A33;
+  --color-red-400: #FF6A3D;
+  --color-red-500: #ED383B;
+
+  /* ---- canvas ---- */
+  --color-background: #08080A;
+  --color-foreground: #FFFFFF;
+  --color-surface-solid: #0E0E11;
+  --color-surface-solid-hi: #14141A;
+
+  /* shadcn primitives, remapped onto the dark system */
+  --color-card: rgba(255, 255, 255, 0.045);
+  --color-card-foreground: #FFFFFF;
   --color-primary: #ED383B;
   --color-primary-foreground: #FFFFFF;
-  --color-secondary: #FCEBEC;
-  --color-secondary-foreground: #1A1A1A;
-  --color-muted: #FCEBEC;
-  --color-muted-foreground: #6B6B6B;
+  --color-secondary: rgba(255, 255, 255, 0.07);
+  --color-secondary-foreground: #FFFFFF;
+  --color-muted: rgba(255, 255, 255, 0.045);
+  --color-muted-foreground: rgba(255, 255, 255, 0.62);
   --color-accent: #ED383B;
   --color-accent-foreground: #FFFFFF;
   --color-destructive: #ED383B;
-  --color-border: #F5C5C7;
-  --color-input: #F5C5C7;
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-input: rgba(255, 255, 255, 0.10);
   --color-ring: #ED383B;
-  --color-popover: #FFFFFF;
-  --color-popover-foreground: #1A1A1A;
-  /* Koyopo brand palette */
+  --color-popover: #0E0E11;
+  --color-popover-foreground: #FFFFFF;
+
   --color-brand: #ED383B;
   --color-brand-deep: #B32A2C;
   --color-brand-red: #ED383B;
-  --color-koyopo-ink: #1A1A1A;
-  --color-koyopo-muted: #6B6B6B;
-  --color-koyopo-card: #FCEBEC;
-  --color-koyopo-border: #F5C5C7;
-  --radius: 0.75rem;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
+
+  /* Legacy aliases. The pages were written against a light palette; these keep
+     the old class names resolving to the new system rather than requiring a
+     rewrite of every utility in the app. */
+  --color-koyopo-ink: #FFFFFF;
+  --color-koyopo-muted: rgba(255, 255, 255, 0.62);
+  --color-koyopo-card: rgba(255, 255, 255, 0.045);
+  --color-koyopo-border: rgba(255, 255, 255, 0.10);
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-2xl: 28px;
+
+  --font-sans: var(--font-body), "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-display), "Archivo", system-ui, sans-serif;
+  --font-serif: var(--font-serif), "Instrument Serif", Georgia, serif;
+}
+
+:root {
+  /* ---- white alpha ladder ---- */
+  --w-02: rgba(255, 255, 255, 0.025);
+  --w-04: rgba(255, 255, 255, 0.04);
+  --w-06: rgba(255, 255, 255, 0.06);
+  --w-08: rgba(255, 255, 255, 0.08);
+  --w-10: rgba(255, 255, 255, 0.10);
+  --w-16: rgba(255, 255, 255, 0.16);
+
+  /* ---- red alpha ladder ---- */
+  --r-06: rgba(237, 56, 59, 0.06);
+  --r-10: rgba(237, 56, 59, 0.10);
+  --r-18: rgba(237, 56, 59, 0.18);
+  --r-22: rgba(237, 56, 59, 0.22);
+  --r-32: rgba(237, 56, 59, 0.32);
+  --r-50: rgba(237, 56, 59, 0.50);
+
+  /* ---- text ramp. --text-4 is .52, not the .42 the original shipped: at the
+     13–16px sizes it is used at, .42 measured 4.02:1 and failed AA. ---- */
+  --ink: #FFFFFF;
+  --text-2: rgba(255, 255, 255, 0.78);
+  --text-3: rgba(255, 255, 255, 0.62);
+  --text-4: rgba(255, 255, 255, 0.52);
+  --text-deco: rgba(255, 255, 255, 0.30);
+
+  --glass: rgba(255, 255, 255, 0.045);
+  --glass-2: rgba(255, 255, 255, 0.07);
+  --line: rgba(255, 255, 255, 0.10);
+  --line-red: rgba(237, 56, 59, 0.22);
+
+  --red: #ED383B;
+  --ember: #FF7A33;
+  --red-grad: linear-gradient(135deg, #ED383B 0%, #FF6A3D 100%);
+  --red-grad-soft: linear-gradient(135deg, rgba(237, 56, 59, 0.16), rgba(255, 106, 61, 0.10));
+
+  /* ---- radius ---- */
+  --r-xs: 8px; --r-sm: 12px; --r-md: 18px; --r-lg: 22px; --r-xl: 28px; --r-pill: 100px;
+
+  /* ---- elevation: depth (black) and heat (red) are orthogonal ---- */
+  --depth-1: 0 24px 60px -28px rgba(0, 0, 0, 0.7);
+  --depth-2: 0 60px 120px -40px rgba(0, 0, 0, 0.78);
+  --glow-sm: 0 8px 24px -8px rgba(237, 56, 59, 0.6);
+  --glow-md: 0 10px 34px -8px rgba(237, 56, 59, 0.6);
+  --glow-lg: 0 40px 90px -34px rgba(237, 56, 59, 0.4);
+  --glow-xl: 0 60px 120px -40px rgba(237, 56, 59, 0.5);
+  /* The signature: a 1px top highlight simulating a light source overhead. */
+  --hi-top: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* ---- motion. One easing curve for everything is what makes the page feel
+     like a single object. ---- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 0.2s; --t-base: 0.3s; --t-card: 0.35s; --t-slow: 0.6s; --t-reveal: 0.8s;
+
+  --lift-1: -2px; --lift-2: -4px; --lift-3: -6px;
+
+  --maxw: 1240px;
+  --section: clamp(56px, 7vh, 92px);
 }
 
 body {
   background: var(--color-background);
-  color: var(--color-foreground);
+  color: var(--ink);
   font-family: var(--font-sans);
+  letter-spacing: -0.005em;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+
+  /* §9 gap 1, the audit's highest-priority fix: focus-visible existed on three
+     elements in the entire system. Everything interactive gets a ring. */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--red);
+    outline-offset: 2px;
+    border-radius: var(--r-xs);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.024em;
+    text-wrap: balance;
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #F5C5C7;
-  border-radius: 3px;
+/* ─── Ambient layers (§5.4) ────────────────────────────────────────────────
+   Three fixed red blooms plus fractal-noise grain. The grain is an inline
+   data-URI feTurbulence — no network cost, and it is what stops the large flat
+   black areas from banding on 8-bit displays. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 78% -8%, rgba(237, 56, 59, 0.22), transparent 70%),
+    radial-gradient(720px 480px at 8% 12%, rgba(255, 106, 61, 0.10), transparent 70%),
+    radial-gradient(1000px 700px at 50% 108%, rgba(237, 56, 59, 0.14), transparent 70%);
 }
 
-/* LinkedIn gradient */
-.linkedin-gradient {
-  background: linear-gradient(135deg, #ED383B 0%, #B32A2C 100%);
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Pulse animation */
+/* ─── Surfaces ─────────────────────────────────────────────────────────────
+   Glass by alpha, never by a lighter grey hex. */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--depth-1), var(--hi-top);
+  backdrop-filter: blur(10px);
+}
+
+/* Red arrives on interaction — that is the whole hover language. */
+.lift {
+  transition: transform var(--t-card) var(--ease),
+              border-color var(--t-base) var(--ease),
+              background var(--t-card) var(--ease),
+              box-shadow var(--t-card) var(--ease);
+}
+.lift:hover {
+  transform: translateY(var(--lift-2));
+  border-color: var(--line-red);
+  background: var(--glass-2);
+}
+
+/* Beveled top edge — a gradient hairline inset from the corners, used on
+   premium tiles where a hard 1px line would read as a seam. */
+.bevel { position: relative; }
+.bevel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 24px; right: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+}
+
+.serif-it {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+
+.grad {
+  background: var(--red-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Eyebrow — consolidated to one ornament and one tracking, per §2.4, rather
+   than the eight near-identical variants the audit found. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.eyebrow::before {
+  content: "";
+  width: 14px;
+  height: 1px;
+  background: var(--red);
+}
+
+/* ─── Scroll reveal (§6.5). The blur is what separates this from a fade-up. ─ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  filter: blur(6px);
+  transition: opacity var(--t-reveal) var(--ease),
+              transform var(--t-reveal) var(--ease),
+              filter var(--t-reveal) var(--ease);
+}
+.reveal.in { opacity: 1; transform: none; filter: blur(0); }
+.d1 { transition-delay: 0.08s; }
+.d2 { transition-delay: 0.16s; }
+.d3 { transition-delay: 0.24s; }
+.d4 { transition-delay: 0.32s; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--w-10); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--r-32); }
+
+.linkedin-gradient { background: var(--red-grad); }
+
 @keyframes gentle-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.35; }
 }
-.animate-gentle-pulse {
-  animation: gentle-pulse 2s ease-in-out infinite;
+.animate-gentle-pulse { animation: gentle-pulse 2.2s var(--ease) infinite; }
+
+/* §6.7 — handled in CSS and JS both, which the audit calls one of the strongest
+   parts of the original system. Kept. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; filter: none; }
 }

@@ -48,18 +48,24 @@ export interface StyleSpec {
   headUpper?: boolean;
   align: "left" | "center";
   /** How the slide number is drawn. */
-  marker: "chip" | "square" | "rule" | "bracket" | "none";
+  marker: "chip" | "square" | "rule" | "bracket" | "inline" | "none";
   /** Corner radius on cards. 0 gives hard corners. */
   radius: number;
   /** Hairline rule under the heading. */
   headRule?: boolean;
   /**
    * How this style carries a picture when one is supplied.
-   *  "band"  — full-width image across the top, copy beneath (light grounds)
-   *  "bleed" — image fills the slide under a scrim, copy on top (dark grounds)
+   *  "band"   — full-width image across the top, copy beneath (light grounds)
+   *  "bottom" — copy on top, image below it. The walkthrough shape: you read the
+   *             instruction, then see the screenshot that proves it.
+   *  "bleed"  — image fills the slide under a scrim, copy on top (dark grounds)
    * Styles whose whole identity is the absence of imagery declare "none".
    */
-  imageFit?: "band" | "bleed" | "none";
+  imageFit?: "band" | "bottom" | "bleed" | "none";
+  /** Small site/handle mark, upper-left. */
+  wordmark?: boolean;
+  /** Sign the deck bottom-right in accent italic — the creator's hand. */
+  signature?: boolean;
 }
 
 export const LAB_STYLES: Record<string, StyleSpec> = {
@@ -121,6 +127,23 @@ export const LAB_STYLES: Record<string, StyleSpec> = {
     card: "#FFFFFF", card2: "#FFE9DE", deep: "#2B1A14", onDeep: "#FFF6F0",
     headFace: "sans", bodyFace: "sans", headWeight: 700,
     align: "center", marker: "chip", radius: 26, imageFit: "band",
+  },
+
+  /**
+   * Walkthrough — the tutorial deck. Deep teal cover, light stone content
+   * slides, serif throughout, numbered steps, and the screenshot sitting UNDER
+   * the instruction it proves. The screenshots are the whole argument of a deck
+   * like this, so it is the one style that is worth far more with uploads than
+   * without.
+   */
+  walkthrough: {
+    label: "Walkthrough", blurb: "Teal and stone, serif, numbered steps with the screenshot under each one",
+    bg: "#E6E6E3", texture: "none",
+    ink: "#0C3B37", body: "#0C3B37", muted: "#6E7F7C", accent: "#C7402F",
+    card: null, card2: "#DCDCD8", deep: "#0C3B37", onDeep: "#FFFFFF",
+    headFace: "serif", bodyFace: "serif", headWeight: 700,
+    align: "left", marker: "inline", radius: 0,
+    imageFit: "bottom", wordmark: true, signature: true,
   },
 
   /** Near-black with a single cold accent — the "quiet authority" look. */

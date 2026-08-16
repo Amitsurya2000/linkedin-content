@@ -51,7 +51,7 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
           toast.success("Copied");
         } catch { toast.error("Could not copy"); }
       }}
-      className="flex items-center gap-1.5 text-xs font-medium text-[#ED383B] px-2.5 py-1.5 rounded-lg border border-[#ED383B]/40 hover:bg-[#ED383B]/10 shrink-0"
+      className="flex items-center gap-1.5 text-xs font-medium text-[#ED383B] px-2.5 py-1.5 rounded-lg border border-[#ED383B]/40 hover:bg-[#ED383B]/[.10] shrink-0"
     >
       {done ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
       {done ? "Copied" : label}
@@ -114,26 +114,26 @@ export default function BrandingPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 text-sm text-[#6B6B6B]">
+      <div className="flex items-center gap-3 text-sm text-white/62">
         <Loader2 className="w-4 h-4 animate-spin text-[#ED383B]" /> Loading your profile kit…
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="w-full space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#1A1A1A] tracking-tight">Profile Kit</h1>
-        <p className="text-[#6B6B6B] text-sm mt-1">
+        <h1 className="text-3xl font-bold text-white tracking-tight">Profile Kit</h1>
+        <p className="text-white/62 text-sm mt-1">
           Banner, headline and About — written as one system, so a recruiter reading all three
           in 30 seconds gets a single clear picture.
         </p>
       </div>
 
       {!hasProfile && (
-        <div className="rounded-xl border border-[#F5C5C7] bg-[#FCEBEC] p-4 flex gap-3">
+        <div className="rounded-xl border border-white/10 bg-white/[.04] p-4 flex gap-3">
           <AlertCircle className="w-4 h-4 text-[#ED383B] shrink-0 mt-0.5" />
-          <p className="text-sm text-[#1A1A1A]">
+          <p className="text-sm text-white">
             Build your profile first — upload your CV or fill in the sections on the Create page.
             Everything here is written from it.
           </p>
@@ -141,16 +141,16 @@ export default function BrandingPage() {
       )}
 
       {/* Generate */}
-      <div className="rounded-2xl bg-[#FFFFFF] border border-[#F5C5C7] p-5 space-y-3">
+      <div className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-3">
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-[#1A1A1A]">Target role &amp; company type</Label>
+          <Label className="text-sm font-medium text-white">Target role &amp; company type</Label>
           <Input
             value={targetRole}
             onChange={(e) => setTargetRole(e.target.value)}
             placeholder="e.g. Senior FP&A / analytics lead at a scaling fintech"
-            className="bg-[#FFFFFF] border-[#F5C5C7] text-[#1A1A1A] placeholder:text-[#6B6B6B] rounded-xl h-10 text-sm"
+            className="bg-white/[.045] border-white/10 text-white placeholder:text-white/62 rounded-xl h-10 text-sm"
           />
-          <p className="text-xs text-[#6B6B6B]">Optional, but all three assets get sharper when they point at one target.</p>
+          <p className="text-xs text-white/62">Optional, but all three assets get sharper when they point at one target.</p>
         </div>
         <Button
           onClick={generate}
@@ -166,13 +166,13 @@ export default function BrandingPage() {
       {kit && (
         <>
           {/* ── Banner ── */}
-          <section className="rounded-2xl bg-[#FFFFFF] border border-[#F5C5C7] overflow-hidden">
+          <section className="rounded-2xl bg-white/[.045] border border-white/10 overflow-hidden">
             <div className="p-5 pb-3 flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-[#1A1A1A] font-semibold flex items-center gap-2">
+                <h2 className="text-white font-semibold flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-[#ED383B]" /> LinkedIn banner
                 </h2>
-                <p className="text-xs text-[#6B6B6B] mt-0.5">1584 × 396 · downloads at 2× for a sharp upload</p>
+                <p className="text-xs text-white/62 mt-0.5">1584 × 396 · downloads at 2× for a sharp upload</p>
               </div>
               <a
                 href={downloadHref}
@@ -184,21 +184,21 @@ export default function BrandingPage() {
 
             <div className="px-5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={bannerSrc} alt="Your LinkedIn banner" className="w-full rounded-xl border border-[#F5C5C7]" />
-              <p className="text-[11px] text-[#6B6B6B] mt-1.5">
+              <img src={bannerSrc} alt="Your LinkedIn banner" className="w-full rounded-xl border border-white/10" />
+              <p className="text-[11px] text-white/62 mt-1.5">
                 The left quarter is intentionally empty — LinkedIn drops your profile photo there.
               </p>
             </div>
 
             <div className="p-5 space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] uppercase tracking-wider text-[#6B6B6B] font-semibold w-14">Colour</span>
+                <span className="text-[11px] uppercase tracking-wider text-white/62 font-semibold w-14">Colour</span>
                 {THEMES.map((t) => (
                   <button
                     key={t.k}
                     onClick={() => setTheme(t.k)}
                     className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border font-medium ${
-                      theme === t.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/10" : "border-[#F5C5C7] text-[#6B6B6B]"
+                      theme === t.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-white/10 text-white/62"
                     }`}
                   >
                     <span className="w-3 h-3 rounded-full border border-black/10" style={{ background: t.dot }} />
@@ -207,14 +207,14 @@ export default function BrandingPage() {
                 ))}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] uppercase tracking-wider text-[#6B6B6B] font-semibold w-14">Diagram</span>
+                <span className="text-[11px] uppercase tracking-wider text-white/62 font-semibold w-14">Diagram</span>
                 {VISUALS.map((v) => (
                   <button
                     key={v.k}
                     onClick={() => setVisual(v.k)}
                     title={v.hint}
                     className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium ${
-                      (visual || kit.banner.visual) === v.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/10" : "border-[#F5C5C7] text-[#6B6B6B]"
+                      (visual || kit.banner.visual) === v.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-white/10 text-white/62"
                     }`}
                   >
                     {v.label}
@@ -222,71 +222,71 @@ export default function BrandingPage() {
                 ))}
               </div>
 
-              <div className="rounded-xl bg-[#FCEBEC] border border-[#F5C5C7] p-4 space-y-1.5 text-xs">
-                <p className="text-[#1A1A1A]"><span className="text-[#6B6B6B]">Tagline:</span> <span className="font-semibold">{kit.banner.tagline}</span></p>
-                <p className="text-[#1A1A1A]"><span className="text-[#6B6B6B]">Pillars:</span> {kit.banner.pillars.join("  |  ")}</p>
+              <div className="rounded-xl bg-white/[.04] border border-white/10 p-4 space-y-1.5 text-xs">
+                <p className="text-white"><span className="text-white/62">Tagline:</span> <span className="font-semibold">{kit.banner.tagline}</span></p>
+                <p className="text-white"><span className="text-white/62">Pillars:</span> {kit.banner.pillars.join("  |  ")}</p>
                 {kit.banner.visualConcept && (
-                  <p className="text-[#1A1A1A]"><span className="text-[#6B6B6B]">Visual concept:</span> {kit.banner.visualConcept}</p>
+                  <p className="text-white"><span className="text-white/62">Visual concept:</span> {kit.banner.visualConcept}</p>
                 )}
-                <p className="text-[#6B6B6B]">Left: {kit.banner.layout.left}</p>
-                <p className="text-[#6B6B6B]">Center: {kit.banner.layout.center}</p>
-                <p className="text-[#6B6B6B]">Right: {kit.banner.layout.right}</p>
+                <p className="text-white/62">Left: {kit.banner.layout.left}</p>
+                <p className="text-white/62">Center: {kit.banner.layout.center}</p>
+                <p className="text-white/62">Right: {kit.banner.layout.right}</p>
               </div>
             </div>
           </section>
 
           {/* ── Headlines ── */}
-          <section className="rounded-2xl bg-[#FFFFFF] border border-[#F5C5C7] p-5 space-y-3">
-            <h2 className="text-[#1A1A1A] font-semibold">Headline options</h2>
+          <section className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-3">
+            <h2 className="text-white font-semibold">Headline options</h2>
             {kit.headlines.map((h, i) => (
-              <div key={i} className={`rounded-xl border p-4 space-y-2 ${h.recommended ? "border-[#ED383B]/40 bg-[#ED383B]/5" : "border-[#F5C5C7]"}`}>
+              <div key={i} className={`rounded-xl border p-4 space-y-2 ${h.recommended ? "border-[#ED383B]/40 bg-[#ED383B]/5" : "border-white/10"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     {h.recommended && (
                       <span className="inline-block text-[10px] uppercase tracking-wider font-bold text-[#ED383B] mb-1">Recommended</span>
                     )}
-                    <p className="text-sm text-[#1A1A1A] font-medium break-words">{h.text}</p>
+                    <p className="text-sm text-white font-medium break-words">{h.text}</p>
                   </div>
                   <CopyButton text={h.text} />
                 </div>
-                <p className="text-xs text-[#6B6B6B]">{h.why}</p>
-                {h.whenToUse && <p className="text-xs text-[#6B6B6B]"><span className="font-medium">Use when:</span> {h.whenToUse}</p>}
-                <p className="text-[10px] text-[#6B6B6B]">{h.text.length} / 220 characters</p>
+                <p className="text-xs text-white/62">{h.why}</p>
+                {h.whenToUse && <p className="text-xs text-white/62"><span className="font-medium">Use when:</span> {h.whenToUse}</p>}
+                <p className="text-[10px] text-white/62">{h.text.length} / 220 characters</p>
               </div>
             ))}
           </section>
 
           {/* ── About ── */}
-          <section className="rounded-2xl bg-[#FFFFFF] border border-[#F5C5C7] p-5 space-y-3">
+          <section className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[#1A1A1A] font-semibold">About section</h2>
+              <h2 className="text-white font-semibold">About section</h2>
               <CopyButton text={kit.about.text} label="Copy About" />
             </div>
-            <p className="text-sm text-[#1A1A1A] whitespace-pre-line leading-relaxed">{kit.about.text}</p>
-            <p className={`text-xs ${kit.about.characterCount > 1600 ? "text-red-500" : "text-[#6B6B6B]"}`}>
+            <p className="text-sm text-white whitespace-pre-line leading-relaxed">{kit.about.text}</p>
+            <p className={`text-xs ${kit.about.characterCount > 1600 ? "text-red-500" : "text-white/62"}`}>
               {kit.about.characterCount} characters {kit.about.characterCount > 1600 ? "— over the 1,600 target" : "· target 1,400–1,600"}
             </p>
           </section>
 
           {/* ── Alignment + refine ── */}
           {(kit.alignment.length > 0 || kit.refine.length > 0) && (
-            <section className="rounded-2xl bg-[#FCEBEC] border border-[#F5C5C7] p-5 space-y-3">
+            <section className="rounded-2xl bg-white/[.04] border border-white/10 p-5 space-y-3">
               {kit.alignment.length > 0 && (
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider font-bold text-[#6B6B6B] mb-1.5">Alignment check</h3>
+                  <h3 className="text-xs uppercase tracking-wider font-bold text-white/62 mb-1.5">Alignment check</h3>
                   <ul className="space-y-1">
                     {kit.alignment.map((a, i) => (
-                      <li key={i} className="text-xs text-[#1A1A1A] flex gap-2"><Check className="w-3.5 h-3.5 text-[#ED383B] shrink-0 mt-0.5" />{a}</li>
+                      <li key={i} className="text-xs text-white flex gap-2"><Check className="w-3.5 h-3.5 text-[#ED383B] shrink-0 mt-0.5" />{a}</li>
                     ))}
                   </ul>
                 </div>
               )}
               {kit.refine.length > 0 && (
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider font-bold text-[#6B6B6B] mb-1.5">What to refine next</h3>
+                  <h3 className="text-xs uppercase tracking-wider font-bold text-white/62 mb-1.5">What to refine next</h3>
                   <ul className="space-y-1">
                     {kit.refine.map((r, i) => (
-                      <li key={i} className="text-xs text-[#6B6B6B]">• {r}</li>
+                      <li key={i} className="text-xs text-white/62">• {r}</li>
                     ))}
                   </ul>
                 </div>

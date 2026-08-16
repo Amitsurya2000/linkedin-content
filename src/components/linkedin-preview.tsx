@@ -36,7 +36,7 @@ export function LinkedInPreview({
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[#1A1A1A] font-semibold text-sm">{name}</p>
+          <p className="text-white font-semibold text-sm">{name}</p>
           <p className="text-[#8b8b8b] text-xs">
             {postType === "carousel" ? "Document" : "Post"} · 1st
           </p>
@@ -48,7 +48,7 @@ export function LinkedInPreview({
       {/* Content */}
       <div className="px-4 pb-3">
         {/* Hook - bold and prominent */}
-        <p className="text-[#1A1A1A] font-semibold text-[15px] leading-relaxed whitespace-pre-line mb-1">
+        <p className="text-white font-semibold text-[15px] leading-relaxed whitespace-pre-line mb-1">
           {hook}
         </p>
 

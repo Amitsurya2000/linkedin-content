@@ -168,11 +168,11 @@ export async function renderVisualDeck(
     if (!isHero) badge++;
 
     // ── Pick this slide's picture ──
+    // With AI art ON the model draws every slide. Uploads used to win outright,
+    // which meant a client who had uploaded anything never saw generated art at
+    // all — the toggle looked broken. Uploads are the fallback now.
     let art: Buffer | null = null;
-    if (uploads.length) {
-      art = await loadUpload(uploads[i % uploads.length]);
-    }
-    if (!art && opts.generateArt) {
+    if (opts.generateArt) {
       try {
         // Generate AT the art band's own ratio. A square image cover-cropped
         // into a wide band loses the top and bottom of its subject — the first
@@ -187,6 +187,7 @@ export async function renderVisualDeck(
         art = null;
       }
     }
+    if (!art && uploads.length) art = await loadUpload(uploads[i % uploads.length]);
 
     const pad = 84;
     const boxW = W - pad * 2;

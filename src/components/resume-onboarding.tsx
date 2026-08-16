@@ -139,18 +139,18 @@ function profileToForm(p: CreatorProfile): ManualForm {
 
 // ── Small form primitives (kept local; they only exist for this form) ────────
 const inputCls =
-  "w-full h-10 rounded-xl bg-[#FCEBEC] border border-[#F5C5C7] px-3 text-sm text-[#1A1A1A] placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#ED383B]/60";
+  "w-full h-10 rounded-xl bg-white/[.04] border border-white/10 px-3 text-sm text-white placeholder:text-white/62 focus:outline-none focus:border-[#ED383B]/60";
 const areaCls =
-  "w-full rounded-xl bg-[#FCEBEC] border border-[#F5C5C7] px-3 py-2 text-sm text-[#1A1A1A] placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#ED383B]/60 resize-y";
+  "w-full rounded-xl bg-white/[.04] border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/62 focus:outline-none focus:border-[#ED383B]/60 resize-y";
 
 function Field({
   label, hint, children,
 }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-semibold text-[#1A1A1A]">
+      <label className="block text-xs font-semibold text-white">
         {label}
-        {hint && <span className="ml-1.5 font-normal text-[11px] text-[#6B6B6B]">{hint}</span>}
+        {hint && <span className="ml-1.5 font-normal text-[11px] text-white/62">{hint}</span>}
       </label>
       {children}
     </div>
@@ -159,10 +159,10 @@ function Field({
 
 function Section({ title, blurb, children }: { title: string; blurb: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-[#F5C5C7] p-4 space-y-3">
+    <div className="rounded-xl border border-white/10 p-4 space-y-3">
       <div>
-        <h4 className="text-sm font-semibold text-[#1A1A1A]">{title}</h4>
-        <p className="text-[11px] text-[#6B6B6B] mt-0.5">{blurb}</p>
+        <h4 className="text-sm font-semibold text-white">{title}</h4>
+        <p className="text-[11px] text-white/62 mt-0.5">{blurb}</p>
       </div>
       {children}
     </div>
@@ -187,7 +187,7 @@ function RemoveRow({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="p-1 rounded-md text-[#6B6B6B] hover:text-[#ED383B] hover:bg-[#ED383B]/10 shrink-0"
+      className="p-1 rounded-md text-white/62 hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] shrink-0"
       title="Remove"
     >
       <X className="w-3.5 h-3.5" />
@@ -333,9 +333,9 @@ export function ResumeOnboarding({
 
   if (loading) {
     return (
-      <div className="rounded-2xl bg-[#FFFFFF] border border-[#F5C5C7] p-5 flex items-center gap-3">
+      <div className="rounded-2xl bg-white/[.045] border border-white/10 p-5 flex items-center gap-3">
         <Loader2 className="w-4 h-4 text-[#ED383B] animate-spin" />
-        <span className="text-sm text-[#6B6B6B]">Checking your profile…</span>
+        <span className="text-sm text-white/62">Checking your profile…</span>
       </div>
     );
   }
@@ -344,8 +344,8 @@ export function ResumeOnboarding({
     return (
       <div className="rounded-2xl bg-gradient-to-r from-[#ED383B]/15 to-[#7F1D1F]/10 border border-[#ED383B]/30 p-6 text-center">
         <Loader2 className="w-8 h-8 text-[#ED383B] animate-spin mx-auto mb-3" />
-        <h3 className="text-[#1A1A1A] font-semibold">Analyzing your resume…</h3>
-        <p className="text-[#6B6B6B] text-sm mt-1">Extracting your experience, achievements, voice, and positioning.</p>
+        <h3 className="text-white font-semibold">Analyzing your resume…</h3>
+        <p className="text-white/62 text-sm mt-1">Extracting your experience, achievements, voice, and positioning.</p>
       </div>
     );
   }
@@ -357,29 +357,29 @@ export function ResumeOnboarding({
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#ED383B]/15 border border-[#ED383B]/30 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[#ED383B]/[.18] border border-[#ED383B]/30 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-5 h-5 text-[#ED383B]" />
               </div>
               <div>
-                <p className="text-[#1A1A1A] font-semibold text-sm">
+                <p className="text-white font-semibold text-sm">
                   Personalizing from {profile.fullName || "your"} resume
                 </p>
                 {profile.headline && (
-                  <p className="text-xs text-[#6B6B6B] mt-0.5 line-clamp-2">{profile.headline}</p>
+                  <p className="text-xs text-white/62 mt-0.5 line-clamp-2">{profile.headline}</p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="p-1.5 rounded-lg text-[#6B6B6B] hover:text-[#1A1A1A] hover:bg-white/5"
+                className="p-1.5 rounded-lg text-white/62 hover:text-white hover:bg-white/5"
                 title={expanded ? "Collapse" : "Expand"}
               >
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               <button
                 onClick={() => { setView("entry"); setTab("upload"); }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#ED383B] border border-[#ED383B]/40 hover:bg-[#ED383B]/10"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#ED383B] border border-[#ED383B]/40 hover:bg-[#ED383B]/[.10]"
               >
                 <Upload className="w-3.5 h-3.5" />
                 Start over
@@ -387,7 +387,7 @@ export function ResumeOnboarding({
               <button
                 onClick={removeProfile}
                 disabled={removing}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#6B6B6B] border border-[#D9D9D9] hover:text-[#ED383B] hover:border-[#ED383B]/40 hover:bg-[#ED383B]/10 disabled:opacity-50 disabled:pointer-events-none"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white/62 border border-white/10 hover:text-[#ED383B] hover:border-[#ED383B]/50/40 hover:bg-[#ED383B]/[.10] disabled:opacity-50 disabled:pointer-events-none"
                 title="Delete your saved resume and start fresh"
               >
                 {removing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -400,10 +400,10 @@ export function ResumeOnboarding({
             <div className="mt-4 space-y-4">
               {profile.expertise && profile.expertise.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-[#6B6B6B] font-medium mb-1.5">Expertise</p>
+                  <p className="text-[10px] uppercase tracking-wider text-white/62 font-medium mb-1.5">Expertise</p>
                   <div className="flex flex-wrap gap-1.5">
                     {profile.expertise.slice(0, 8).map((e, i) => (
-                      <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-[#FCEBEC] border border-[#F5C5C7] text-[#1A1A1A]">
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-white/[.04] border border-white/10 text-white">
                         {e}
                       </span>
                     ))}
@@ -413,7 +413,7 @@ export function ResumeOnboarding({
 
               {profile.postIdeas && profile.postIdeas.length > 0 && (
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-[#6B6B6B] font-medium mb-1.5 flex items-center gap-1">
+                  <p className="text-[10px] uppercase tracking-wider text-white/62 font-medium mb-1.5 flex items-center gap-1">
                     <Lightbulb className="w-3 h-3 text-[#ED383B]" />
                     Post ideas from your experience — click to use
                   </p>
@@ -422,7 +422,7 @@ export function ResumeOnboarding({
                       <button
                         key={i}
                         onClick={() => { onUseIdea?.(idea); toast.success("Idea loaded into the topic field"); }}
-                        className="w-full text-left text-xs text-[#1A1A1A] bg-[#FCEBEC] border border-[#F5C5C7] rounded-lg px-3 py-2 hover:border-[#ED383B]/40 hover:text-[#1A1A1A] transition-colors"
+                        className="w-full text-left text-xs text-white bg-white/[.04] border border-white/10 rounded-lg px-3 py-2 hover:border-[#ED383B]/50/40 hover:text-white transition-colors"
                       >
                         {idea}
                       </button>
@@ -439,15 +439,15 @@ export function ResumeOnboarding({
 
   // ── Entry view — the default on every visit ──
   return (
-    <div className="rounded-2xl bg-[#FFFFFF] border border-[#F5C5C7] overflow-hidden">
+    <div className="rounded-2xl bg-white/[.045] border border-white/10 overflow-hidden">
       <div className="p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-[#ED383B]/15 border border-[#ED383B]/30 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-[#ED383B]/[.18] border border-[#ED383B]/30 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-[#ED383B]" />
           </div>
           <div>
-            <h3 className="text-[#1A1A1A] font-semibold">Create your profile</h3>
-            <p className="text-xs text-[#6B6B6B]">
+            <h3 className="text-white font-semibold">Create your profile</h3>
+            <p className="text-xs text-white/62">
               Upload your CV to have it analyzed, or fill in every section yourself.
             </p>
           </div>
@@ -455,21 +455,21 @@ export function ResumeOnboarding({
 
         {/* An earlier profile is still on file — offered, never assumed. */}
         {profile && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#FCEBEC] border border-[#F5C5C7] px-3 py-2.5 mb-4">
-            <FileText className="w-4 h-4 text-[#6B6B6B] shrink-0" />
-            <p className="text-xs text-[#6B6B6B] flex-1 min-w-[140px]">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white/[.04] border border-white/10 px-3 py-2.5 mb-4">
+            <FileText className="w-4 h-4 text-white/62 shrink-0" />
+            <p className="text-xs text-white/62 flex-1 min-w-[140px]">
               You have a saved profile{profile.fullName ? ` for ${profile.fullName}` : ""}. Uploading again replaces it.
             </p>
             <button
               onClick={() => setView("saved")}
-              className="text-xs font-medium text-[#ED383B] px-2.5 py-1 rounded-lg border border-[#ED383B]/40 hover:bg-[#ED383B]/10"
+              className="text-xs font-medium text-[#ED383B] px-2.5 py-1 rounded-lg border border-[#ED383B]/40 hover:bg-[#ED383B]/[.10]"
             >
               View saved
             </button>
             <button
               onClick={removeProfile}
               disabled={removing}
-              className="text-xs font-medium text-[#6B6B6B] px-2.5 py-1 rounded-lg border border-[#D9D9D9] hover:text-[#ED383B] hover:border-[#ED383B]/40 disabled:opacity-50"
+              className="text-xs font-medium text-white/62 px-2.5 py-1 rounded-lg border border-white/10 hover:text-[#ED383B] hover:border-[#ED383B]/50/40 disabled:opacity-50"
             >
               {removing ? "Removing…" : "Remove"}
             </button>
@@ -477,7 +477,7 @@ export function ResumeOnboarding({
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 rounded-xl bg-[#FCEBEC] border border-[#F5C5C7] mb-4">
+        <div className="flex gap-1 p-1 rounded-xl bg-white/[.04] border border-white/10 mb-4">
           {([
             { k: "upload" as const, label: "Upload resume", icon: Upload },
             { k: "manual" as const, label: "Fill in manually", icon: PencilLine },
@@ -487,7 +487,7 @@ export function ResumeOnboarding({
               type="button"
               onClick={() => setTab(k)}
               className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg text-xs font-semibold transition-colors ${
-                tab === k ? "bg-[#ED383B] text-white" : "text-[#6B6B6B] hover:text-[#1A1A1A]"
+                tab === k ? "bg-[#ED383B] text-white" : "text-white/62 hover:text-white"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -505,13 +505,13 @@ export function ResumeOnboarding({
                 onClick={() => fileRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) setCvFile(f); }}
-                className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors ${cvFile ? "border-[#ED383B]/60 bg-[#ED383B]/5" : "border-[#F5C5C7] hover:border-[#ED383B]/50"}`}
+                className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors ${cvFile ? "border-[#ED383B]/60 bg-[#ED383B]/5" : "border-white/10 hover:border-[#ED383B]/50/50"}`}
               >
                 <input ref={fileRef} type="file" accept=".pdf,.txt,.md,.doc,.docx,.rtf" className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) setCvFile(f); }} />
-                {cvFile ? <CheckCircle2 className="w-6 h-6 text-[#ED383B] mx-auto mb-1.5" /> : <FileText className="w-6 h-6 text-[#6B6B6B] mx-auto mb-1.5" />}
-                <p className="text-xs text-[#1A1A1A] font-semibold">CV / Resume <span className="text-[#ED383B]">*</span></p>
-                <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{cvFile ? cvFile.name : "Any format · click to upload"}</p>
+                {cvFile ? <CheckCircle2 className="w-6 h-6 text-[#ED383B] mx-auto mb-1.5" /> : <FileText className="w-6 h-6 text-white/62 mx-auto mb-1.5" />}
+                <p className="text-xs text-white font-semibold">CV / Resume <span className="text-[#ED383B]">*</span></p>
+                <p className="text-[11px] text-white/62 mt-0.5 truncate">{cvFile ? cvFile.name : "Any format · click to upload"}</p>
               </div>
 
               {/* Experience transcript slot */}
@@ -519,13 +519,13 @@ export function ResumeOnboarding({
                 onClick={() => oneRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) setOnePagerFile(f); }}
-                className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors ${onePagerFile ? "border-[#ED383B]/60 bg-[#ED383B]/5" : "border-[#F5C5C7] hover:border-[#ED383B]/50"}`}
+                className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors ${onePagerFile ? "border-[#ED383B]/60 bg-[#ED383B]/5" : "border-white/10 hover:border-[#ED383B]/50/50"}`}
               >
                 <input ref={oneRef} type="file" accept=".pdf,.txt,.md,.doc,.docx,.rtf" className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) setOnePagerFile(f); }} />
-                {onePagerFile ? <CheckCircle2 className="w-6 h-6 text-[#ED383B] mx-auto mb-1.5" /> : <Upload className="w-6 h-6 text-[#6B6B6B] mx-auto mb-1.5" />}
-                <p className="text-xs text-[#1A1A1A] font-semibold">Experience Transcript <span className="text-[#6B6B6B]">(optional)</span></p>
-                <p className="text-[11px] text-[#6B6B6B] mt-0.5 truncate">{onePagerFile ? onePagerFile.name : "The detail your CV leaves out"}</p>
+                {onePagerFile ? <CheckCircle2 className="w-6 h-6 text-[#ED383B] mx-auto mb-1.5" /> : <Upload className="w-6 h-6 text-white/62 mx-auto mb-1.5" />}
+                <p className="text-xs text-white font-semibold">Experience Transcript <span className="text-white/62">(optional)</span></p>
+                <p className="text-[11px] text-white/62 mt-0.5 truncate">{onePagerFile ? onePagerFile.name : "The detail your CV leaves out"}</p>
               </div>
             </div>
 
@@ -572,7 +572,7 @@ export function ResumeOnboarding({
         {tab === "manual" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] text-[#6B6B6B]">
+              <p className="text-[11px] text-white/62">
                 Only your name, headline, or summary is required — fill in as much as you can, everything here feeds the writer.
               </p>
               {profile && (
@@ -648,7 +648,7 @@ export function ResumeOnboarding({
             <Section title="Career history" blurb="The roles worth writing from.">
               <div className="space-y-3">
                 {form.roles.map((r, i) => (
-                  <div key={i} className="rounded-lg border border-[#F5C5C7] p-3 space-y-2">
+                  <div key={i} className="rounded-lg border border-white/10 p-3 space-y-2">
                     <div className="flex items-start gap-2">
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
                         <input className={inputCls} value={r.title}
@@ -738,7 +738,7 @@ export function ResumeOnboarding({
         {profile && (
           <button
             onClick={() => setView("saved")}
-            className="flex items-center gap-1.5 text-xs text-[#6B6B6B] hover:text-[#1A1A1A] mt-3"
+            className="flex items-center gap-1.5 text-xs text-white/62 hover:text-white mt-3"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Back to saved profile

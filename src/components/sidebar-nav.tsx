@@ -35,11 +35,11 @@ function NavItem({ href, label, icon: Icon }: { href: string; label: string; ico
       className={cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
         isActive
-          ? "bg-[#ED383B]/15 text-[#ED383B]"
-          : "text-[#94a3b8] hover:text-[#1A1A1A] hover:bg-white/5"
+          ? "bg-[#ED383B]/[.18] text-[#ED383B]"
+          : "text-white/62 hover:text-white hover:bg-white/[.07]"
       )}
     >
-      <Icon className={cn("w-4 h-4 shrink-0 transition-colors", isActive ? "text-[#ED383B]" : "group-hover:text-[#1A1A1A]")} />
+      <Icon className={cn("w-4 h-4 shrink-0 transition-colors", isActive ? "text-[#ED383B]" : "group-hover:text-white")} />
       <span className="flex-1">{label}</span>
       {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#ED383B] shrink-0" />}
     </Link>

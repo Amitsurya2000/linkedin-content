@@ -135,7 +135,7 @@ export function SwipeDeck({
   }
 
   const arrowCls =
-    "absolute top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur border border-[#F5C5C7] shadow-sm flex items-center justify-center text-[#1A1A1A] hover:bg-white hover:border-[#ED383B] disabled:opacity-0 disabled:pointer-events-none transition-all";
+    "absolute top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-[#14141A]/85 backdrop-blur border border-white/20 shadow-lg flex items-center justify-center text-white hover:bg-[#14141A] hover:border-[#ED383B] disabled:opacity-0 disabled:pointer-events-none transition-all";
 
   return (
     <div className={`relative ${className}`}>
@@ -202,7 +202,7 @@ export function SwipeDeck({
               aria-label={`Go to slide ${i + 1}`}
               aria-current={i === index}
               className={`h-1.5 rounded-full transition-all ${
-                i === index ? "w-4 bg-[#ED383B]" : "w-1.5 bg-[#F5C5C7] hover:bg-[#ED383B]/50"
+                i === index ? "w-4 bg-[#ED383B]" : "w-1.5 bg-white/[.08] hover:bg-[#ED383B]/50"
               }`}
             />
           ))}

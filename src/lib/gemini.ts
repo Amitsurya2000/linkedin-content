@@ -109,6 +109,71 @@ function pick<T>(list: readonly T[], i: number): T {
   return list[i % list.length];
 }
 
+/**
+ * The hook archetype each tone naturally wants.
+ *
+ * Archetypes are assigned by index, so a Storytelling post could be handed
+ * "bold counterintuitive claim" and open on an assertion rather than a scene —
+ * the tone directive and the archetype pulling against each other. The tone wins
+ * for the FIRST post; the variations still rotate, so a batch keeps its range.
+ */
+const TONE_HOOK: Record<string, number> = {
+  Professional: 2,   // C. News/number peg
+  Conversational: 8, // I. Question hook
+  Inspirational: 4,  // E. Time-anchored story open
+  Educational: 5,    // F. "How to" promise + value drop
+  Provocative: 6,    // G. Contrarian "don't" / negative command
+  Storytelling: 4,   // E. Time-anchored story open
+};
+
+/**
+ * What each tone actually requires, as structural moves.
+ *
+ * The tone dropdown had no measurable effect while it was a bare label: the same
+ * topic under Professional, Provocative and Storytelling produced three posts
+ * differing only in which synonym they chose for "expensive software". A tone
+ * only bites when it dictates how the post OPENS, how it BUILDS, and what it
+ * refuses to do.
+ */
+const TONE_DIRECTIVES: Record<string, string> = {
+  Professional: `- Open on the claim, not on yourself. No warm-up line.
+- Short declarative sentences. One idea per line. No rhetorical questions.
+- Evidence before opinion: state the number, then what it means.
+- No exclamation marks, no emoji, no "I'm excited to share".
+- Close on a judgement, not a feeling: what you would do next and why.`,
+
+  Conversational: `- Write the way you would explain it to a colleague at lunch.
+- Contractions throughout. Fragments are fine. Second person ("you") often.
+- Include one aside or self-interruption — the thing you would actually say out loud.
+- Ask one real question mid-post, not as a rhetorical device.
+- No corporate register anywhere: not "leverage", not "utilise", not "in order to".`,
+
+  Inspirational: `- Open on the moment it could have gone the other way.
+- Earn the lift: the encouraging line only lands AFTER the cost is shown honestly.
+- Name what it actually took — hours, doubt, the thing that nearly stopped you.
+- Never end on a platitude. End on something specific the reader can do this week.
+- Banned: "the sky is the limit", "believe in yourself", "everything happens for a reason".`,
+
+  Educational: `- State what the reader will be able to do by the end, in the first two lines.
+- Teach ONE mechanism, in order. Each step must be executable, not conceptual.
+- Name the tool, the setting, the exact figure. Vagueness is the failure mode here.
+- Include the step where people usually go wrong, and why.
+- Close with the smallest first action, not a summary.`,
+
+  Provocative: `- Open by contradicting something this audience currently believes. Say it flatly.
+- Do not soften it in the second line. Defend it instead.
+- Bring the evidence early — a provocative claim with no proof is just noise.
+- Name who is wrong and why they came to believe it. Be specific, never sneering.
+- Concede the strongest counter-argument honestly before you close.
+- Banned: "unpopular opinion" as an opener. Just state the opinion.`,
+
+  Storytelling: `- Open INSIDE a scene: a specific moment, place or line of dialogue. Not a summary of a scene.
+- Past tense, chronological. One thing happens, then the next.
+- Keep the tension: do not reveal the outcome in the first line.
+- Include the concrete detail that proves you were there — what was on the screen, who said what, what time it was.
+- The lesson comes last, in one line, and is never announced ("here's what I learned").`,
+};
+
 interface GenerateLinkedInPostsParams {
   apiKey: string;
   topic: string;
@@ -184,6 +249,18 @@ export async function generateLinkedInPosts(params: GenerateLinkedInPostsParams)
   // Parse JSON response, handle potential markdown code blocks
   const cleanText = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
   const posts: LinkedInPost[] = JSON.parse(cleanText);
+
+  // Carousels get a second pass against the scorecard. Text posts do not: their
+  // failure modes differ and the hook rules in the playbook are deck-specific.
+  if (params.postType === "carousel" && params.refine !== false) {
+    try {
+      return await refineCarousels(genai, posts, params.topic);
+    } catch (err) {
+      // A refinement that fails must never cost the user the deck they have.
+      console.error("Carousel refinement failed, returning the draft:", err);
+      return posts;
+    }
+  }
 
   return posts;
 }
@@ -271,6 +348,32 @@ function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
   }
   if (params.tonePrefs) {
     prompt += `**Tone & Style:** ${params.tonePrefs}\n`;
+    // A bare tone label changed nothing: the same topic produced the same post
+    // under Professional, Provocative and Storytelling, differing only in which
+    // synonym it picked. A tone has to be described as MOVES — how it opens,
+    // how it builds, what it refuses to do — before it changes anything.
+    const directive = TONE_DIRECTIVES[params.tonePrefs];
+    if (directive) prompt += `\n**What "${params.tonePrefs}" means here — follow it structurally, not just in word choice:**\n${directive}\n`;
+  }
+
+  // Industry and audience used to be bare labels, which the model largely
+  // ignored — the same topic produced near-identical posts whoever it was aimed
+  // at. Naming what each one must CHANGE is what makes them bite, the same way
+  // assigning a hook archetype by name beats asking for "variety".
+  if (params.targetAudience || params.industry) {
+    prompt += `\n**Write for that specific reader.** The audience and industry above are not decoration — they change the post:\n`;
+    if (params.targetAudience) {
+      prompt += `- **Vocabulary:** use the words this reader uses at work. Explain a term only if THIS reader would not already know it; explaining something they use daily reads as condescension.\n`;
+      prompt += `- **Proof:** different readers accept different evidence. Executives want money, risk and time. Practitioners want the mechanism, the tool and the trade-off. Peers want the honest thing nobody says out loud. Pick the proof THIS reader finds convincing.\n`;
+      prompt += `- **Objection:** name the specific push-back this reader would raise, and answer it inside the post. Ignoring the obvious objection reads as naive to the person who holds it.\n`;
+      prompt += `- **Stakes:** frame the cost in terms this reader personally feels — their budget, their weekend, their credibility in a meeting.\n`;
+      prompt += `- **CTA:** ask for something this reader could actually do next.\n`;
+    }
+    if (params.industry) {
+      prompt += `- **Examples:** every analogy, tool and scenario comes from ${params.industry}. A generic SaaS example in a ${params.industry} post tells the reader it was not written for them.\n`;
+      prompt += `- **Constraints:** respect what is true in ${params.industry} — its regulation, cycles, tooling and politics. Advice that ignores the constraints of the field loses a knowledgeable reader immediately.\n`;
+    }
+    prompt += `\nIf the same post could be sent unchanged to a different audience, you have not used this brief.\n`;
   }
 
   prompt += `\n**Post Type:** ${params.postType}\n`;

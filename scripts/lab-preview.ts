@@ -13,7 +13,29 @@ import { decrypt } from "../src/lib/crypto";
 import { toKoyopoSlides, type RawSlide } from "../src/lib/koyopo";
 
 const SAMPLE: RawSlide[] = [
-  { slideTemplate: "title", title: "Automation won't save your month-end close", body: "Why the tooling was never the bottleneck." },
+  { slideTemplate: "title", title: "Cut your month-end close to 36 hours", body: "The exact VBA setup that replaced five days of manual reconciliation." },
+  {
+    slideTemplate: "cardGrid", title: "Open the reconciliation sheet",
+    takeaway: "Start where the hours actually go, not where the noise is.",
+    body: "Open the workbook you rebuild every month.\nFind the tab you copy into by hand.\nThat tab is the whole problem.",
+  },
+  {
+    slideTemplate: "bigStat", title: "The close time reduction",
+    body: "36 hrs\ndown from 120 hours, with 22% better accuracy",
+    takeaway: "Eliminating manual entry improves accuracy, not just speed.",
+  },
+  {
+    slideTemplate: "twoColumn", title: "Manual close vs automated",
+    takeaway: "Automating data movement frees analysts for judgement work.",
+    body: [
+      "Manual",
+      "- 5 full days processing",
+      "- 22% error risk in recs",
+      "Automated",
+      "- 36-hour total cycle",
+      "- Errors caught at source",
+    ].join("\n"),
+  },
   {
     slideTemplate: "cardGrid", title: "The close was never the bottleneck",
     takeaway: "Close time is not a constraint. It is an unexamined habit.",
@@ -42,6 +64,7 @@ async function main() {
   for (const style of styles) {
     const bufs = await renderLabDeck(toKoyopoSlides(SAMPLE), {
       style, author: "Alex Morgan",
+      referenceImages: (process.argv.find((a) => a.startsWith("--shots="))?.split("=")[1] ?? "").split(",").filter(Boolean),
       generateArt: art, geminiKey, topic: "automating the month-end close",
       designDirections: [
         "Cinematic photograph of a finance professional at a desk at dusk",

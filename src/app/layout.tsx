@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Archivo, Hanken_Grotesk, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthSessionProvider } from "@/components/session-provider";
@@ -18,6 +19,15 @@ const font = localFont({
   display: "swap",
 });
 
+// The design system's three roles (DESIGN-SYSTEM.md §2.1): Archivo carries every
+// heading and numeral, Hanken Grotesk carries body and UI, and Instrument Serif
+// italic is reserved for the human register — quotes, asides, numerals. Poppins
+// stays loaded because the slide renderer draws with those exact files, so the
+// decks and the app remain one typeface family where it matters.
+const display = Archivo({ subsets: ["latin"], weight: ["500", "600", "700", "800", "900"], variable: "--font-display", display: "swap" });
+const body = Hanken_Grotesk({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-body", display: "swap" });
+const serif = Instrument_Serif({ subsets: ["latin"], weight: ["400"], style: ["italic"], variable: "--font-serif", display: "swap" });
+
 export const metadata: Metadata = {
   title: "LinkedIn Post Generator",
   description: "AI-powered LinkedIn content that goes viral",
@@ -30,7 +40,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${font.variable} font-[family-name:var(--font-inter)] antialiased`}>
+      <body className={`${font.variable} ${display.variable} ${body.variable} ${serif.variable} antialiased`}>
         <AuthSessionProvider>{children}</AuthSessionProvider>
         <Toaster richColors position="top-right" />
       </body>
