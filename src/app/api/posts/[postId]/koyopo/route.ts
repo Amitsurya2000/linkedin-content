@@ -13,7 +13,8 @@ import { renderAttnDeck } from "@/lib/deck-attention";
 import { renderVisualDeck } from "@/lib/deck-visual";
 import { renderCampaignDeck } from "@/lib/deck-campaign";
 import { renderLabDeck, LAB_STYLES, type LabStyleName } from "@/lib/deck-lab";
-import { buildPptxFromImages } from "@/lib/koyopo-pptx";
+import { buildPptxFromImages, buildPdfFromImages } from "@/lib/koyopo-pptx";
+import { renderPaperDeck } from "@/lib/deck-paper";
 
 export const maxDuration = 300;
 
@@ -83,8 +84,9 @@ async function handle(
   try {
     const { postId } = await params;
     const canvas: CanvasName = input.canvas === "wide" ? "wide" : "tall";
-    const format: "png" | "pptx" = input.format === "pptx" ? "pptx" : "png";
-    const STYLES = ["koyopo", "editorial", "swipe", "attention", "visual", "campaign"] as const;
+    const format: "png" | "pptx" | "pdf" =
+      input.format === "pptx" ? "pptx" : input.format === "pdf" ? "pdf" : "png";
+    const STYLES = ["koyopo", "editorial", "swipe", "attention", "visual", "campaign", "paper"] as const;
     // Spec-driven styles live in their own table; any name in it is valid.
     const labStyle = input.style && input.style in LAB_STYLES ? (input.style as LabStyleName) : null;
     type Style = (typeof STYLES)[number];
@@ -121,11 +123,11 @@ async function handle(
     // Reading back what was rendered avoids all three. The file is exactly the
     // deck the user approved, it costs nothing, and it is correct for all fifteen
     // styles without pptxgenjs needing to know any of them.
-    if (format === "pptx") {
+    if (format === "pptx" || format === "pdf") {
       const stored: string[] = post.carouselImages ? safeParse(post.carouselImages, []) : [];
       if (!stored.length) {
         return NextResponse.json(
-          { error: "Render the deck first — the .pptx is built from the slides on screen." },
+          { error: `Render the deck first — the .${format} is built from the slides on screen.` },
           { status: 400 }
         );
       }
@@ -133,11 +135,14 @@ async function handle(
       for (const url of stored) {
         frames.push(await fs.readFile(path.join(process.cwd(), "public", url.replace(/^\/+/, ""))));
       }
-      const buf = await buildPptxFromImages(frames, { deckTitle });
+      const pdf = format === "pdf";
+      const buf = pdf ? await buildPdfFromImages(frames) : await buildPptxFromImages(frames, { deckTitle });
       return new NextResponse(new Uint8Array(buf), {
         headers: {
-          "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          "Content-Disposition": `attachment; filename="deck-${postId.slice(0, 8)}.pptx"`,
+          "Content-Type": pdf
+            ? "application/pdf"
+            : "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+          "Content-Disposition": `attachment; filename="deck-${postId.slice(0, 8)}.${format}"`,
         },
       });
     }
@@ -189,6 +194,8 @@ async function handle(
           generateArt: input.generateArt === true,
           ...visualExtras,
         })
+      : style === "paper"
+        ? await renderPaperDeck(slides, { seed: postId, author })
       : style === "campaign"
         ? await renderCampaignDeck(slides, { seed: postId, brand: author })
         : style === "visual"

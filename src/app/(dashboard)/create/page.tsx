@@ -138,7 +138,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   const [carError, setCarError] = useState<string | null>(null);
   // Index of the slide open full screen; null when the viewer is closed.
   const [lightbox, setLightbox] = useState<number | null>(null);
-  const [pptxBusy, setPptxBusy] = useState(false);
+  const [dlBusy, setDlBusy] = useState<"pdf" | "pptx" | null>(null);
   const slideTotal = post.carouselSlides?.length ?? 0;
 
   async function generateCarousel() {
@@ -185,14 +185,14 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
     }
   }
 
-  async function downloadPptx() {
-    setPptxBusy(true);
+  async function downloadDeck(format: "pdf" | "pptx") {
+    setDlBusy(format);
     setCarError(null);
     try {
-      const res = await fetch(`/api/posts/${post.id}/koyopo?format=pptx`);
+      const res = await fetch(`/api/posts/${post.id}/koyopo?format=${format}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setCarError(data.error || "Could not build the .pptx");
+        setCarError(data.error || `Could not build the .${format}`);
         return;
       }
       // The blob is handed to a throwaway anchor so the browser saves it instead
@@ -200,16 +200,16 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       const url = URL.createObjectURL(await res.blob());
       const a = document.createElement("a");
       a.href = url;
-      a.download = `deck-${deckStyle}-${deckShape}.pptx`;
+      a.download = `deck-${deckStyle}-${deckShape}.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast.success("PowerPoint downloaded");
+      toast.success(format === "pdf" ? "PDF downloaded — upload it to LinkedIn as a document post" : "PowerPoint downloaded");
     } catch {
       setCarError("Network error — try again");
     } finally {
-      setPptxBusy(false);
+      setDlBusy(null);
     }
   }
 
@@ -496,7 +496,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 </button>
               ))}
               {/* Style switch — same copy, four visual languages. */}
-              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"], ["visual", "Visual"], ["campaign", "Campaign"], ["photo", "Photo"]] as const).map(([v, label]) => (
+              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"], ["visual", "Visual"], ["campaign", "Campaign"], ["paper", "Paper"], ["photo", "Photo"]] as const).map(([v, label]) => (
                 <button
                   key={v}
                   onClick={() => setDeckStyle(v)}
@@ -547,21 +547,32 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               {/* Downloads through fetch rather than a bare <a href>. As a link
                   it had no loading state and no error path: a 400 or a 500 put
                   the route's JSON on screen in place of the app. */}
-              <button
-                onClick={downloadPptx}
-                disabled={pptxBusy || carLoading || carouselImages.length === 0}
-                className="text-[10px] rounded-lg border border-[#F2DAD8] text-[#1A1414] px-2 py-1 font-medium hover:border-[#ED383B]/50 disabled:opacity-50 flex items-center gap-1"
-                title={
-                  carouselImages.length === 0
-                    ? "Render the deck first — the .pptx is built from the slides on screen"
-                    : deckStale
-                      ? "Downloads the deck as currently rendered — apply your changes first to include them"
-                      : "Download these slides as a PowerPoint deck"
-                }
-              >
-                {pptxBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                {pptxBusy ? "Building…" : ".pptx"}
-              </button>
+              {/* PDF first: it is what LinkedIn wants for a document post, and
+                  it uploads without the re-flow a .pptx goes through. */}
+              {(["pdf", "pptx"] as const).map((fmt) => (
+                <button
+                  key={fmt}
+                  onClick={() => downloadDeck(fmt)}
+                  disabled={!!dlBusy || carLoading || carouselImages.length === 0}
+                  className={`text-[10px] rounded-lg border px-2 py-1 font-medium disabled:opacity-50 flex items-center gap-1 ${
+                    fmt === "pdf"
+                      ? "border-[#0A66C2] text-[#0A66C2] hover:bg-[#DCE6F1]"
+                      : "border-[#F2DAD8] text-[#1A1414] hover:border-[#ED383B]/50"
+                  }`}
+                  title={
+                    carouselImages.length === 0
+                      ? `Render the deck first — the .${fmt} is built from the slides on screen`
+                      : deckStale
+                        ? "Downloads the deck as currently rendered — apply your changes first to include them"
+                        : fmt === "pdf"
+                          ? "Download as PDF — the format LinkedIn accepts for a document post"
+                          : "Download these slides as a PowerPoint deck"
+                  }
+                >
+                  {dlBusy === fmt ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                  {dlBusy === fmt ? "Building…" : `.${fmt}`}
+                </button>
+              ))}
               <button
                 onClick={generateCarousel}
                 disabled={carLoading}

@@ -55,6 +55,29 @@ export interface PptxOptions {
  * renderer that emits an unexpected aspect ratio is reproduced exactly instead
  * of being stretched to fit.
  */
+/**
+ * Rendered slides → PDF, one full-bleed page per slide.
+ *
+ * This is the format LinkedIn actually wants. A document post accepts PDF,
+ * PPTX or DOCX, but PDF is the one that uploads without conversion and renders
+ * identically for every viewer — PowerPoint files get re-flowed on the way in,
+ * which is exactly the risk a carefully positioned deck cannot take.
+ *
+ * Page size is the frame's own pixel size mapped 1px → 1pt, so the aspect ratio
+ * is preserved by construction and nothing is scaled or cropped.
+ */
+export async function buildPdfFromImages(frames: Buffer[]): Promise<Buffer> {
+  if (!frames.length) throw new Error("No slides to export.");
+  const { PDFDocument } = await import("pdf-lib");
+  const pdf = await PDFDocument.create();
+  for (const frame of frames) {
+    const img = await pdf.embedPng(frame);
+    const page = pdf.addPage([img.width, img.height]);
+    page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+  }
+  return Buffer.from(await pdf.save());
+}
+
 export async function buildPptxFromImages(
   frames: Buffer[],
   opts: PptxOptions = {}
