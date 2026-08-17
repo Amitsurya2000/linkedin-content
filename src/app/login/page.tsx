@@ -36,13 +36,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white/[.04] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-[#FDF3F2] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Top-left branding */}
       <div className="absolute top-6 left-6 flex items-center gap-2">
         <div className="w-7 h-7 rounded-lg bg-[#ED383B] flex items-center justify-center">
-          <Linkedin className="w-3.5 h-3.5 text-white" />
+          <Linkedin className="w-3.5 h-3.5 text-[#1A1414]" />
         </div>
-        <span className="text-base font-bold text-white tracking-tight">LI Post Gen</span>
+        <span className="text-base font-bold text-[#1A1414] tracking-tight">LI Post Gen</span>
       </div>
 
       {/* Background glow */}
@@ -58,19 +58,19 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="bg-white/[.045] border border-white/10 rounded-2xl p-8 shadow-xl">
+        <div className="bg-white border border-[#F2DAD8] rounded-2xl p-8 shadow-xl">
           <div className="mb-6 text-center">
-            <h2 className="text-xl font-semibold text-white">Sign in</h2>
-            <p className="text-white/62 text-sm mt-1">Enter your credentials to continue</p>
+            <h2 className="text-xl font-semibold text-[#1A1414]">Sign in</h2>
+            <p className="text-[#6B5B5A] text-sm mt-1">Enter your credentials to continue</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm text-white/62 font-medium">
+              <Label htmlFor="email" className="text-sm text-[#6B5B5A] font-medium">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/52" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#776462]" />
                 <Input
                   id="email"
                   type="email"
@@ -79,14 +79,14 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="bg-white/[.04] border-white/10 text-white placeholder:text-white/52 focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
+                  className="bg-[#FDF3F2] border-[#F2DAD8] text-[#1A1414] placeholder:text-[#776462] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm text-white/62 font-medium">
+                <Label htmlFor="password" className="text-sm text-[#6B5B5A] font-medium">
                   Password
                 </Label>
                 <span className="text-xs text-[#ED383B] hover:text-[#FF6A3D] cursor-pointer font-medium">
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 </span>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/52" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#776462]" />
                 <Input
                   id="password"
                   type="password"
@@ -103,7 +103,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="bg-white/[.04] border-white/10 text-white placeholder:text-white/52 focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
+                  className="bg-[#FDF3F2] border-[#F2DAD8] text-[#1A1414] placeholder:text-[#776462] focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B] h-10 rounded-xl pl-10"
                 />
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-white/62 text-sm mt-6">
+        <p className="text-center text-[#6B5B5A] text-sm mt-6">
           Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-[#ED383B] hover:text-[#FF6A3D] font-medium transition-colors">
             Sign up
@@ -134,7 +134,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <p className="absolute bottom-6 text-xs text-white/52">
+      <p className="absolute bottom-6 text-xs text-[#776462]">
         &copy; {new Date().getFullYear()} LI Post Gen. All rights reserved.
       </p>
     </div>

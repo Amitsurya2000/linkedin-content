@@ -46,15 +46,15 @@ export default async function BatchDetailPage({
       <div>
         <Link
           href="/history"
-          className="inline-flex items-center gap-1.5 text-sm text-white/62 hover:text-white/62 transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-sm text-[#6B5B5A] hover:text-[#6B5B5A] transition-colors mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Posts
         </Link>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-[#1A1414] tracking-tight">
           {batch.topic}
         </h1>
-        <div className="flex items-center gap-4 mt-2 text-sm text-white/62">
+        <div className="flex items-center gap-4 mt-2 text-sm text-[#6B5B5A]">
           <span>
             {new Date(batch.createdAt ?? Date.now()).toLocaleDateString("en-US", {
               month: "long",
@@ -62,14 +62,14 @@ export default async function BatchDetailPage({
               year: "numeric",
             })}
           </span>
-          <span className="text-white">|</span>
+          <span className="text-[#1A1414]">|</span>
           <span className="flex items-center gap-1">
             <CheckCircle2 className="w-3.5 h-3.5 text-red-500" />
             {completedCount} completed
           </span>
           {failedCount > 0 && (
             <>
-              <span className="text-white">|</span>
+              <span className="text-[#1A1414]">|</span>
               <span className="flex items-center gap-1 text-red-500">
                 <XCircle className="w-3.5 h-3.5" />
                 {failedCount} failed

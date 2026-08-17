@@ -71,7 +71,7 @@ export function DeckLightbox({
     >
       {/* Bar */}
       <div
-        className="flex items-center justify-between px-4 py-3 text-white/80 shrink-0"
+        className="flex items-center justify-between px-4 py-3 text-white/90 shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
         <span className="text-sm font-medium tabular-nums">
@@ -84,7 +84,7 @@ export function DeckLightbox({
               if (!document.fullscreenElement) el?.requestFullscreen?.();
               else document.exitFullscreen?.();
             }}
-            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-white/20 hover:bg-white/10"
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-white/25 hover:bg-white/15"
             title="Browser full screen (F11-style)"
           >
             <Maximize2 className="w-3.5 h-3.5" /> Full screen
@@ -92,13 +92,13 @@ export function DeckLightbox({
           <a
             href={images[i]}
             download
-            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-white/20 hover:bg-white/10"
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-white/25 hover:bg-white/15"
           >
             <Download className="w-3.5 h-3.5" /> Slide
           </a>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-lg border border-white/20 hover:bg-white/10 flex items-center justify-center"
+            className="w-9 h-9 rounded-lg border border-white/25 hover:bg-white/15 flex items-center justify-center"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -123,7 +123,7 @@ export function DeckLightbox({
           onClick={() => go(-1)}
           disabled={i === 0}
           aria-label="Previous slide"
-          className="absolute left-3 z-10 w-11 h-11 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center hover:bg-white/20 disabled:opacity-0 disabled:pointer-events-none"
+          className="absolute left-3 z-10 w-11 h-11 rounded-full bg-white/15 border border-white/30 text-white flex items-center justify-center hover:bg-white/25 disabled:opacity-0 disabled:pointer-events-none"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -140,7 +140,7 @@ export function DeckLightbox({
           onClick={() => go(1)}
           disabled={i === images.length - 1}
           aria-label="Next slide"
-          className="absolute right-3 z-10 w-11 h-11 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center hover:bg-white/20 disabled:opacity-0 disabled:pointer-events-none"
+          className="absolute right-3 z-10 w-11 h-11 rounded-full bg-white/15 border border-white/30 text-white flex items-center justify-center hover:bg-white/25 disabled:opacity-0 disabled:pointer-events-none"
         >
           <ChevronRight className="w-5 h-5" />
         </button>

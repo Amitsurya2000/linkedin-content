@@ -19,21 +19,21 @@ export default async function LandingPage() {
   const isLoggedIn = !!session;
 
   return (
-    <div className="min-h-screen bg-white/[.04] text-white antialiased">
+    <div className="min-h-screen bg-[#FDF3F2] text-[#1A1414] antialiased">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-white/[.04]/80 backdrop-blur-xl border-b border-white/5">
+      <nav className="sticky top-0 z-50 bg-[#FDF3F2]/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#ED383B] flex items-center justify-center shadow-lg shadow-[#ED383B]/25">
-              <Linkedin className="w-4 h-4 text-white" />
+              <Linkedin className="w-4 h-4 text-[#1A1414]" />
             </div>
             <span className="text-lg font-bold tracking-tight">LI Post Gen</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="#features" className="text-sm text-white/50 hover:text-white transition-colors hidden sm:block">
+            <a href="#features" className="text-sm text-[#1A1414]/50 hover:text-[#1A1414] transition-colors hidden sm:block">
               Features
             </a>
-            <a href="#how-it-works" className="text-sm text-white/50 hover:text-white transition-colors hidden sm:block">
+            <a href="#how-it-works" className="text-sm text-[#1A1414]/50 hover:text-[#1A1414] transition-colors hidden sm:block">
               How it works
             </a>
             {isLoggedIn ? (
@@ -48,7 +48,7 @@ export default async function LandingPage() {
               <div className="flex items-center gap-3">
                 <Link
                   href="/login"
-                  className="text-sm text-white/60 hover:text-white font-medium transition-colors"
+                  className="text-sm text-[#1A1414]/60 hover:text-[#1A1414] font-medium transition-colors"
                 >
                   Log In
                 </Link>
@@ -82,7 +82,7 @@ export default async function LandingPage() {
 
         <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-24 text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[#ED383B] text-xs font-medium mb-8 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FDF3F2] border border-[#F2DAD8] text-[#ED383B] text-xs font-medium mb-8 backdrop-blur-sm">
             <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
             AI-Powered LinkedIn Content
           </div>
@@ -94,7 +94,7 @@ export default async function LandingPage() {
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-white/40 max-w-2xl mx-auto mb-12 leading-relaxed">
+          <p className="text-lg md:text-xl text-[#C9B4B2] max-w-2xl mx-auto mb-12 leading-relaxed">
             AI-powered content engine that crafts scroll-stopping LinkedIn posts,
             carousels, articles, and polls. Write once, get noticed everywhere.
           </p>
@@ -102,7 +102,7 @@ export default async function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link
               href={isLoggedIn ? "/create" : "/signup"}
-              className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] hover:from-[#ED383B]/90 hover:to-[#DB272A]/90 text-white font-semibold transition-all shadow-xl shadow-[#ED383B]/25 hover:shadow-[#ED383B]/40"
+              className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] hover:from-[#ED383B]/90 hover:to-[#DB272A]/90 text-[#1A1414] font-semibold transition-all shadow-xl shadow-[#ED383B]/25 hover:shadow-[#ED383B]/40"
             >
               <Zap className="w-4 h-4" />
               {isLoggedIn ? "Create Posts" : "Start Creating for Free"}
@@ -110,7 +110,7 @@ export default async function LandingPage() {
             </Link>
             <a
               href="#how-it-works"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-white/5 border border-white/10 text-white/70 font-semibold hover:bg-white/10 hover:text-white transition-all backdrop-blur-sm"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-[#FDF3F2] border border-[#F2DAD8] text-[#1A1414]/70 font-semibold hover:bg-white/10 hover:text-[#1A1414] transition-all backdrop-blur-sm"
             >
               See How It Works
             </a>
@@ -122,7 +122,7 @@ export default async function LandingPage() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="w-9 h-9 rounded-full border-2 border-white/10 bg-gradient-to-br from-[#ED383B] to-[#FF6A3D] flex items-center justify-center text-white text-xs font-bold"
+                  className="w-9 h-9 rounded-full border-2 border-[#F2DAD8] bg-gradient-to-br from-[#ED383B] to-[#FF6A3D] flex items-center justify-center text-[#1A1414] text-xs font-bold"
                 >
                   {String.fromCharCode(64 + i)}
                 </div>
@@ -134,7 +134,7 @@ export default async function LandingPage() {
                   <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <span className="text-sm text-white/40">
+              <span className="text-sm text-[#C9B4B2]">
                 Loved by content creators
               </span>
             </div>
@@ -146,7 +146,7 @@ export default async function LandingPage() {
       <section id="how-it-works" className="border-y border-white/5 bg-white/[0.02]">
         <div className="max-w-5xl mx-auto px-6 py-28">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[#ED383B] text-xs font-medium mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FDF3F2] border border-[#F2DAD8] text-[#ED383B] text-xs font-medium mb-6">
               <TrendingUp className="w-3.5 h-3.5" />
               Simple Workflow
             </div>
@@ -156,7 +156,7 @@ export default async function LandingPage() {
                 viral content
               </span>
             </h2>
-            <p className="text-white/40 max-w-xl mx-auto">
+            <p className="text-[#C9B4B2] max-w-xl mx-auto">
               No copywriter needed. Just tell us your topic and let AI do the heavy lifting.
             </p>
           </div>
@@ -187,7 +187,7 @@ export default async function LandingPage() {
       {/* Features Grid */}
       <section id="features" className="max-w-6xl mx-auto px-6 py-28">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[#ED383B] text-xs font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FDF3F2] border border-[#F2DAD8] text-[#ED383B] text-xs font-medium mb-6">
             <Zap className="w-3.5 h-3.5" />
             Content Types
           </div>
@@ -197,7 +197,7 @@ export default async function LandingPage() {
               dominate LinkedIn
             </span>
           </h2>
-          <p className="text-white/40 max-w-xl mx-auto">
+          <p className="text-[#C9B4B2] max-w-xl mx-auto">
             Four content formats, endless possibilities. Generate the right format for your message.
           </p>
         </div>
@@ -239,7 +239,7 @@ export default async function LandingPage() {
               creators
             </span>
           </h2>
-          <p className="text-white/40 max-w-xl mx-auto">
+          <p className="text-[#C9B4B2] max-w-xl mx-auto">
             Every feature is designed to maximize your LinkedIn reach and engagement.
           </p>
         </div>
@@ -255,10 +255,10 @@ export default async function LandingPage() {
           ].map(({ icon: Icon, text }, i) => (
             <div
               key={i}
-              className="flex items-center gap-4 rounded-xl bg-white/[.045]/50 border border-white/10 px-5 py-4 hover:border-[#ED383B]/50/40 transition-all"
+              className="flex items-center gap-4 rounded-xl bg-[#FDF3F2]0 border border-[#F2DAD8] px-5 py-4 hover:border-[#ED383B]/50/40 transition-all"
             >
               <Icon className="w-5 h-5 text-[#ED383B] shrink-0" />
-              <span className="text-sm text-white/60">{text}</span>
+              <span className="text-sm text-[#1A1414]/60">{text}</span>
             </div>
           ))}
         </div>
@@ -276,20 +276,20 @@ export default async function LandingPage() {
               Start posting.
             </span>
           </h2>
-          <p className="text-lg text-white/40 mb-10 max-w-lg mx-auto">
+          <p className="text-lg text-[#C9B4B2] mb-10 max-w-lg mx-auto">
             Join thousands of professionals creating high-impact LinkedIn content with AI.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href={isLoggedIn ? "/dashboard" : "/login"}
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] hover:from-[#ED383B]/90 hover:to-[#DB272A]/90 text-white font-bold text-lg transition-all shadow-xl shadow-[#ED383B]/25 hover:shadow-[#ED383B]/40"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] hover:from-[#ED383B]/90 hover:to-[#DB272A]/90 text-[#1A1414] font-bold text-lg transition-all shadow-xl shadow-[#ED383B]/25 hover:shadow-[#ED383B]/40"
             >
               {isLoggedIn ? "Go to Dashboard" : "Get Started Free"}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-white/5 border border-white/10 text-white/70 font-semibold hover:bg-white/10 hover:text-white transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-[#FDF3F2] border border-[#F2DAD8] text-[#1A1414]/70 font-semibold hover:bg-white/10 hover:text-[#1A1414] transition-all"
             >
               Create Account
             </Link>
@@ -303,16 +303,16 @@ export default async function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-lg bg-[#ED383B] flex items-center justify-center">
-                <Linkedin className="w-3.5 h-3.5 text-white" />
+                <Linkedin className="w-3.5 h-3.5 text-[#1A1414]" />
               </div>
               <span className="text-sm font-bold">LI Post Gen</span>
             </div>
-            <div className="flex items-center gap-6 text-xs text-white/30">
-              <span className="hover:text-white/60 cursor-pointer transition-colors">Privacy</span>
-              <span className="hover:text-white/60 cursor-pointer transition-colors">Terms</span>
-              <span className="hover:text-white/60 cursor-pointer transition-colors">Support</span>
+            <div className="flex items-center gap-6 text-xs text-[#1A1414]/30">
+              <span className="hover:text-[#1A1414]/60 cursor-pointer transition-colors">Privacy</span>
+              <span className="hover:text-[#1A1414]/60 cursor-pointer transition-colors">Terms</span>
+              <span className="hover:text-[#1A1414]/60 cursor-pointer transition-colors">Support</span>
             </div>
-            <p className="text-xs text-white/20">
+            <p className="text-xs text-[#1A1414]/20">
               &copy; {new Date().getFullYear()} LI Post Gen. All rights reserved.
             </p>
           </div>
@@ -334,7 +334,7 @@ function FeatureCard({
   tag: string;
 }) {
   return (
-    <div className="rounded-2xl bg-white/[.045]/60 border border-white/10 p-8 hover:border-[#ED383B]/50/40 transition-all group">
+    <div className="rounded-2xl bg-white/60 border border-[#F2DAD8] p-8 hover:border-[#ED383B]/50/40 transition-all group">
       <div className="flex items-center justify-between mb-5">
         <div className="w-12 h-12 rounded-xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
           {icon}
@@ -344,7 +344,7 @@ function FeatureCard({
         </span>
       </div>
       <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-white/40 leading-relaxed text-sm">{description}</p>
+      <p className="text-[#C9B4B2] leading-relaxed text-sm">{description}</p>
     </div>
   );
 }
@@ -361,12 +361,12 @@ function StepCard({
   gradient: string;
 }) {
   return (
-    <div className="relative rounded-2xl bg-white/[.045]/40 border border-white/10 p-8 hover:border-[#ED383B]/50/30 transition-all group">
+    <div className="relative rounded-2xl bg-white/40 border border-[#F2DAD8] p-8 hover:border-[#ED383B]/50/30 transition-all group">
       <div className={`text-5xl font-extrabold bg-gradient-to-br ${gradient} bg-clip-text text-transparent opacity-30 mb-4`}>
         {number}
       </div>
       <h3 className="text-lg font-bold mb-3">{title}</h3>
-      <p className="text-sm text-white/40 leading-relaxed">{description}</p>
+      <p className="text-sm text-[#C9B4B2] leading-relaxed">{description}</p>
     </div>
   );
 }

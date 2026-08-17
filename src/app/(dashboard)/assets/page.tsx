@@ -53,7 +53,7 @@ function CopyBtn({ text, label = "Copy" }: { text: string; label?: string }) {
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl border border-white/10 p-4 space-y-2">{children}</div>;
+  return <div className="rounded-xl border border-[#F2DAD8] p-4 space-y-2">{children}</div>;
 }
 
 export default function AssetsPage() {
@@ -122,8 +122,8 @@ export default function AssetsPage() {
   return (
     <div className="w-full space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Assets</h1>
-        <p className="text-white/62 text-sm mt-1">
+        <h1 className="text-3xl font-bold text-[#1A1414] tracking-tight">Assets</h1>
+        <p className="text-[#6B5B5A] text-sm mt-1">
           Everything on LinkedIn that is not a post. All of it runs on your Gemini key — no other service.
         </p>
       </div>
@@ -135,7 +135,7 @@ export default function AssetsPage() {
             key={k}
             onClick={() => { setTab(k); setError(null); }}
             className={`flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-semibold border transition-colors ${
-              tab === k ? "bg-[#ED383B] text-white border-[#ED383B]" : "bg-white/[.045] text-white/62 border-white/10 hover:border-[#ED383B]/50"
+              tab === k ? "bg-[#ED383B] text-white border-[#ED383B]" : "bg-white text-[#6B5B5A] border-[#F2DAD8] hover:border-[#ED383B]/50"
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
@@ -144,18 +144,18 @@ export default function AssetsPage() {
         ))}
       </div>
 
-      <p className="text-xs text-white/62 -mt-3">{TABS.find((t) => t.k === tab)?.blurb}</p>
+      <p className="text-xs text-[#6B5B5A] -mt-3">{TABS.find((t) => t.k === tab)?.blurb}</p>
 
       {/* Theme picker — shared by every rendered image on this page. */}
       {(tab === "newsletter" || tab === "featured" || tab === "photo") && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] uppercase tracking-wider text-white/62 font-semibold">Colour</span>
+          <span className="text-[11px] uppercase tracking-wider text-[#6B5B5A] font-semibold">Colour</span>
           {THEMES.map((t) => (
             <button
               key={t.k}
               onClick={() => setTheme(t.k)}
               className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border font-medium ${
-                theme === t.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-white/10 text-white/62"
+                theme === t.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
               }`}
             >
               <span className="w-3 h-3 rounded-full border border-black/10" style={{ background: t.dot }} />
@@ -167,27 +167,27 @@ export default function AssetsPage() {
 
       {/* ── Profile photo ── */}
       {tab === "photo" ? (
-        <div className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-4">
+        <div className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-4">
           <div
             onClick={() => photoRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) setPhotoFile(f); }}
-            className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer ${photoFile ? "border-[#ED383B]/60 bg-[#ED383B]/5" : "border-white/10 hover:border-[#ED383B]/50/50"}`}
+            className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer ${photoFile ? "border-[#ED383B]/60 bg-[#ED383B]/5" : "border-[#F2DAD8] hover:border-[#ED383B]/50/50"}`}
           >
             <input ref={photoRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) setPhotoFile(f); }} />
-            {photoFile ? <Check className="w-6 h-6 text-[#ED383B] mx-auto mb-1.5" /> : <Upload className="w-6 h-6 text-white/62 mx-auto mb-1.5" />}
-            <p className="text-xs text-white font-semibold">{photoFile ? photoFile.name : "Drop a headshot, or click to choose"}</p>
-            <p className="text-[11px] text-white/62 mt-0.5">JPG or PNG. Shoulders-up works best. Your photo is processed and returned — never stored.</p>
+            {photoFile ? <Check className="w-6 h-6 text-[#ED383B] mx-auto mb-1.5" /> : <Upload className="w-6 h-6 text-[#6B5B5A] mx-auto mb-1.5" />}
+            <p className="text-xs text-[#1A1414] font-semibold">{photoFile ? photoFile.name : "Drop a headshot, or click to choose"}</p>
+            <p className="text-[11px] text-[#6B5B5A] mt-0.5">JPG or PNG. Shoulders-up works best. Your photo is processed and returned — never stored.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] uppercase tracking-wider text-white/62 font-semibold">Style</span>
+            <span className="text-[11px] uppercase tracking-wider text-[#6B5B5A] font-semibold">Style</span>
             {[["ring", "Accent ring"], ["halo", "Halo"], ["duotone", "Duotone"], ["plain", "Plain"]].map(([k, l]) => (
               <button
                 key={k}
                 onClick={() => setPhotoStyle(k)}
-                className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium ${photoStyle === k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-white/10 text-white/62"}`}
+                className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium ${photoStyle === k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"}`}
               >{l}</button>
             ))}
           </div>
@@ -200,9 +200,9 @@ export default function AssetsPage() {
           {photoOut && (
             <div className="flex items-center gap-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photoOut} alt="Your profile photo" className="w-40 h-40 rounded-full border border-white/10" />
+              <img src={photoOut} alt="Your profile photo" className="w-40 h-40 rounded-full border border-[#F2DAD8]" />
               <div className="space-y-2">
-                <p className="text-xs text-white/62">800 × 800. LinkedIn crops to a circle — this is composed for it.</p>
+                <p className="text-xs text-[#6B5B5A]">800 × 800. LinkedIn crops to a circle — this is composed for it.</p>
                 <a href={photoOut} download="linkedin-profile-photo.png" className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl bg-[#ED383B] text-white text-xs font-semibold">
                   <Download className="w-3.5 h-3.5" /> Download PNG
                 </a>
@@ -214,14 +214,14 @@ export default function AssetsPage() {
       ) : (
         <>
           {/* ── Generate ── */}
-          <div className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-3">
+          <div className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-3">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-white">Brief (optional)</Label>
+              <Label className="text-sm font-medium text-[#1A1414]">Brief (optional)</Label>
               <Input
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 placeholder="e.g. aimed at FP&A managers at fintechs, about closing the books faster"
-                className="bg-white/[.045] border-white/10 text-white rounded-xl h-10 text-sm"
+                className="bg-white border-[#F2DAD8] text-[#1A1414] rounded-xl h-10 text-sm"
               />
             </div>
             <Button onClick={generate} disabled={busy} className="w-full h-11 bg-[#ED383B] hover:bg-[#ED383B]/90 text-white font-semibold rounded-xl gap-2 disabled:opacity-50">
@@ -234,11 +234,11 @@ export default function AssetsPage() {
           {/* ── Newsletter ── */}
           {tab === "newsletter" && current && (
             <div className="space-y-4">
-              <div className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-3">
+              <div className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h2 className="text-white font-semibold">{current.title}</h2>
-                    <p className="text-xs text-white/62">{current.subtitle}</p>
+                    <h2 className="text-[#1A1414] font-semibold">{current.title}</h2>
+                    <p className="text-xs text-[#6B5B5A]">{current.subtitle}</p>
                   </div>
                   <a href={coverUrl(current.coverHeadline || current.title, "NEWSLETTER", current.subtitle, "newsletter", true)}
                     className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-[#ED383B] text-white text-xs font-semibold shrink-0">
@@ -247,31 +247,31 @@ export default function AssetsPage() {
                 </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={coverUrl(current.coverHeadline || current.title, "NEWSLETTER", current.subtitle, "newsletter")}
-                  alt="Newsletter cover" className="w-full rounded-xl border border-white/10" />
+                  alt="Newsletter cover" className="w-full rounded-xl border border-[#F2DAD8]" />
               </div>
 
-              <div className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-3">
+              <div className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-white">Issue</h3>
+                  <h3 className="text-sm font-semibold text-[#1A1414]">Issue</h3>
                   <CopyBtn
                     label="Copy issue"
                     text={[current.hook, ...(current.sections ?? []).map((s: { heading: string; body: string }) => `${s.heading}\n\n${s.body}`), current.takeaway, current.cta].join("\n\n")}
                   />
                 </div>
-                <p className="text-sm text-white leading-relaxed">{current.hook}</p>
+                <p className="text-sm text-[#1A1414] leading-relaxed">{current.hook}</p>
                 {(current.sections ?? []).map((s: { heading: string; body: string }, i: number) => (
                   <div key={i} className="space-y-1">
-                    <p className="text-sm font-semibold text-white">{s.heading}</p>
-                    <p className="text-sm text-white/62 leading-relaxed">{s.body}</p>
+                    <p className="text-sm font-semibold text-[#1A1414]">{s.heading}</p>
+                    <p className="text-sm text-[#6B5B5A] leading-relaxed">{s.body}</p>
                   </div>
                 ))}
-                <p className="text-sm font-semibold text-white">{current.takeaway}</p>
-                <p className="text-sm text-white/62">{current.cta}</p>
+                <p className="text-sm font-semibold text-[#1A1414]">{current.takeaway}</p>
+                <p className="text-sm text-[#6B5B5A]">{current.cta}</p>
                 {current.subjectLines?.length > 0 && (
-                  <div className="pt-2 border-t border-white/10">
-                    <p className="text-[10px] uppercase tracking-wider text-white/62 font-bold mb-1.5">Subject lines</p>
+                  <div className="pt-2 border-t border-[#F2DAD8]">
+                    <p className="text-[10px] uppercase tracking-wider text-[#6B5B5A] font-bold mb-1.5">Subject lines</p>
                     {current.subjectLines.map((s: string, i: number) => (
-                      <p key={i} className="text-xs text-white">• {s}</p>
+                      <p key={i} className="text-xs text-[#1A1414]">• {s}</p>
                     ))}
                   </div>
                 )}
@@ -287,11 +287,11 @@ export default function AssetsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[10px] uppercase tracking-wider text-[#ED383B] font-bold">{c.scenario}</p>
-                      <p className="text-sm text-white mt-1">{c.text}</p>
+                      <p className="text-sm text-[#1A1414] mt-1">{c.text}</p>
                     </div>
                     <CopyBtn text={c.text} />
                   </div>
-                  <p className="text-xs text-white/62">{c.why}</p>
+                  <p className="text-xs text-[#6B5B5A]">{c.why}</p>
                 </Card>
               ))}
             </div>
@@ -301,23 +301,23 @@ export default function AssetsPage() {
           {tab === "dms" && current?.sequences && (
             <div className="space-y-4">
               {current.sequences.map((s: { name: string; target: string; research: string; steps: { stage: string; timing: string; text: string; charCount?: number }[] }, i: number) => (
-                <div key={i} className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-3">
+                <div key={i} className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-3">
                   <div>
-                    <h3 className="text-sm font-semibold text-white">{s.name}</h3>
-                    <p className="text-xs text-white/62">{s.target}</p>
-                    <p className="text-xs text-white/62 mt-1"><span className="font-medium text-white">Research first:</span> {s.research}</p>
+                    <h3 className="text-sm font-semibold text-[#1A1414]">{s.name}</h3>
+                    <p className="text-xs text-[#6B5B5A]">{s.target}</p>
+                    <p className="text-xs text-[#6B5B5A] mt-1"><span className="font-medium text-[#1A1414]">Research first:</span> {s.research}</p>
                   </div>
                   {(s.steps ?? []).map((st, j) => {
                     const over = st.stage?.toLowerCase().includes("connect") && (st.charCount ?? 0) > 300;
                     return (
-                      <div key={j} className="rounded-xl bg-white/[.04] border border-white/10 p-3 space-y-1.5">
+                      <div key={j} className="rounded-xl bg-[#FDF3F2] border border-[#F2DAD8] p-3 space-y-1.5">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-[10px] uppercase tracking-wider text-white/62 font-bold">{st.stage} · {st.timing}</p>
+                          <p className="text-[10px] uppercase tracking-wider text-[#6B5B5A] font-bold">{st.stage} · {st.timing}</p>
                           <CopyBtn text={st.text} />
                         </div>
-                        <p className="text-sm text-white">{st.text}</p>
+                        <p className="text-sm text-[#1A1414]">{st.text}</p>
                         {st.charCount !== undefined && (
-                          <p className={`text-[10px] ${over ? "text-red-500 font-semibold" : "text-white/62"}`}>
+                          <p className={`text-[10px] ${over ? "text-red-500 font-semibold" : "text-[#6B5B5A]"}`}>
                             {st.charCount} characters{over ? " — over LinkedIn's 300 limit for connection notes" : ""}
                           </p>
                         )}
@@ -333,12 +333,12 @@ export default function AssetsPage() {
           {tab === "featured" && current?.items && (
             <div className="space-y-4">
               {current.items.map((it: { title: string; subtitle: string; kind: string; why: string; coverHeadline: string; coverKicker: string }, i: number) => (
-                <div key={i} className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-3">
+                <div key={i} className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[10px] uppercase tracking-wider text-[#ED383B] font-bold">{it.kind}</p>
-                      <h3 className="text-sm font-semibold text-white">{it.title}</h3>
-                      <p className="text-xs text-white/62">{it.subtitle}</p>
+                      <h3 className="text-sm font-semibold text-[#1A1414]">{it.title}</h3>
+                      <p className="text-xs text-[#6B5B5A]">{it.subtitle}</p>
                     </div>
                     <a href={coverUrl(it.coverHeadline, it.coverKicker, it.subtitle, "featured", true)}
                       className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-[#ED383B] text-white text-xs font-semibold shrink-0">
@@ -346,8 +346,8 @@ export default function AssetsPage() {
                     </a>
                   </div>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={coverUrl(it.coverHeadline, it.coverKicker, it.subtitle)} alt={it.title} className="w-full rounded-xl border border-white/10" />
-                  <p className="text-xs text-white/62"><span className="font-medium text-white">Proves:</span> {it.why}</p>
+                  <img src={coverUrl(it.coverHeadline, it.coverKicker, it.subtitle)} alt={it.title} className="w-full rounded-xl border border-[#F2DAD8]" />
+                  <p className="text-xs text-[#6B5B5A]"><span className="font-medium text-[#1A1414]">Proves:</span> {it.why}</p>
                 </div>
               ))}
             </div>
@@ -359,26 +359,26 @@ export default function AssetsPage() {
               <Card>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-white/62 font-bold">Tagline</p>
-                    <p className="text-sm text-white font-medium">{current.tagline}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-[#6B5B5A] font-bold">Tagline</p>
+                    <p className="text-sm text-[#1A1414] font-medium">{current.tagline}</p>
                   </div>
                   <CopyBtn text={current.tagline} />
                 </div>
               </Card>
               <Card>
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-[10px] uppercase tracking-wider text-white/62 font-bold">About</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#6B5B5A] font-bold">About</p>
                   <CopyBtn text={current.about} />
                 </div>
-                <p className="text-sm text-white whitespace-pre-line leading-relaxed">{current.about}</p>
-                <p className="text-xs text-white/62">{String(current.about ?? "").length} characters</p>
+                <p className="text-sm text-[#1A1414] whitespace-pre-line leading-relaxed">{current.about}</p>
+                <p className="text-xs text-[#6B5B5A]">{String(current.about ?? "").length} characters</p>
               </Card>
               {current.specialties?.length > 0 && (
                 <Card>
-                  <p className="text-[10px] uppercase tracking-wider text-white/62 font-bold">Specialties</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#6B5B5A] font-bold">Specialties</p>
                   <div className="flex flex-wrap gap-1.5">
                     {current.specialties.map((s: string, i: number) => (
-                      <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-white/[.04] border border-white/10 text-white">{s}</span>
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-md bg-[#FDF3F2] border border-[#F2DAD8] text-[#1A1414]">{s}</span>
                     ))}
                   </div>
                 </Card>
@@ -388,11 +388,11 @@ export default function AssetsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[10px] uppercase tracking-wider text-[#ED383B] font-bold">{p.day}</p>
-                      <p className="text-xs text-white/62">{p.angle}</p>
+                      <p className="text-xs text-[#6B5B5A]">{p.angle}</p>
                     </div>
                     <CopyBtn text={p.text} />
                   </div>
-                  <p className="text-sm text-white whitespace-pre-line">{p.text}</p>
+                  <p className="text-sm text-[#1A1414] whitespace-pre-line">{p.text}</p>
                 </Card>
               ))}
             </div>
@@ -401,33 +401,33 @@ export default function AssetsPage() {
           {/* ── Video script ── */}
           {tab === "videoScript" && current && (
             <div className="space-y-4">
-              <div className="rounded-2xl bg-white/[.045] border border-white/10 p-5 space-y-2">
-                <h3 className="text-sm font-semibold text-white">{current.title}</h3>
+              <div className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-2">
+                <h3 className="text-sm font-semibold text-[#1A1414]">{current.title}</h3>
                 <p className="text-sm text-[#ED383B] font-semibold">{current.hookLine}</p>
-                <p className="text-xs text-white/62">First 3 seconds. Spoken and on screen — LinkedIn video plays muted.</p>
+                <p className="text-xs text-[#6B5B5A]">First 3 seconds. Spoken and on screen — LinkedIn video plays muted.</p>
               </div>
-              <div className="rounded-2xl bg-white/[.045] border border-white/10 overflow-hidden">
+              <div className="rounded-2xl bg-white border border-[#F2DAD8] overflow-hidden">
                 <div className="flex items-center justify-between p-4 pb-2">
-                  <h3 className="text-sm font-semibold text-white">Script</h3>
+                  <h3 className="text-sm font-semibold text-[#1A1414]">Script</h3>
                   <CopyBtn label="Copy script" text={(current.script ?? []).map((b: { t: string; spoken: string }) => `[${b.t}] ${b.spoken}`).join("\n")} />
                 </div>
-                <div className="divide-y divide-white/10">
+                <div className="divide-y divide-[#F2DAD8]">
                   {(current.script ?? []).map((b: { t: string; spoken: string; onScreen: string; shot: string }, i: number) => (
                     <div key={i} className="p-4 space-y-1">
                       <p className="text-[10px] uppercase tracking-wider text-[#ED383B] font-bold">{b.t}</p>
-                      <p className="text-sm text-white">{b.spoken}</p>
-                      <p className="text-xs text-white/62"><span className="font-medium">On screen:</span> {b.onScreen}</p>
-                      <p className="text-xs text-white/62"><span className="font-medium">Shot:</span> {b.shot}</p>
+                      <p className="text-sm text-[#1A1414]">{b.spoken}</p>
+                      <p className="text-xs text-[#6B5B5A]"><span className="font-medium">On screen:</span> {b.onScreen}</p>
+                      <p className="text-xs text-[#6B5B5A]"><span className="font-medium">Shot:</span> {b.shot}</p>
                     </div>
                   ))}
                 </div>
               </div>
               <Card>
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-[10px] uppercase tracking-wider text-white/62 font-bold">Caption</p>
+                  <p className="text-[10px] uppercase tracking-wider text-[#6B5B5A] font-bold">Caption</p>
                   <CopyBtn text={`${current.caption}\n\n${(current.hashtags ?? []).map((h: string) => `#${h.replace(/^#/, "")}`).join(" ")}`} />
                 </div>
-                <p className="text-sm text-white whitespace-pre-line">{current.caption}</p>
+                <p className="text-sm text-[#1A1414] whitespace-pre-line">{current.caption}</p>
                 <p className="text-xs text-[#ED383B]">{(current.hashtags ?? []).map((h: string) => `#${h.replace(/^#/, "")}`).join("  ")}</p>
               </Card>
             </div>

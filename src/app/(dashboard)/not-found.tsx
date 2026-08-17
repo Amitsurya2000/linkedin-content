@@ -8,7 +8,7 @@ export default function DashboardNotFound() {
         <p className="mt-4 text-lg text-gray-600">This page doesn&apos;t exist</p>
         <Link
           href="/dashboard"
-          className="mt-6 inline-block rounded-lg bg-red-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-red-700"
+          className="mt-6 inline-block rounded-lg bg-red-600 px-6 py-2.5 text-sm font-medium text-[#1A1414] hover:bg-red-700"
         >
           Back to Dashboard
         </Link>

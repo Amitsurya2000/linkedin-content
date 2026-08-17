@@ -177,9 +177,8 @@ const TONE_DIRECTIVES: Record<string, string> = {
 interface GenerateLinkedInPostsParams {
   apiKey: string;
   topic: string;
-  postType: "text" | "carousel" | "article" | "poll";
+  postType: "text" | "carousel" | "article";
   postsCount: number;
-  industry?: string;
   targetAudience?: string;
   tonePrefs?: string;
   profileContext?: string; // client's resume-derived Creator Profile (base context)
@@ -340,9 +339,9 @@ function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
   prompt += `Generate ${params.postsCount} LinkedIn ${params.postType} post(s) about:\n\n`;
   prompt += `**Topic/Idea:** ${params.topic}\n\n`;
 
-  if (params.industry) {
-    prompt += `**Industry:** ${params.industry}\n`;
-  }
+  // Industry is no longer a field the user fills. An ablation showed it swapped
+  // nouns without changing the argument, and the creator profile — injected
+  // above as profileContext — already states the field they work in.
   if (params.targetAudience) {
     prompt += `**Target Audience:** ${params.targetAudience}\n`;
   }
@@ -360,7 +359,7 @@ function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
   // ignored — the same topic produced near-identical posts whoever it was aimed
   // at. Naming what each one must CHANGE is what makes them bite, the same way
   // assigning a hook archetype by name beats asking for "variety".
-  if (params.targetAudience || params.industry) {
+  if (params.targetAudience) {
     prompt += `\n**Write for that specific reader.** The audience and industry above are not decoration — they change the post:\n`;
     if (params.targetAudience) {
       prompt += `- **Vocabulary:** use the words this reader uses at work. Explain a term only if THIS reader would not already know it; explaining something they use daily reads as condescension.\n`;
@@ -368,10 +367,6 @@ function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
       prompt += `- **Objection:** name the specific push-back this reader would raise, and answer it inside the post. Ignoring the obvious objection reads as naive to the person who holds it.\n`;
       prompt += `- **Stakes:** frame the cost in terms this reader personally feels — their budget, their weekend, their credibility in a meeting.\n`;
       prompt += `- **CTA:** ask for something this reader could actually do next.\n`;
-    }
-    if (params.industry) {
-      prompt += `- **Examples:** every analogy, tool and scenario comes from ${params.industry}. A generic SaaS example in a ${params.industry} post tells the reader it was not written for them.\n`;
-      prompt += `- **Constraints:** respect what is true in ${params.industry} — its regulation, cycles, tooling and politics. Advice that ignores the constraints of the field loses a knowledgeable reader immediately.\n`;
     }
     prompt += `\nIf the same post could be sent unchanged to a different audience, you have not used this brief.\n`;
   }
@@ -453,9 +448,6 @@ ${params.customInstructions.trim()}
     }
   }
 
-  if (params.postType === "poll") {
-    prompt += `\n\nFor each poll post, include the poll question in the hook, poll options in the body (formatted as numbered list), and context/follow-up in the cta field.`;
-  }
 
   if (params.postType === "article") {
     prompt += `\n\nFor each article, the body should contain the full article outline with section headers (use ## for headers) and key bullet points for each section.`;

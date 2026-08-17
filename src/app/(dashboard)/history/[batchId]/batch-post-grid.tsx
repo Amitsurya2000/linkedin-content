@@ -47,31 +47,31 @@ function PostItem({ post }: { post: Post }) {
   }
 
   return (
-    <div className="bg-white/[.045] border border-white/10 rounded-2xl overflow-hidden">
+    <div className="bg-white border border-[#F2DAD8] rounded-2xl overflow-hidden">
       <div className="p-5 space-y-3">
         <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-[#ED383B]/[.10] text-[#ED383B] border border-[#ED383B]/20">
           {post.hookCategory}
         </span>
-        <p className="text-white font-semibold leading-snug">{post.hook}</p>
-        <p className="text-sm text-white/62 whitespace-pre-line line-clamp-6">{post.body}</p>
+        <p className="text-[#1A1414] font-semibold leading-snug">{post.hook}</p>
+        <p className="text-sm text-[#6B5B5A] whitespace-pre-line line-clamp-6">{post.body}</p>
       </div>
 
       {carousel.length > 0 ? (
         <div className="px-5 pb-3">
-          <p className="text-xs text-white/62 mb-2 flex items-center gap-1.5">
+          <p className="text-xs text-[#6B5B5A] mb-2 flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-[#ED383B]" /> {carousel.length} slides
           </p>
           <SwipeDeck slideClassName="w-[45%]" label="Carousel slides">
             {carousel.map((url, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} src={url} alt={`Slide ${i + 1}`} className="w-full rounded-lg border border-white/10 select-none pointer-events-none" draggable={false} />
+              <img key={i} src={url} alt={`Slide ${i + 1}`} className="w-full rounded-lg border border-[#F2DAD8] select-none pointer-events-none" draggable={false} />
             ))}
           </SwipeDeck>
         </div>
       ) : post.imageUrl ? (
         <div className="px-5 pb-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={post.imageUrl} alt="Post visual" className="w-full rounded-xl border border-white/10" />
+          <img src={post.imageUrl} alt="Post visual" className="w-full rounded-xl border border-[#F2DAD8]" />
         </div>
       ) : null}
 
@@ -90,7 +90,7 @@ function PostItem({ post }: { post: Post }) {
 
 export function BatchPostGrid({ initialPosts }: { initialPosts: Post[]; batchId: string }) {
   if (!initialPosts.length) {
-    return <p className="text-white/62 text-sm">No posts in this batch.</p>;
+    return <p className="text-[#6B5B5A] text-sm">No posts in this batch.</p>;
   }
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">

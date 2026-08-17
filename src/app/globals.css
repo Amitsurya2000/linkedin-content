@@ -23,29 +23,29 @@
   --color-red-400: #FF6A3D;
   --color-red-500: #ED383B;
 
-  /* ---- canvas ---- */
-  --color-background: #08080A;
-  --color-foreground: #FFFFFF;
-  --color-surface-solid: #0E0E11;
-  --color-surface-solid-hi: #14141A;
+  /* ---- canvas: white and blush, with red doing the heavy lifting ---- */
+  --color-background: #FFFFFF;
+  --color-foreground: #1A1414;
+  --color-surface-solid: #FFFFFF;
+  --color-surface-solid-hi: #FDF3F2;
 
-  /* shadcn primitives, remapped onto the dark system */
-  --color-card: rgba(255, 255, 255, 0.045);
-  --color-card-foreground: #FFFFFF;
+  /* shadcn primitives, remapped onto the light system */
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1A1414;
   --color-primary: #ED383B;
   --color-primary-foreground: #FFFFFF;
-  --color-secondary: rgba(255, 255, 255, 0.07);
-  --color-secondary-foreground: #FFFFFF;
-  --color-muted: rgba(255, 255, 255, 0.045);
-  --color-muted-foreground: rgba(255, 255, 255, 0.62);
+  --color-secondary: #FDF3F2;
+  --color-secondary-foreground: #1A1414;
+  --color-muted: #FDF3F2;
+  --color-muted-foreground: #6B5B5A;
   --color-accent: #ED383B;
   --color-accent-foreground: #FFFFFF;
   --color-destructive: #ED383B;
-  --color-border: rgba(255, 255, 255, 0.10);
-  --color-input: rgba(255, 255, 255, 0.10);
+  --color-border: #F2DAD8;
+  --color-input: #F2DAD8;
   --color-ring: #ED383B;
-  --color-popover: #0E0E11;
-  --color-popover-foreground: #FFFFFF;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1A1414;
 
   --color-brand: #ED383B;
   --color-brand-deep: #B32A2C;
@@ -54,10 +54,10 @@
   /* Legacy aliases. The pages were written against a light palette; these keep
      the old class names resolving to the new system rather than requiring a
      rewrite of every utility in the app. */
-  --color-koyopo-ink: #FFFFFF;
-  --color-koyopo-muted: rgba(255, 255, 255, 0.62);
-  --color-koyopo-card: rgba(255, 255, 255, 0.045);
-  --color-koyopo-border: rgba(255, 255, 255, 0.10);
+  --color-koyopo-ink: #1A1414;
+  --color-koyopo-muted: #6B5B5A;
+  --color-koyopo-card: #FDF3F2;
+  --color-koyopo-border: #F2DAD8;
 
   --radius: 18px;
   --radius-sm: 12px;
@@ -88,18 +88,28 @@
   --r-32: rgba(237, 56, 59, 0.32);
   --r-50: rgba(237, 56, 59, 0.50);
 
-  /* ---- text ramp. --text-4 is .52, not the .42 the original shipped: at the
-     13–16px sizes it is used at, .42 measured 4.02:1 and failed AA. ---- */
-  --ink: #FFFFFF;
-  --text-2: rgba(255, 255, 255, 0.78);
-  --text-3: rgba(255, 255, 255, 0.62);
-  --text-4: rgba(255, 255, 255, 0.52);
-  --text-deco: rgba(255, 255, 255, 0.30);
+  /* ---- text ramp, measured against white:
+     --ink 15.9:1 · --text-2 9.9:1 · --text-3 6.4:1 · --text-4 5.55:1.
+     --text-4 was #8A7877 at 4.17:1, which failed AA at the 12-14px captions it
+     is used for. --text-deco is decorative only and never carries meaning. ---- */
+  --ink: #1A1414;
+  --text-2: #453838;
+  --text-3: #6B5B5A;
+  --text-4: #776462;
+  --text-deco: #C9B4B2;
 
-  --glass: rgba(255, 255, 255, 0.045);
-  --glass-2: rgba(255, 255, 255, 0.07);
-  --line: rgba(255, 255, 255, 0.10);
-  --line-red: rgba(237, 56, 59, 0.22);
+  /* On a light ground "glass" is a blush tint, not a white alpha — depth comes
+     from the tint plus a hairline, the same way the reference alternates
+     white and blush bands. */
+  --glass: #FDF3F2;
+  --glass-2: #FAE8E6;
+  --line: #F2DAD8;
+  --line-red: rgba(237, 56, 59, 0.28);
+
+  /* The saturated band from the reference: a diagonal red that sections sit on
+     with white type over it. */
+  --band-red: linear-gradient(135deg, #E5413F 0%, #C21D1D 100%);
+  --blush: #FDF3F2;
 
   --red: #ED383B;
   --ember: #FF7A33;
@@ -110,14 +120,14 @@
   --r-xs: 8px; --r-sm: 12px; --r-md: 18px; --r-lg: 22px; --r-xl: 28px; --r-pill: 100px;
 
   /* ---- elevation: depth (black) and heat (red) are orthogonal ---- */
-  --depth-1: 0 24px 60px -28px rgba(0, 0, 0, 0.7);
-  --depth-2: 0 60px 120px -40px rgba(0, 0, 0, 0.78);
+  --depth-1: 0 10px 30px -12px rgba(120, 30, 30, 0.14);
+  --depth-2: 0 24px 60px -20px rgba(120, 30, 30, 0.18);
   --glow-sm: 0 8px 24px -8px rgba(237, 56, 59, 0.6);
   --glow-md: 0 10px 34px -8px rgba(237, 56, 59, 0.6);
   --glow-lg: 0 40px 90px -34px rgba(237, 56, 59, 0.4);
   --glow-xl: 0 60px 120px -40px rgba(237, 56, 59, 0.5);
   /* The signature: a 1px top highlight simulating a light source overhead. */
-  --hi-top: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --hi-top: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 
   /* ---- motion. One easing curve for everything is what makes the page feel
      like a single object. ---- */
@@ -174,9 +184,8 @@ body::before {
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(900px 520px at 78% -8%, rgba(237, 56, 59, 0.22), transparent 70%),
-    radial-gradient(720px 480px at 8% 12%, rgba(255, 106, 61, 0.10), transparent 70%),
-    radial-gradient(1000px 700px at 50% 108%, rgba(237, 56, 59, 0.14), transparent 70%);
+    radial-gradient(900px 520px at 82% -10%, rgba(237, 56, 59, 0.10), transparent 70%),
+    radial-gradient(760px 500px at 6% 8%, rgba(255, 106, 61, 0.07), transparent 70%);
 }
 
 body::after {
@@ -185,18 +194,42 @@ body::after {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.035;
+  opacity: 0.018;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ─── Surfaces ─────────────────────────────────────────────────────────────
    Glass by alpha, never by a lighter grey hex. */
 .glass {
-  background: var(--glass);
+  background: #FFFFFF;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  box-shadow: var(--depth-1), var(--hi-top);
-  backdrop-filter: blur(10px);
+  box-shadow: var(--depth-1);
+}
+
+/* The saturated section band. White type, pill eyebrow, cards in white-alpha —
+   the treatment the reference alternates with its blush sections. */
+.band {
+  background: var(--band-red);
+  color: #FFFFFF;
+}
+.band .eyebrow {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: var(--r-pill);
+  padding: 7px 18px;
+}
+.band .eyebrow::before { display: none; }
+
+/* Highlight block behind a phrase in a headline. */
+.mark {
+  background: #FBDDD9;
+  color: #8E1B18;
+  padding: 0 0.18em;
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* Red arrives on interaction — that is the whole hover language. */
@@ -209,7 +242,7 @@ body::after {
 .lift:hover {
   transform: translateY(var(--lift-2));
   border-color: var(--line-red);
-  background: var(--glass-2);
+  box-shadow: var(--depth-2);
 }
 
 /* Beveled top edge — a gradient hairline inset from the corners, used on
@@ -220,7 +253,7 @@ body::after {
   position: absolute;
   top: 0; left: 24px; right: 24px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+  background: linear-gradient(90deg, transparent, rgba(237, 56, 59, 0.22), transparent);
 }
 
 .serif-it {
@@ -277,12 +310,12 @@ body::after {
    Styling the options globally fixes every dropdown in the app at once, and
    stops the next one being written with the same fault. */
 select {
-  color-scheme: dark;
+  color-scheme: light;
 }
 select option,
 select optgroup {
-  background-color: #14141A;
-  color: #FFFFFF;
+  background-color: #FFFFFF;
+  color: #1A1414;
 }
 select option:checked {
   background-color: var(--red);
@@ -291,8 +324,8 @@ select option:checked {
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--w-10); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--r-32); }
+::-webkit-scrollbar-thumb { background: #E8CFCD; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--red); }
 
 .linkedin-gradient { background: var(--red-grad); }
 

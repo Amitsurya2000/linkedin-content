@@ -28,7 +28,7 @@ function StatusBadge({ status }: { status: string }) {
     completed: { label: "Completed", dotCls: "bg-red-500", textCls: "text-red-400", bgCls: "bg-red-500/10" },
     generating: { label: "Generating", dotCls: "bg-amber-500 animate-pulse", textCls: "text-amber-400", bgCls: "bg-amber-500/10" },
     failed: { label: "Failed", dotCls: "bg-red-500", textCls: "text-red-400", bgCls: "bg-red-500/10" },
-    draft: { label: "Draft", dotCls: "bg-white/40", textCls: "text-white/62", bgCls: "bg-white/[.08]" },
+    draft: { label: "Draft", dotCls: "bg-white/40", textCls: "text-[#6B5B5A]", bgCls: "bg-[#FAE8E6]" },
   };
   const { label, dotCls, textCls, bgCls } = config[status] ?? config.draft;
   return (
@@ -73,10 +73,10 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-bold text-[#1A1414] tracking-tight">
             Welcome back, {userName}!
           </h1>
-          <p className="text-white/62 text-sm mt-1">
+          <p className="text-[#6B5B5A] text-sm mt-1">
             Here&apos;s an overview of your LinkedIn content.
           </p>
         </div>
@@ -120,8 +120,8 @@ export default function DashboardPage() {
       <div className="rounded-2xl bg-gradient-to-r from-[#ED383B]/20 to-[#DB272A]/10 border border-[#ED383B]/20 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-white mb-1">Ready to create?</h3>
-            <p className="text-white/62 text-sm">Generate your next batch of LinkedIn posts in seconds.</p>
+            <h3 className="text-lg font-semibold text-[#1A1414] mb-1">Ready to create?</h3>
+            <p className="text-[#6B5B5A] text-sm">Generate your next batch of LinkedIn posts in seconds.</p>
           </div>
           <Link href="/create">
             <Button className="bg-[#ED383B] hover:bg-[#ED383B]/90 text-white gap-2 rounded-xl cursor-pointer">
@@ -136,22 +136,22 @@ export default function DashboardPage() {
       {loading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-white/[.045] rounded-2xl border border-white/10 animate-pulse" />
+            <div key={i} className="h-16 bg-white rounded-2xl border border-[#F2DAD8] animate-pulse" />
           ))}
         </div>
       )}
 
       {/* Empty State */}
       {!loading && batches.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-white/10 bg-white/[.045] flex flex-col items-center text-center py-16 space-y-4">
+        <div className="rounded-2xl border border-dashed border-[#F2DAD8] bg-white flex flex-col items-center text-center py-16 space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
             <FileText className="w-7 h-7 text-[#ED383B]" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-[#1A1414]">
               No posts yet
             </h3>
-            <p className="text-white/62 text-sm mt-1 max-w-xs">
+            <p className="text-[#6B5B5A] text-sm mt-1 max-w-xs">
               Generate your first batch of LinkedIn posts in seconds with AI.
             </p>
           </div>
@@ -168,22 +168,22 @@ export default function DashboardPage() {
       {!loading && batches.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-white">Recent Batches</h2>
+            <h2 className="text-base font-semibold text-[#1A1414]">Recent Batches</h2>
             <Link href="/history" className="text-sm text-[#ED383B] hover:text-[#FF6A3D] transition-colors">
               View all
             </Link>
           </div>
 
-          <div className="rounded-2xl bg-white/[.045] border border-white/10 overflow-hidden">
-            <div className="hidden md:grid grid-cols-[2fr_1fr_80px_120px_80px] gap-4 px-5 py-3 border-b border-white/10 bg-white/[.04]/50">
-              <span className="text-xs font-medium text-white/52 uppercase tracking-wider">Topic</span>
-              <span className="text-xs font-medium text-white/52 uppercase tracking-wider">Status</span>
-              <span className="text-xs font-medium text-white/52 uppercase tracking-wider">Posts</span>
-              <span className="text-xs font-medium text-white/52 uppercase tracking-wider">Date</span>
-              <span className="text-xs font-medium text-white/52 uppercase tracking-wider">Action</span>
+          <div className="rounded-2xl bg-white border border-[#F2DAD8] overflow-hidden">
+            <div className="hidden md:grid grid-cols-[2fr_1fr_80px_120px_80px] gap-4 px-5 py-3 border-b border-[#F2DAD8] bg-[#FDF3F2]/50">
+              <span className="text-xs font-medium text-[#776462] uppercase tracking-wider">Topic</span>
+              <span className="text-xs font-medium text-[#776462] uppercase tracking-wider">Status</span>
+              <span className="text-xs font-medium text-[#776462] uppercase tracking-wider">Posts</span>
+              <span className="text-xs font-medium text-[#776462] uppercase tracking-wider">Date</span>
+              <span className="text-xs font-medium text-[#776462] uppercase tracking-wider">Action</span>
             </div>
 
-            <div className="divide-y divide-white/10">
+            <div className="divide-y divide-[#F2DAD8]">
               {batches.map((batch) => (
                 <div
                   key={batch.id}
@@ -194,22 +194,22 @@ export default function DashboardPage() {
                       <FileText className="w-4 h-4 text-[#ED383B]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-medium text-sm truncate">
+                      <p className="text-[#1A1414] font-medium text-sm truncate">
                         {batch.topic || "Untitled"}
                       </p>
-                      <p className="text-white/52 text-xs mt-0.5 capitalize">
+                      <p className="text-[#776462] text-xs mt-0.5 capitalize">
                         {batch.postType || "text"} post
                       </p>
                     </div>
                   </div>
                   <div><StatusBadge status={batch.status} /></div>
-                  <div className="text-sm text-white font-medium">{batch.postsCount}</div>
-                  <div className="text-white/62 text-sm">
+                  <div className="text-sm text-[#1A1414] font-medium">{batch.postsCount}</div>
+                  <div className="text-[#6B5B5A] text-sm">
                     {new Date(batch.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </div>
                   <div>
                     <Link href={`/history/${batch.id}`}>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-white/52 hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] rounded-lg cursor-pointer">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[#776462] hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] rounded-lg cursor-pointer">
                         <Eye className="w-3.5 h-3.5" />
                       </Button>
                     </Link>
@@ -226,18 +226,18 @@ export default function DashboardPage() {
 
 function StatCard({ icon, label, value, loading }: { icon: React.ReactNode; label: string; value: number; loading: boolean }) {
   return (
-    <div className="rounded-2xl bg-white/[.045] border border-white/10 p-5">
+    <div className="rounded-2xl bg-white border border-[#F2DAD8] p-5">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-[#FDF3F2] flex items-center justify-center">
           {icon}
         </div>
       </div>
       {loading ? (
-        <div className="h-8 w-16 bg-white/[.08] rounded-lg animate-pulse" />
+        <div className="h-8 w-16 bg-[#FAE8E6] rounded-lg animate-pulse" />
       ) : (
-        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className="text-2xl font-bold text-[#1A1414]">{value}</p>
       )}
-      <p className="text-xs text-white/52 mt-1">{label}</p>
+      <p className="text-xs text-[#776462] mt-1">{label}</p>
     </div>
   );
 }

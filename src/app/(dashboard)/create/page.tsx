@@ -23,7 +23,6 @@ import {
   FileText,
   Layers,
   MessageSquare,
-  BarChart3,
   Pencil,
   X,
   ImageIcon,
@@ -36,7 +35,7 @@ import {
   Maximize2,
 } from "lucide-react";
 
-type PostType = "text" | "carousel" | "article" | "poll";
+type PostType = "text" | "carousel" | "article";
 type Step = "form" | "generating" | "done";
 
 interface GeneratedPost {
@@ -59,13 +58,6 @@ const POST_TYPES: { value: PostType; label: string; description: string; icon: R
   { value: "text", label: "Text Post", description: "Classic LinkedIn text post — most popular format", icon: FileText },
   { value: "carousel", label: "Carousel", description: "Multi-slide document — highest engagement", icon: Layers },
   { value: "article", label: "Article", description: "Long-form article outline for thought leadership", icon: MessageSquare },
-  { value: "poll", label: "Poll", description: "Interactive poll that sparks conversation", icon: BarChart3 },
-];
-
-const INDUSTRIES = [
-  "Technology / SaaS", "Finance / Fintech", "Marketing / Advertising",
-  "Healthcare", "Consulting", "Startups", "E-commerce", "Education",
-  "Real Estate", "Manufacturing", "Legal", "HR / Recruiting", "Other",
 ];
 
 const TONES = [
@@ -333,7 +325,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   }
 
   return (
-    <div className="bg-white/[.045] border border-white/10 rounded-2xl overflow-hidden hover:border-[#ED383B]/50/40 transition-all">
+    <div className="bg-white border border-[#F2DAD8] rounded-2xl overflow-hidden hover:border-[#ED383B]/50/40 transition-all">
       {/* Header */}
       <div className="p-5 pb-3 flex items-center justify-between">
         <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-[#ED383B]/[.10] text-[#ED383B] border border-[#ED383B]/20">
@@ -342,7 +334,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setEditing(!editing); setEditHook(post.hook); setEditBody(post.body); }}
-            className="p-1.5 rounded-lg text-white/62 hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] transition-colors"
+            className="p-1.5 rounded-lg text-[#6B5B5A] hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] transition-colors"
             title="Edit post"
           >
             {editing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
@@ -355,21 +347,21 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
         {editing ? (
           <div className="space-y-3">
             <div>
-              <Label className="text-xs text-white/62 mb-1">Hook (first 2 lines)</Label>
+              <Label className="text-xs text-[#6B5B5A] mb-1">Hook (first 2 lines)</Label>
               <Textarea
                 value={editHook}
                 onChange={(e) => setEditHook(e.target.value)}
                 rows={2}
-                className="bg-white/[.04] border-white/10 text-white text-sm rounded-xl"
+                className="bg-[#FDF3F2] border-[#F2DAD8] text-[#1A1414] text-sm rounded-xl"
               />
             </div>
             <div>
-              <Label className="text-xs text-white/62 mb-1">Body</Label>
+              <Label className="text-xs text-[#6B5B5A] mb-1">Body</Label>
               <Textarea
                 value={editBody}
                 onChange={(e) => setEditBody(e.target.value)}
                 rows={8}
-                className="bg-white/[.04] border-white/10 text-white text-sm rounded-xl"
+                className="bg-[#FDF3F2] border-[#F2DAD8] text-[#1A1414] text-sm rounded-xl"
               />
             </div>
             <div className="flex gap-2 justify-end">
@@ -377,7 +369,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 variant="outline"
                 size="sm"
                 onClick={() => setEditing(false)}
-                className="rounded-lg border-white/10 text-white/62 hover:text-white"
+                className="rounded-lg border-[#F2DAD8] text-[#6B5B5A] hover:text-[#1A1414]"
               >
                 Cancel
               </Button>
@@ -408,16 +400,16 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       {/* Carousel Slides */}
       {post.carouselSlides && post.carouselSlides.length > 0 && (
         <div className="px-5 mt-3">
-          <p className="text-xs text-white/62 font-medium mb-2">Carousel Slides ({post.carouselSlides.length})</p>
+          <p className="text-xs text-[#6B5B5A] font-medium mb-2">Carousel Slides ({post.carouselSlides.length})</p>
           <SwipeDeck slideClassName={solo ? "w-[240px]" : "w-[200px]"} label="Carousel slide copy">
             {post.carouselSlides.map((slide, i) => (
               <div
                 key={i}
-                className="h-full bg-white/[.04] border border-white/10 rounded-xl p-3"
+                className="h-full bg-[#FDF3F2] border border-[#F2DAD8] rounded-xl p-3"
               >
                 <p className="text-[10px] text-[#ED383B] font-medium mb-1">Slide {slide.slideNumber}</p>
-                <p className="text-sm font-bold text-white mb-1 line-clamp-2">{slide.title}</p>
-                <p className="text-xs text-white/62 line-clamp-3">{slide.body}</p>
+                <p className="text-sm font-bold text-[#1A1414] mb-1 line-clamp-2">{slide.title}</p>
+                <p className="text-xs text-[#6B5B5A] line-clamp-3">{slide.body}</p>
               </div>
             ))}
           </SwipeDeck>
@@ -428,9 +420,9 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       {isCarousel && (
         <div className="px-5 mt-3">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-white/62 font-medium flex items-center gap-1.5">
+            <p className="text-xs text-[#6B5B5A] font-medium flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-[#ED383B]" />
-              Carousel {carouselImages.length > 0 && <span className="text-white/62">· {carouselImages.length} slides</span>}
+              Carousel {carouselImages.length > 0 && <span className="text-[#6B5B5A]">· {carouselImages.length} slides</span>}
             </p>
             <div className="flex items-center gap-1.5 flex-wrap justify-end max-w-full">
               {/* Render 1-15 slides. Counts above what the model wrote are
@@ -439,12 +431,12 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   higher number on the Format step to get a longer deck. */}
               {slideTotal > 1 && (
                 <span className="flex items-center gap-1">
-                  <span className="text-[10px] text-white/62">Slides</span>
+                  <span className="text-[10px] text-[#6B5B5A]">Slides</span>
                   <select
                     value={deckCount}
                     onChange={(e) => setDeckCount(Number(e.target.value))}
                     disabled={carLoading}
-                    className="text-[10px] rounded-lg border border-white/10 bg-[#14141A] text-white px-1.5 py-1 font-medium focus:border-[#ED383B] outline-none disabled:opacity-50 [&>option]:bg-[#14141A] [&>option]:text-white"
+                    className="text-[10px] rounded-lg border border-[#F2DAD8] bg-white text-[#1A1414] px-1.5 py-1 font-medium focus:border-[#ED383B] outline-none disabled:opacity-50 [&>option]:bg-white [&>option]:text-[#1A1414]"
                     title="How many slides to render"
                   >
                     <option value={0}>All {slideTotal}</option>
@@ -467,7 +459,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
                     deckShape === s
                       ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]"
-                      : "border-white/10 text-white/62"
+                      : "border-[#F2DAD8] text-[#6B5B5A]"
                   }`}
                 >
                   {s === "tall" ? "4:5" : "16:9"}
@@ -480,7 +472,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   onClick={() => setDeckStyle(v)}
                   disabled={carLoading}
                   className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
-                    deckStyle === v ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-white/10 text-white/62"
+                    deckStyle === v ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
                   }`}
                 >
                   {label}
@@ -495,7 +487,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   disabled={carLoading}
                   title={spec.blurb}
                   className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
-                    deckStyle === k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-white/10 text-white/62"
+                    deckStyle === k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
                   }`}
                 >
                   {spec.label}
@@ -504,7 +496,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               {carouselImages.length > 0 && (
                 <button
                   onClick={() => setLightbox(0)}
-                  className="text-[10px] rounded-lg px-2 py-1 font-medium border border-white/10 text-white hover:border-[#ED383B]/50 flex items-center gap-1"
+                  className="text-[10px] rounded-lg px-2 py-1 font-medium border border-[#F2DAD8] text-[#1A1414] hover:border-[#ED383B]/50 flex items-center gap-1"
                   title="View the deck full screen"
                 >
                   <Maximize2 className="w-3 h-3" /> Expand
@@ -515,7 +507,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   onClick={() => setGenArt(!genArt)}
                   disabled={carLoading}
                   className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
-                    genArt ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-white/10 text-white/62"
+                    genArt ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
                   }`}
                   title="Generate an image for slides with no uploaded picture (slow, uses quota)"
                 >
@@ -524,7 +516,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               )}
               <a
                 href={`/api/posts/${post.id}/koyopo?format=pptx&canvas=${deckShape}${deckCount ? `&maxSlides=${deckCount}` : ""}`}
-                className="text-[10px] rounded-lg border border-white/10 text-white px-2 py-1 font-medium hover:border-[#ED383B]/50"
+                className="text-[10px] rounded-lg border border-[#F2DAD8] text-[#1A1414] px-2 py-1 font-medium hover:border-[#ED383B]/50"
               >
                 .pptx
               </a>
@@ -532,7 +524,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   native video its own reach, and the slides already exist. */}
               <a
                 href={`/api/posts/${post.id}/video?style=${deckStyle}&seconds=3`}
-                className="text-[10px] rounded-lg border border-white/10 text-white px-2 py-1 font-medium hover:border-[#ED383B]/50"
+                className="text-[10px] rounded-lg border border-[#F2DAD8] text-[#1A1414] px-2 py-1 font-medium hover:border-[#ED383B]/50"
                 title="Encode these slides into an MP4 (takes ~20-60s)"
               >
                 .mp4
@@ -548,11 +540,11 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
             </div>
           </div>
           {carLoading ? (
-            <div className="rounded-xl border border-white/10 bg-white/[.04] aspect-[4/5] flex items-center justify-center">
+            <div className="rounded-xl border border-[#F2DAD8] bg-[#FDF3F2] aspect-[4/5] flex items-center justify-center">
               <div className="text-center px-4">
                 <Loader2 className="w-7 h-7 text-[#ED383B] animate-spin mx-auto mb-2" />
-                <p className="text-xs text-white/62">Designing your carousel slides…</p>
-                <p className="text-[10px] text-white/62 mt-0.5">
+                <p className="text-xs text-[#6B5B5A]">Designing your carousel slides…</p>
+                <p className="text-[10px] text-[#6B5B5A] mt-0.5">
                   {deckStyle === "photo"
                     ? "Gathos / Gemini · ~40–90s"
                     : deckStyle === "visual" && genArt
@@ -573,14 +565,14 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 <div
                   key={i}
                   onClick={() => setLightbox(i)}
-                  className="relative rounded-xl overflow-hidden border border-white/10 bg-white/[.04] cursor-zoom-in"
+                  className="relative rounded-xl overflow-hidden border border-[#F2DAD8] bg-[#FDF3F2] cursor-zoom-in"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={url} alt={`Slide ${i + 1}`} className="w-full h-auto select-none pointer-events-none" draggable={false} />
-                  <span className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-black/60 text-white">
+                  <span className="absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-black/60 text-[#1A1414]">
                     {i + 1}/{carouselImages.length}
                   </span>
-                  <a href={url} download className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-black/70">
+                  <a href={url} download className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/50 backdrop-blur border border-[#F2DAD8] flex items-center justify-center text-[#1A1414] hover:bg-black/70">
                     <Download className="w-3.5 h-3.5" />
                   </a>
                 </div>
@@ -588,9 +580,9 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
             </SwipeDeck>
             </>
           ) : (
-            <div className="rounded-xl border border-dashed border-white/10 bg-white/[.04] p-6 text-center">
-              <Layers className="w-7 h-7 text-white/62 mx-auto mb-2" />
-              <p className="text-xs text-white/62">{carError || "No carousel yet"}</p>
+            <div className="rounded-xl border border-dashed border-[#F2DAD8] bg-[#FDF3F2] p-6 text-center">
+              <Layers className="w-7 h-7 text-[#6B5B5A] mx-auto mb-2" />
+              <p className="text-xs text-[#6B5B5A]">{carError || "No carousel yet"}</p>
               <button onClick={generateCarousel} className="mt-2 text-xs text-[#ED383B] hover:text-[#FF6A3D] font-medium">
                 Generate carousel slides
               </button>
@@ -605,16 +597,16 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       {!isCarousel && (
       <div className="px-5 mt-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs text-white/62 font-medium flex items-center gap-1.5">
+          <p className="text-xs text-[#6B5B5A] font-medium flex items-center gap-1.5">
             <ImageIcon className="w-3.5 h-3.5 text-[#ED383B]" />
             Premium Image
-            {imgStyleName && <span className="text-white/62">· {imgStyleName}</span>}
+            {imgStyleName && <span className="text-[#6B5B5A]">· {imgStyleName}</span>}
           </p>
           <select
             value={imgStyle}
             onChange={(e) => generateImage(e.target.value)}
             disabled={imgLoading}
-            className="text-[11px] rounded-lg bg-white/[.04] border border-white/10 text-white px-2 py-1 focus:border-[#ED383B] outline-none disabled:opacity-50 max-w-[160px]"
+            className="text-[11px] rounded-lg bg-[#FDF3F2] border border-[#F2DAD8] text-[#1A1414] px-2 py-1 focus:border-[#ED383B] outline-none disabled:opacity-50 max-w-[160px]"
           >
             <option value="auto">✨ Auto (Surprise me)</option>
             {Object.entries(STYLE_GROUPS).map(([cat, styles]) => (
@@ -627,20 +619,20 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
           </select>
         </div>
 
-        <div className={`relative rounded-xl overflow-hidden border border-white/10 bg-white/[.04] aspect-[4/5] flex items-center justify-center ${solo ? "max-w-[520px]" : ""}`}>
+        <div className={`relative rounded-xl overflow-hidden border border-[#F2DAD8] bg-[#FDF3F2] aspect-[4/5] flex items-center justify-center ${solo ? "max-w-[520px]" : ""}`}>
           {imgLoading ? (
             <div className="text-center px-4">
               <Loader2 className="w-7 h-7 text-[#ED383B] animate-spin mx-auto mb-2" />
-              <p className="text-xs text-white/62">Designing your premium visual…</p>
-              <p className="text-[10px] text-white/62 mt-0.5">Gathos / Gemini · ~20–60s</p>
+              <p className="text-xs text-[#6B5B5A]">Designing your premium visual…</p>
+              <p className="text-[10px] text-[#6B5B5A] mt-0.5">Gathos / Gemini · ~20–60s</p>
             </div>
           ) : imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="Generated premium visual" className="w-full h-full object-contain" />
           ) : (
             <div className="text-center px-4">
-              <Wand2 className="w-7 h-7 text-white/62 mx-auto mb-2" />
-              <p className="text-xs text-white/62">{imgError || "No image yet"}</p>
+              <Wand2 className="w-7 h-7 text-[#6B5B5A] mx-auto mb-2" />
+              <p className="text-xs text-[#6B5B5A]">{imgError || "No image yet"}</p>
               <button
                 onClick={() => generateImage(imgStyle)}
                 className="mt-2 text-xs text-[#ED383B] hover:text-[#FF6A3D] font-medium"
@@ -655,14 +647,14 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               <a
                 href={imageUrl}
                 download
-                className="w-8 h-8 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className="w-8 h-8 rounded-lg bg-black/50 backdrop-blur border border-[#F2DAD8] flex items-center justify-center text-[#1A1414] hover:bg-black/70 transition-colors"
                 title="Download image"
               >
                 <Download className="w-4 h-4" />
               </a>
               <button
                 onClick={() => generateImage(imgStyle)}
-                className="w-8 h-8 rounded-lg bg-black/50 backdrop-blur border border-white/10 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className="w-8 h-8 rounded-lg bg-black/50 backdrop-blur border border-[#F2DAD8] flex items-center justify-center text-[#1A1414] hover:bg-black/70 transition-colors"
                 title="Regenerate"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -706,7 +698,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
             </span>
             <button
               onClick={() => { setPostStatus("draft"); setScheduledAt(null); setSchedOpen(true); }}
-              className="text-xs text-white/62 hover:text-white transition-colors"
+              className="text-xs text-[#6B5B5A] hover:text-[#1A1414] transition-colors"
             >
               Change
             </button>
@@ -717,7 +709,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               <Button
                 onClick={handlePostNow}
                 disabled={statusBusy}
-                className="w-full h-10 bg-white/[.04] hover:bg-white/[.04]/70 border border-white/10 text-white font-medium rounded-xl gap-2 disabled:opacity-50"
+                className="w-full h-10 bg-[#FDF3F2] hover:bg-[#FDF3F2]/70 border border-[#F2DAD8] text-[#1A1414] font-medium rounded-xl gap-2 disabled:opacity-50"
               >
                 {statusBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 Post Now
@@ -725,27 +717,27 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               <Button
                 onClick={() => setSchedOpen((v) => !v)}
                 disabled={statusBusy}
-                className="w-full h-10 bg-white/[.04] hover:bg-white/[.04]/70 border border-white/10 text-white font-medium rounded-xl gap-2 disabled:opacity-50"
+                className="w-full h-10 bg-[#FDF3F2] hover:bg-[#FDF3F2]/70 border border-[#F2DAD8] text-[#1A1414] font-medium rounded-xl gap-2 disabled:opacity-50"
               >
                 <CalendarIcon className="w-4 h-4" />
                 Schedule
               </Button>
             </div>
             {schedOpen && (
-              <div className="rounded-xl bg-white/[.04] border border-white/10 p-3 space-y-2.5">
-                <p className="text-xs text-white/62 font-medium">Pick a date & time — it lands on your Calendar.</p>
+              <div className="rounded-xl bg-[#FDF3F2] border border-[#F2DAD8] p-3 space-y-2.5">
+                <p className="text-xs text-[#6B5B5A] font-medium">Pick a date & time — it lands on your Calendar.</p>
                 <div className="flex items-center gap-2">
                   <input
                     type="date"
                     value={schedDate}
                     onChange={(e) => setSchedDate(e.target.value)}
-                    className="flex-1 text-xs px-2.5 py-2 rounded-lg border border-white/10 bg-white/[.045] text-white outline-none focus:border-[#ED383B]"
+                    className="flex-1 text-xs px-2.5 py-2 rounded-lg border border-[#F2DAD8] bg-white text-[#1A1414] outline-none focus:border-[#ED383B]"
                   />
                   <input
                     type="time"
                     value={schedTime}
                     onChange={(e) => setSchedTime(e.target.value)}
-                    className="text-xs px-2.5 py-2 rounded-lg border border-white/10 bg-white/[.045] text-white outline-none focus:border-[#ED383B]"
+                    className="text-xs px-2.5 py-2 rounded-lg border border-[#F2DAD8] bg-white text-[#1A1414] outline-none focus:border-[#ED383B]"
                   />
                 </div>
                 <Button
@@ -763,14 +755,14 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
 
         {/* Why this works */}
         <button
-          className="flex items-center gap-1.5 text-xs text-white/62 hover:text-white transition-colors w-full justify-center"
+          className="flex items-center gap-1.5 text-xs text-[#6B5B5A] hover:text-[#1A1414] transition-colors w-full justify-center"
           onClick={() => setExpanded(!expanded)}
         >
           Why this works
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
         {expanded && (
-          <p className="text-xs text-white/62 leading-relaxed bg-white/[.04] rounded-xl p-3 border border-white/10">
+          <p className="text-xs text-[#6B5B5A] leading-relaxed bg-[#FDF3F2] rounded-xl p-3 border border-[#F2DAD8]">
             {post.whyThisWorks}
           </p>
         )}
@@ -790,15 +782,15 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 {post.variations.map((v, i) => (
                   <div
                     key={i}
-                    className="bg-white/[.04] border border-white/10 rounded-xl p-3 group"
+                    className="bg-[#FDF3F2] border border-[#F2DAD8] rounded-xl p-3 group"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-xs text-white leading-relaxed whitespace-pre-line flex-1">
+                      <p className="text-xs text-[#1A1414] leading-relaxed whitespace-pre-line flex-1">
                         {v}
                       </p>
                       <button
                         onClick={() => copyToClipboard(v, i)}
-                        className="shrink-0 p-1.5 rounded-lg text-white/62 hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] transition-colors"
+                        className="shrink-0 p-1.5 rounded-lg text-[#6B5B5A] hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] transition-colors"
                         title="Copy variation"
                       >
                         {copiedIdx === i ? <Check className="w-3.5 h-3.5 text-red-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -828,7 +820,6 @@ export default function CreatePage() {
   const [refFiles, setRefFiles] = useState<File[]>([]);
   const [customInstructions, setCustomInstructions] = useState("");
   const refInput = useRef<HTMLInputElement>(null);
-  const [industry, setIndustry] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
   const [tone, setTone] = useState("");
   const [wizardStep, setWizardStep] = useState<WizardStep>(1);
@@ -853,7 +844,6 @@ export default function CreatePage() {
         postType,
         postsCount: String(postsCount),
       };
-      if (industry) fields.industry = industry;
       if (targetAudience) fields.targetAudience = targetAudience;
       if (tone) fields.tonePrefs = tone;
       if (postType === "carousel" && slidesCount) fields.slidesCount = String(slidesCount);
@@ -917,8 +907,8 @@ export default function CreatePage() {
     return (
       <div className="w-full">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white tracking-tight">Create LinkedIn Post</h1>
-          <p className="text-white/62 text-sm mt-1">{WIZARD_STEPS[wizardStep - 1].blurb}</p>
+          <h1 className="text-3xl font-bold text-[#1A1414] tracking-tight">Create LinkedIn Post</h1>
+          <p className="text-[#6B5B5A] text-sm mt-1">{WIZARD_STEPS[wizardStep - 1].blurb}</p>
         </div>
 
 
@@ -941,17 +931,17 @@ export default function CreatePage() {
                         ? "bg-[#ED383B]/20 text-[#ED383B] border border-[#ED383B]"
                         : active
                           ? "bg-[#ED383B] text-white"
-                          : "bg-white/[.045] text-white/62 border border-white/10"
+                          : "bg-white text-[#6B5B5A] border border-[#F2DAD8]"
                     }`}
                   >
                     {done ? <Check className="w-3.5 h-3.5" /> : s.n}
                   </span>
-                  <span className={`text-xs font-medium hidden sm:inline ${active ? "text-white" : done ? "text-white" : "text-white/62"}`}>
+                  <span className={`text-xs font-medium hidden sm:inline ${active ? "text-[#1A1414]" : done ? "text-[#1A1414]" : "text-[#6B5B5A]"}`}>
                     {s.label}
                   </span>
                 </button>
                 {i < WIZARD_STEPS.length - 1 && (
-                  <span className={`h-px flex-1 ${wizardStep > s.n ? "bg-[#ED383B]/50" : "bg-white/[.08]"}`} />
+                  <span className={`h-px flex-1 ${wizardStep > s.n ? "bg-[#ED383B]/50" : "bg-[#FAE8E6]"}`} />
                 )}
               </div>
             );
@@ -977,7 +967,7 @@ export default function CreatePage() {
                 onUseIdea={(idea) => { setTopic(idea); setWizardStep(2); }}
               />
               {!profileReady && (
-                <p className="text-xs text-white/62">
+                <p className="text-xs text-[#6B5B5A]">
                   Upload your CV or paste your background above. Posts written from your real
                   experience beat generic advice — this is what makes them yours.
                 </p>
@@ -988,7 +978,7 @@ export default function CreatePage() {
           {/* STEP 2 — Topic */}
           {wizardStep === 2 && (
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-white">
+              <Label className="text-sm font-medium text-[#1A1414]">
                 What do you want to post about? <span className="text-red-400">*</span>
               </Label>
               <Textarea
@@ -997,9 +987,9 @@ export default function CreatePage() {
                 placeholder="e.g. I quantized a YOLOv8 detector to ONNX FP16 expecting to lose accuracy. mAP went from 0.6637 to 0.6642. Why edge deployment is less painful than engineers assume."
                 rows={5}
                 autoFocus
-                className="bg-white/[.045] border-white/10 text-white placeholder:text-white/62 rounded-xl text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
+                className="bg-white border-[#F2DAD8] text-[#1A1414] placeholder:text-[#6B5B5A] rounded-xl text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
               />
-              <p className="text-xs text-white/62">
+              <p className="text-xs text-[#6B5B5A]">
                 Be specific. A real number, a real failure, or a claim someone could argue with
                 beats a broad topic every time.
               </p>
@@ -1010,7 +1000,7 @@ export default function CreatePage() {
           {wizardStep === 3 && (
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">Post Type</Label>
+                <Label className="text-sm font-medium text-[#1A1414]">Post Type</Label>
                 <div className="grid grid-cols-2 gap-3">
                   {POST_TYPES.map((pt) => (
                     <button
@@ -1020,15 +1010,15 @@ export default function CreatePage() {
                       className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
                         postType === pt.value
                           ? "border-[#ED383B] bg-[#ED383B]/[.10]"
-                          : "border-white/10 bg-white/[.045] hover:border-[#ED383B]/50"
+                          : "border-[#F2DAD8] bg-white hover:border-[#ED383B]/50"
                       }`}
                     >
-                      <pt.icon className={`w-5 h-5 mt-0.5 shrink-0 ${postType === pt.value ? "text-[#ED383B]" : "text-white/62"}`} />
+                      <pt.icon className={`w-5 h-5 mt-0.5 shrink-0 ${postType === pt.value ? "text-[#ED383B]" : "text-[#6B5B5A]"}`} />
                       <div>
-                        <p className={`text-sm font-semibold ${postType === pt.value ? "text-[#ED383B]" : "text-white"}`}>
+                        <p className={`text-sm font-semibold ${postType === pt.value ? "text-[#ED383B]" : "text-[#1A1414]"}`}>
                           {pt.label}
                         </p>
-                        <p className="text-xs text-white/62 mt-0.5">{pt.description}</p>
+                        <p className="text-xs text-[#6B5B5A] mt-0.5">{pt.description}</p>
                       </div>
                     </button>
                   ))}
@@ -1036,7 +1026,7 @@ export default function CreatePage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">Number of Posts</Label>
+                <Label className="text-sm font-medium text-[#1A1414]">Number of Posts</Label>
                 <div className="flex gap-2">
                   {COUNTS.map((n) => (
                     <button
@@ -1046,14 +1036,14 @@ export default function CreatePage() {
                       className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                         postsCount === n
                           ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
-                          : "bg-white/[.045] text-white/62 border border-white/10 hover:border-[#ED383B]/50"
+                          : "bg-white text-[#6B5B5A] border border-[#F2DAD8] hover:border-[#ED383B]/50"
                       }`}
                     >
                       {n}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-white/62">
+                <p className="text-xs text-[#6B5B5A]">
                   Each post also comes with 3 alternative versions, so {postsCount} gives you {postsCount * 4} to choose from.
                 </p>
               </div>
@@ -1063,7 +1053,7 @@ export default function CreatePage() {
                   control can trim a deck but never extend one. */}
               {postType === "carousel" && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-white">Slides per carousel</Label>
+                  <Label className="text-sm font-medium text-[#1A1414]">Slides per carousel</Label>
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
@@ -1071,7 +1061,7 @@ export default function CreatePage() {
                       className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
                         slidesCount === 0
                           ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
-                          : "bg-white/[.045] text-white/62 border border-white/10 hover:border-[#ED383B]/50"
+                          : "bg-white text-[#6B5B5A] border border-[#F2DAD8] hover:border-[#ED383B]/50"
                       }`}
                     >
                       Auto
@@ -1084,14 +1074,14 @@ export default function CreatePage() {
                         className={`w-10 py-2 rounded-xl text-sm font-medium transition-all ${
                           slidesCount === n
                             ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
-                            : "bg-white/[.045] text-white/62 border border-white/10 hover:border-[#ED383B]/50"
+                            : "bg-white text-[#6B5B5A] border border-[#F2DAD8] hover:border-[#ED383B]/50"
                         }`}
                       >
                         {n}
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-white/62">
+                  <p className="text-xs text-[#6B5B5A]">
                     {slidesCount === 0
                       ? "Auto picks 8–10, where completion rates peak."
                       : slidesCount > 12
@@ -1106,33 +1096,20 @@ export default function CreatePage() {
           {/* STEP 4 — Details */}
           {wizardStep === 4 && (
             <div className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-white">Industry</Label>
-                  <select
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    className="w-full h-10 px-3 rounded-xl bg-[#14141A] border border-white/10 text-white text-sm focus:ring-[#ED383B]/30 focus:border-[#ED383B] outline-none"
-                  >
-                    <option value="">Select industry...</option>
-                    {INDUSTRIES.map((i) => (
-                      <option key={i} value={i}>{i}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-white">Target Audience</Label>
+                  <Label className="text-sm font-medium text-[#1A1414]">Target Audience</Label>
                   <Input
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}
                     placeholder="e.g. AI/ML engineers and hiring managers in India"
-                    className="bg-white/[.045] border-white/10 text-white placeholder:text-white/62 rounded-xl h-10 text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
+                    className="bg-white border-[#F2DAD8] text-[#1A1414] placeholder:text-[#6B5B5A] rounded-xl h-10 text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">Tone &amp; Style</Label>
+                <Label className="text-sm font-medium text-[#1A1414]">Tone &amp; Style</Label>
                 <div className="flex flex-wrap gap-2">
                   {TONES.map((t) => (
                     <button
@@ -1142,7 +1119,7 @@ export default function CreatePage() {
                       className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
                         tone === t
                           ? "bg-[#ED383B] text-white"
-                          : "bg-white/[.045] text-white/62 border border-white/10 hover:border-[#ED383B]/50"
+                          : "bg-white text-[#6B5B5A] border border-[#F2DAD8] hover:border-[#ED383B]/50"
                       }`}
                     >
                       {t}
@@ -1156,8 +1133,8 @@ export default function CreatePage() {
                   Gemini reads PDFs and images natively, so the file goes into
                   the request as-is and becomes the primary source. */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">
-                  Reference file <span className="text-white/62 font-normal">(optional)</span>
+                <Label className="text-sm font-medium text-[#1A1414]">
+                  Reference file <span className="text-[#6B5B5A] font-normal">(optional)</span>
                 </Label>
                 <div
                   onClick={() => refInput.current?.click()}
@@ -1167,7 +1144,7 @@ export default function CreatePage() {
                     const f = Array.from(e.dataTransfer.files || []);
                     if (f.length) setRefFiles((prev) => [...prev, ...f].slice(0, MAX_REF_FILES));
                   }}
-                  className="border-2 border-dashed border-white/10 hover:border-[#ED383B]/50/50 rounded-xl p-4 text-center cursor-pointer transition-colors"
+                  className="border-2 border-dashed border-[#F2DAD8] hover:border-[#ED383B]/50/50 rounded-xl p-4 text-center cursor-pointer transition-colors"
                 >
                   <input
                     ref={refInput}
@@ -1180,29 +1157,29 @@ export default function CreatePage() {
                       if (f.length) setRefFiles((prev) => [...prev, ...f].slice(0, MAX_REF_FILES));
                     }}
                   />
-                  <FileText className="w-5 h-5 text-white/62 mx-auto mb-1" />
-                  <p className="text-xs text-white font-medium">Build the post from a file</p>
-                  <p className="text-[11px] text-white/62 mt-0.5">
+                  <FileText className="w-5 h-5 text-[#6B5B5A] mx-auto mb-1" />
+                  <p className="text-xs text-[#1A1414] font-medium">Build the post from a file</p>
+                  <p className="text-[11px] text-[#6B5B5A] mt-0.5">
                     PDF, image, or doc · up to {MAX_REF_FILES} files · select or drop several at once
                   </p>
                 </div>
                 {refFiles.length > 0 && (
                   <div className="space-y-1.5">
                     {refFiles.map((f, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs bg-white/[.04] border border-white/10 rounded-lg px-3 py-2">
+                      <div key={i} className="flex items-center gap-2 text-xs bg-[#FDF3F2] border border-[#F2DAD8] rounded-lg px-3 py-2">
                         <FileText className="w-3.5 h-3.5 text-[#ED383B] shrink-0" />
-                        <span className="text-white truncate flex-1">{f.name}</span>
-                        <span className="text-white/62 shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
+                        <span className="text-[#1A1414] truncate flex-1">{f.name}</span>
+                        <span className="text-[#6B5B5A] shrink-0">{(f.size / 1024).toFixed(0)} KB</span>
                         <button
                           type="button"
                           onClick={() => setRefFiles((prev) => prev.filter((_, j) => j !== i))}
-                          className="text-white/62 hover:text-[#ED383B] shrink-0"
+                          className="text-[#6B5B5A] hover:text-[#ED383B] shrink-0"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
-                    <p className="text-[11px] text-white/62">
+                    <p className="text-[11px] text-[#6B5B5A]">
                       The file becomes the primary source — figures and findings come from it, not from guesswork.
                     </p>
                   </div>
@@ -1212,35 +1189,35 @@ export default function CreatePage() {
               {/* Free-text direction. Overrides the built-in defaults, which is
                   what makes the same engine produce different work per client. */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-white">
-                  Describe the output you want <span className="text-white/62 font-normal">(optional)</span>
+                <Label className="text-sm font-medium text-[#1A1414]">
+                  Describe the output you want <span className="text-[#6B5B5A] font-normal">(optional)</span>
                 </Label>
                 <Textarea
                   value={customInstructions}
                   onChange={(e) => setCustomInstructions(e.target.value)}
                   rows={3}
                   placeholder="e.g. Make slide 1 a bold contrarian claim. Keep every slide under 25 words. Use the numbers from the attached report. End with a CTA to download the template. No emojis."
-                  className="bg-white/[.045] border-white/10 text-white placeholder:text-white/62 rounded-xl text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
+                  className="bg-white border-[#F2DAD8] text-[#1A1414] placeholder:text-[#6B5B5A] rounded-xl text-sm focus-visible:ring-[#ED383B]/30 focus-visible:border-[#ED383B]"
                 />
-                <p className="text-xs text-white/62">
+                <p className="text-xs text-[#6B5B5A]">
                   These instructions override the defaults — structure, length, tone, what to emphasise, what to avoid.
                 </p>
               </div>
 
               {/* Recap, so the earlier steps can be checked without navigating back. */}
-              <div className="rounded-xl border border-white/10 bg-white/[.04] p-4 space-y-1.5">
-                <p className="text-[11px] uppercase tracking-wider text-white/62 font-semibold">Ready to generate</p>
-                <p className="text-xs text-white line-clamp-2">
-                  <span className="text-white/62">Topic:</span> {topic || "—"}
+              <div className="rounded-xl border border-[#F2DAD8] bg-[#FDF3F2] p-4 space-y-1.5">
+                <p className="text-[11px] uppercase tracking-wider text-[#6B5B5A] font-semibold">Ready to generate</p>
+                <p className="text-xs text-[#1A1414] line-clamp-2">
+                  <span className="text-[#6B5B5A]">Topic:</span> {topic || "—"}
                 </p>
-                <p className="text-xs text-white">
-                  <span className="text-white/62">Format:</span>{" "}
+                <p className="text-xs text-[#1A1414]">
+                  <span className="text-[#6B5B5A]">Format:</span>{" "}
                   {POST_TYPES.find((p) => p.value === postType)?.label} · {postsCount} post{postsCount !== 1 ? "s" : ""}
                   {postType === "carousel" && slidesCount ? ` · ${slidesCount} slides` : ""}
                 </p>
                 {(refFiles.length > 0 || customInstructions.trim()) && (
-                  <p className="text-xs text-white">
-                    <span className="text-white/62">Source:</span>{" "}
+                  <p className="text-xs text-[#1A1414]">
+                    <span className="text-[#6B5B5A]">Source:</span>{" "}
                     {refFiles.length > 0 ? `${refFiles.length} file${refFiles.length !== 1 ? "s" : ""}` : "—"}
                     {customInstructions.trim() ? " · custom direction" : ""}
                   </p>
@@ -1255,7 +1232,7 @@ export default function CreatePage() {
               <Button
                 type="button"
                 onClick={() => setWizardStep((s) => (s - 1) as WizardStep)}
-                className="h-12 px-5 bg-white/[.045] hover:bg-white/[.08] text-white font-medium rounded-xl border border-white/10"
+                className="h-12 px-5 bg-white hover:bg-[#FAE8E6] text-[#1A1414] font-medium rounded-xl border border-[#F2DAD8]"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back
@@ -1303,7 +1280,7 @@ export default function CreatePage() {
             <button
               type="button"
               onClick={() => setWizardStep(2)}
-              className="w-full text-xs text-white/62 hover:text-white/62 underline underline-offset-4"
+              className="w-full text-xs text-[#6B5B5A] hover:text-[#6B5B5A] underline underline-offset-4"
             >
               Skip for now — posts will be more generic without it
             </button>
@@ -1320,8 +1297,8 @@ export default function CreatePage() {
         <div className="w-16 h-16 rounded-2xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center mx-auto mb-6">
           <Loader2 className="w-8 h-8 text-[#ED383B] animate-spin" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">Generating your LinkedIn posts...</h2>
-        <p className="text-white/62 text-sm">This usually takes 15-30 seconds. Our AI is crafting scroll-stopping content.</p>
+        <h2 className="text-xl font-bold text-[#1A1414] mb-2">Generating your LinkedIn posts...</h2>
+        <p className="text-[#6B5B5A] text-sm">This usually takes 15-30 seconds. Our AI is crafting scroll-stopping content.</p>
       </div>
     );
   }
@@ -1332,16 +1309,16 @@ export default function CreatePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-[#1A1414] tracking-tight">
             {posts.length} LinkedIn Post{posts.length !== 1 ? "s" : ""} Ready!
           </h1>
-          <p className="text-white/62 text-sm mt-1">
+          <p className="text-[#6B5B5A] text-sm mt-1">
             Review your posts, edit if needed, then copy and paste into LinkedIn.
           </p>
         </div>
         <button
           onClick={() => { setStep("form"); setPosts([]); setBatchId(null); }}
-          className="flex items-center gap-2 text-sm text-white/62 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-sm text-[#6B5B5A] hover:text-[#1A1414] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Create More

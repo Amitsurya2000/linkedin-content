@@ -19,7 +19,7 @@ export default function DashboardError({
         <div className="mt-6 flex items-center justify-center gap-3">
           <button
             onClick={reset}
-            className="rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-white hover:bg-red-700"
+            className="rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-[#1A1414] hover:bg-red-700"
           >
             Try again
           </button>

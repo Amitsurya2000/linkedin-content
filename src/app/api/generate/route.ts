@@ -9,7 +9,7 @@ import { generateLinkedInPosts } from "@/lib/gemini";
 import { profileToContext, type CreatorProfileData } from "@/lib/resume";
 import { eq, and } from "drizzle-orm";
 
-const VALID_POST_TYPES = ["text", "carousel", "article", "poll"] as const;
+const VALID_POST_TYPES = ["text", "carousel", "article"] as const;
 
 export async function POST(req: NextRequest) {
   try {
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     if (!VALID_POST_TYPES.includes(postType)) {
       return NextResponse.json(
-        { error: "postType must be one of: text, carousel, article, poll" },
+        { error: "postType must be one of: text, carousel, article" },
         { status: 400 }
       );
     }
@@ -151,7 +151,6 @@ export async function POST(req: NextRequest) {
         topic: topic.trim(),
         postType,
         postsCount: count,
-        industry: industry || undefined,
         targetAudience: targetAudience || undefined,
         tonePrefs: tonePrefs || undefined,
         profileContext,
