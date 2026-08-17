@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useWorkspace } from "@/components/workspace-context";
 import { Button } from "@/components/ui/button";
 import { PlusSquare, Layers } from "lucide-react";
+import { AccentIcon, AccentBadge, type Accent } from "@/components/accent-icon";
 
 interface Batch {
   id: string;
@@ -15,21 +16,19 @@ interface Batch {
   createdAt: string;
 }
 
+// Completed and Failed were both red on red here too, and Pending's dot was
+// #FAE8E6 — the page's own background colour.
+const STATUS: Record<string, { label: string; accent: Accent; pulse?: boolean }> = {
+  completed: { label: "Completed", accent: "green" },
+  generating_briefs: { label: "Generating", accent: "amber", pulse: true },
+  generating_images: { label: "Generating", accent: "amber", pulse: true },
+  pending: { label: "Pending", accent: "slate" },
+  failed: { label: "Failed", accent: "red" },
+};
+
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; dot: string; text: string; bg: string }> = {
-    completed: { label: "Completed", dot: "bg-red-500", text: "text-red-700", bg: "bg-red-50" },
-    generating_briefs: { label: "Generating", dot: "bg-amber-500 animate-pulse", text: "text-amber-700", bg: "bg-amber-50" },
-    generating_images: { label: "Generating", dot: "bg-amber-500 animate-pulse", text: "text-amber-700", bg: "bg-amber-50" },
-    pending: { label: "Pending", dot: "bg-[#FAE8E6]", text: "text-[#6B5B5A]", bg: "bg-[#FDF3F2]" },
-    failed: { label: "Failed", dot: "bg-red-500", text: "text-red-700", bg: "bg-red-50" },
-  };
-  const { label, dot, text, bg } = config[status] ?? config.pending;
-  return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg ${text} ${bg}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-      {label}
-    </span>
-  );
+  const { label, accent, pulse } = STATUS[status] ?? STATUS.pending;
+  return <AccentBadge accent={accent} label={label} pulse={pulse} />;
 }
 
 export default function HistoryPage() {
@@ -117,15 +116,13 @@ export default function HistoryPage() {
 
       {!loading && batches.length === 0 && (
         <div className="rounded-2xl border border-dashed border-[#F2DAD8] bg-white flex flex-col items-center text-center py-20 space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#FDF3F2] border border-[#F2DAD8] flex items-center justify-center">
-            <Layers className="w-7 h-7 text-[#6B5B5A]" />
-          </div>
+          <AccentIcon icon={Layers} accent="linkedin" size="xl" />
           <div>
             <h3 className="text-lg font-semibold text-[#1A1414]">No posts yet</h3>
             <p className="text-[#6B5B5A] text-sm mt-1 max-w-xs">Your generated posts will appear here.</p>
           </div>
           <Link href="/create">
-            <Button className="bg-red-600 hover:bg-red-700 text-[#1A1414] gap-2 rounded-xl cursor-pointer">
+            <Button className="bg-[#ED383B] hover:bg-[#C21D1D] text-white gap-2 rounded-xl cursor-pointer">
               <PlusSquare className="w-4 h-4" /> Create Posts
             </Button>
           </Link>
@@ -134,7 +131,7 @@ export default function HistoryPage() {
 
       {!loading && batches.length > 0 && (
         <div className="rounded-2xl bg-white border border-[#F2DAD8] overflow-hidden shadow-sm">
-          <div className="hidden md:grid grid-cols-[2fr_80px_120px_120px_60px] gap-4 px-5 py-3 border-b border-[#F2DAD8] bg-slate-50">
+          <div className="hidden md:grid grid-cols-[2fr_80px_120px_120px_60px] gap-4 px-5 py-3 border-b border-[#F2DAD8] bg-[#FDF3F2]">
             <span className="text-xs font-medium text-[#6B5B5A] uppercase tracking-wider">Business</span>
             <span className="text-xs font-medium text-[#6B5B5A] uppercase tracking-wider">Posts</span>
             <span className="text-xs font-medium text-[#6B5B5A] uppercase tracking-wider">Status</span>
@@ -143,11 +140,9 @@ export default function HistoryPage() {
           </div>
           <div className="divide-y divide-[#F2DAD8]">
             {batches.map((batch) => (
-              <div key={batch.id} className="grid grid-cols-1 md:grid-cols-[2fr_80px_120px_120px_60px] gap-4 items-center px-5 py-4 hover:bg-slate-50 transition-colors">
+              <div key={batch.id} className="grid grid-cols-1 md:grid-cols-[2fr_80px_120px_120px_60px] gap-4 items-center px-5 py-4 hover:bg-[#FDF3F2] transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center shrink-0">
-                    <Layers className="w-3.5 h-3.5 text-red-600" />
-                  </div>
+                  <AccentIcon icon={Layers} accent="linkedin" size="sm" />
                   <div className="min-w-0">
                     <p className="text-[#1A1414] font-medium text-sm truncate">{batch.businessName}</p>
                     {batch.websiteUrl && <p className="text-[#6B5B5A] text-xs truncate">{batch.websiteUrl}</p>}
@@ -162,7 +157,7 @@ export default function HistoryPage() {
                 </div>
                 <div className="flex justify-end">
                   <Link href={`/history/${batch.id}`}>
-                    <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg gap-1 cursor-pointer">View</Button>
+                    <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-[#C21D1D] hover:text-[#8E1B18] hover:bg-red-50 rounded-lg gap-1 cursor-pointer">View</Button>
                   </Link>
                 </div>
               </div>

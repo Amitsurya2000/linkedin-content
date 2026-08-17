@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Star,
 } from "lucide-react";
+import { AccentIcon, ACCENTS, type Accent } from "@/components/accent-icon";
 
 /**
  * Colour rules this page follows, all measured rather than eyeballed:
@@ -39,7 +40,10 @@ export default async function LandingPage() {
       <nav className="sticky top-0 z-50 bg-[#FDF3F2]/85 backdrop-blur-xl border-b border-[#F2DAD8]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#D4302E] flex items-center justify-center shadow-lg shadow-[#ED383B]/25">
+            {/* The mark is the one place the LinkedIn glyph should be LinkedIn's
+                own blue rather than the app's red — it names the platform, not
+                the product. White on #0A66C2 is 5.69:1. */}
+            <div className="w-8 h-8 rounded-lg bg-[#0A66C2] flex items-center justify-center shadow-lg shadow-[#0A66C2]/25">
               <Linkedin className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold tracking-tight">LI Post Gen</span>
@@ -98,8 +102,8 @@ export default async function LandingPage() {
 
         <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-24 text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#F2DAD8] text-[#C9282A] text-xs font-semibold mb-8 shadow-sm">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#D4302E] animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#EFCB93] text-[#B45309] text-xs font-semibold mb-8 shadow-sm">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#B45309] animate-pulse" />
             AI-Powered LinkedIn Content
           </div>
 
@@ -163,7 +167,7 @@ export default async function LandingPage() {
       <section id="how-it-works" className="border-y border-[#F2DAD8] bg-white">
         <div className="max-w-5xl mx-auto px-6 py-28">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FDF3F2] border border-[#F2DAD8] text-[#C9282A] text-xs font-semibold mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D7EBCE] border border-[#B2D8A4] text-[#44712E] text-xs font-semibold mb-6">
               <TrendingUp className="w-3.5 h-3.5" />
               Simple Workflow
             </div>
@@ -204,7 +208,7 @@ export default async function LandingPage() {
       {/* Features Grid */}
       <section id="features" className="max-w-6xl mx-auto px-6 py-28">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#F2DAD8] text-[#C9282A] text-xs font-semibold mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#DCE6F1] border border-[#B7CDE7] text-[#0A66C2] text-xs font-semibold mb-6">
             <Zap className="w-3.5 h-3.5" />
             Content Types
           </div>
@@ -221,19 +225,22 @@ export default async function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FeatureCard
-            icon={<FileText className="w-6 h-6 text-[#D4302E]" />}
+            icon={FileText}
+            accent="linkedin"
             title="Text Posts"
             description="Classic LinkedIn text posts with scroll-stopping hooks, compelling body copy, and strategic hashtags. The most popular format on LinkedIn."
             tag="Most Popular"
           />
           <FeatureCard
-            icon={<Layers className="w-6 h-6 text-[#D4302E]" />}
+            icon={Layers}
+            accent="amber"
             title="Carousel Posts"
             description="Multi-slide document posts that drive the highest engagement. Each slide crafted with clear messaging and visual flow."
             tag="Highest Engagement"
           />
           <FeatureCard
-            icon={<MessageSquare className="w-6 h-6 text-[#D4302E]" />}
+            icon={MessageSquare}
+            accent="slate"
             title="Article Outlines"
             description="Long-form article outlines with structured sections, key talking points, and SEO-optimized headlines for LinkedIn articles."
             tag="Thought Leadership"
@@ -255,20 +262,25 @@ export default async function LandingPage() {
           </p>
         </div>
 
+        {/* The accent is chosen by what the line MEANS — amber for the two that
+            are about generating an idea, LinkedIn blue for the two that are
+            about the platform, green for the one that completes something,
+            slate for the one that is scaffolding. Six identical red icons told
+            the reader nothing. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { icon: Zap, text: "Psychology-driven hooks that stop the scroll" },
-            { icon: Lightbulb, text: "Multiple post variations to A/B test your content" },
-            { icon: FileText, text: "LinkedIn-optimized hashtag suggestions" },
-            { icon: BarChart3, text: "Content calendar to plan your posting schedule" },
-            { icon: CheckCircle2, text: "One-click copy to clipboard for instant posting" },
-            { icon: MessageSquare, text: "Caption variations for different audiences" },
-          ].map(({ icon: Icon, text }, i) => (
+            { icon: Zap, text: "Psychology-driven hooks that stop the scroll", accent: "amber" as const, glow: true },
+            { icon: Lightbulb, text: "Multiple post variations to A/B test your content", accent: "amber" as const, glow: true },
+            { icon: FileText, text: "LinkedIn-optimized hashtag suggestions", accent: "linkedin" as const },
+            { icon: BarChart3, text: "Content calendar to plan your posting schedule", accent: "slate" as const },
+            { icon: CheckCircle2, text: "One-click copy to clipboard for instant posting", accent: "green" as const },
+            { icon: MessageSquare, text: "Caption variations for different audiences", accent: "linkedin" as const },
+          ].map(({ icon: Icon, text, accent, glow }, i) => (
             <div
               key={i}
               className="flex items-center gap-4 rounded-xl bg-white border border-[#F2DAD8] px-5 py-4 hover:border-[#ED383B]/40 transition-all shadow-sm"
             >
-              <Icon className="w-5 h-5 text-[#D4302E] shrink-0" />
+              <AccentIcon icon={Icon} accent={accent} size="sm" glow={glow} />
               <span className="text-sm text-[#453838]">{text}</span>
             </div>
           ))}
@@ -313,7 +325,7 @@ export default async function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-[#D4302E] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-[#0A66C2] flex items-center justify-center">
                 <Linkedin className="w-3.5 h-3.5 text-white" />
               </div>
               <span className="text-sm font-bold">LI Post Gen</span>
@@ -335,22 +347,28 @@ export default async function LandingPage() {
 
 function FeatureCard({
   icon,
+  accent,
   title,
   description,
   tag,
 }: {
-  icon: React.ReactNode;
+  icon: React.ElementType;
+  accent: Accent;
   title: string;
   description: string;
   tag: string;
 }) {
+  const a = ACCENTS[accent];
   return (
     <div className="rounded-2xl bg-white border border-[#F2DAD8] p-8 hover:border-[#ED383B]/40 transition-all group shadow-sm">
-      <div className="flex items-center justify-between mb-5">
-        <div className="w-12 h-12 rounded-xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
-          {icon}
-        </div>
-        <span className="text-[10px] font-bold uppercase tracking-wider text-[#B32A2C] bg-[#ED383B]/[.10] px-2.5 py-1 rounded-full border border-[#ED383B]/20">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <AccentIcon icon={icon} accent={accent} size="lg" />
+        {/* The tag takes the card's accent as TEXT on white, where the palette
+            measures 5:1 and up — not on its own tint, where it would not. */}
+        <span
+          className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border bg-white"
+          style={{ color: a.fg, borderColor: a.ring }}
+        >
           {tag}
         </span>
       </div>

@@ -34,6 +34,7 @@ import {
   Clock,
   Maximize2,
 } from "lucide-react";
+import { AccentIcon, ACCENTS, type Accent } from "@/components/accent-icon";
 
 type PostType = "text" | "carousel" | "article";
 type Step = "form" | "generating" | "done";
@@ -54,10 +55,10 @@ interface GeneratedPost {
   carouselImages?: string[] | null;
 }
 
-const POST_TYPES: { value: PostType; label: string; description: string; icon: React.ElementType }[] = [
-  { value: "text", label: "Text Post", description: "Classic LinkedIn text post — most popular format", icon: FileText },
-  { value: "carousel", label: "Carousel", description: "Multi-slide document — highest engagement", icon: Layers },
-  { value: "article", label: "Article", description: "Long-form article outline for thought leadership", icon: MessageSquare },
+const POST_TYPES: { value: PostType; label: string; description: string; icon: React.ElementType; accent: Accent }[] = [
+  { value: "text", label: "Text Post", description: "Classic LinkedIn text post — most popular format", icon: FileText, accent: "linkedin" },
+  { value: "carousel", label: "Carousel", description: "Multi-slide document — highest engagement", icon: Layers, accent: "amber" },
+  { value: "article", label: "Article", description: "Long-form article outline for thought leadership", icon: MessageSquare, accent: "slate" },
 ];
 
 const TONES = [
@@ -507,7 +508,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   onClick={() => setGenArt(!genArt)}
                   disabled={carLoading}
                   className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
-                    genArt ? "border-[#ED383B] text-[#C9282A] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
+                    genArt ? "border-[#EFCB93] text-[#B45309] bg-[#FCE2BA]" : "border-[#F2DAD8] text-[#6B5B5A]"
                   }`}
                   title="Generate an image for slides with no uploaded picture (slow, uses quota)"
                 >
@@ -631,7 +632,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
             <img src={imageUrl} alt="Generated premium visual" className="w-full h-full object-contain" />
           ) : (
             <div className="text-center px-4">
-              <Wand2 className="w-7 h-7 text-[#6B5B5A] mx-auto mb-2" />
+              <div className="flex justify-center mb-3"><AccentIcon icon={Wand2} accent="amber" size="xl" glow /></div>
               <p className="text-xs text-[#6B5B5A]">{imgError || "No image yet"}</p>
               <button
                 onClick={() => generateImage(imgStyle)}
@@ -1002,26 +1003,27 @@ export default function CreatePage() {
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-[#1A1414]">Post Type</Label>
                 <div className="grid grid-cols-2 gap-3">
-                  {POST_TYPES.map((pt) => (
-                    <button
-                      key={pt.value}
-                      type="button"
-                      onClick={() => setPostType(pt.value)}
-                      className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
-                        postType === pt.value
-                          ? "border-[#ED383B] bg-[#ED383B]/[.10]"
-                          : "border-[#F2DAD8] bg-white hover:border-[#ED383B]/50"
-                      }`}
-                    >
-                      <pt.icon className={`w-5 h-5 mt-0.5 shrink-0 ${postType === pt.value ? "text-[#C9282A]" : "text-[#6B5B5A]"}`} />
-                      <div>
-                        <p className={`text-sm font-semibold ${postType === pt.value ? "text-[#C9282A]" : "text-[#1A1414]"}`}>
-                          {pt.label}
-                        </p>
-                        <p className="text-xs text-[#6B5B5A] mt-0.5">{pt.description}</p>
-                      </div>
-                    </button>
-                  ))}
+                  {POST_TYPES.map((pt) => {
+                    const a = ACCENTS[pt.accent];
+                    const on = postType === pt.value;
+                    return (
+                      <button
+                        key={pt.value}
+                        type="button"
+                        onClick={() => setPostType(pt.value)}
+                        className="flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left bg-white"
+                        style={on ? { borderColor: a.fg, background: a.tint } : { borderColor: "#F2DAD8" }}
+                      >
+                        <pt.icon className="w-5 h-5 mt-0.5 shrink-0" style={{ color: on ? a.fg : "#6B5B5A" }} />
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: on ? a.fg : "#1A1414" }}>
+                            {pt.label}
+                          </p>
+                          <p className="text-xs text-[#6B5B5A] mt-0.5">{pt.description}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

@@ -13,6 +13,7 @@ import {
   Clock,
   Layers,
 } from "lucide-react";
+import { AccentIcon, AccentBadge, type Accent } from "@/components/accent-icon";
 
 interface Batch {
   id: string;
@@ -23,20 +24,21 @@ interface Batch {
   createdAt: string;
 }
 
+/**
+ * Completed and Failed were both red, on a red dot, in a red pill — the two
+ * outcomes a status badge exists to tell apart were rendered identically. Draft
+ * carried `bg-white/40` for its dot, invisible once the surface went white.
+ */
+const STATUS: Record<string, { label: string; accent: Accent; pulse?: boolean }> = {
+  completed: { label: "Completed", accent: "green" },
+  generating: { label: "Generating", accent: "amber", pulse: true },
+  failed: { label: "Failed", accent: "red" },
+  draft: { label: "Draft", accent: "slate" },
+};
+
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; dotCls: string; textCls: string; bgCls: string }> = {
-    completed: { label: "Completed", dotCls: "bg-red-500", textCls: "text-red-400", bgCls: "bg-red-500/10" },
-    generating: { label: "Generating", dotCls: "bg-amber-500 animate-pulse", textCls: "text-amber-400", bgCls: "bg-amber-500/10" },
-    failed: { label: "Failed", dotCls: "bg-red-500", textCls: "text-red-400", bgCls: "bg-red-500/10" },
-    draft: { label: "Draft", dotCls: "bg-white/40", textCls: "text-[#6B5B5A]", bgCls: "bg-[#FAE8E6]" },
-  };
-  const { label, dotCls, textCls, bgCls } = config[status] ?? config.draft;
-  return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg ${textCls} ${bgCls}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dotCls}`} />
-      {label}
-    </span>
-  );
+  const { label, accent, pulse } = STATUS[status] ?? STATUS.draft;
+  return <AccentBadge accent={accent} label={label} pulse={pulse} />;
 }
 
 export default function DashboardPage() {
@@ -88,32 +90,14 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Stats Cards */}
+      {/* Four stats that were four shades of the same red. The accent now says
+          which is which at a glance: total is the platform, this-week is growth,
+          drafts are unfinished, scheduled is time. */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          icon={<FileText className="w-5 h-5 text-[#C9282A]" />}
-          label="Total Posts Generated"
-          value={stats.total}
-          loading={loading}
-        />
-        <StatCard
-          icon={<TrendingUp className="w-5 h-5 text-red-400" />}
-          label="Posts This Week"
-          value={stats.thisWeek}
-          loading={loading}
-        />
-        <StatCard
-          icon={<Layers className="w-5 h-5 text-[#D4302E]" />}
-          label="Drafts Ready"
-          value={stats.drafts}
-          loading={loading}
-        />
-        <StatCard
-          icon={<CalendarDays className="w-5 h-5 text-[#C9282A]" />}
-          label="Scheduled"
-          value={stats.scheduled}
-          loading={loading}
-        />
+        <StatCard icon={FileText} accent="linkedin" label="Total Posts Generated" value={stats.total} loading={loading} />
+        <StatCard icon={TrendingUp} accent="green" label="Posts This Week" value={stats.thisWeek} loading={loading} />
+        <StatCard icon={Layers} accent="amber" label="Drafts Ready" value={stats.drafts} loading={loading} />
+        <StatCard icon={CalendarDays} accent="slate" label="Scheduled" value={stats.scheduled} loading={loading} />
       </div>
 
       {/* Quick Action Card */}
@@ -144,9 +128,7 @@ export default function DashboardPage() {
       {/* Empty State */}
       {!loading && batches.length === 0 && (
         <div className="rounded-2xl border border-dashed border-[#F2DAD8] bg-white flex flex-col items-center text-center py-16 space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
-            <FileText className="w-7 h-7 text-[#C9282A]" />
-          </div>
+          <AccentIcon icon={FileText} accent="linkedin" size="xl" />
           <div>
             <h3 className="text-lg font-semibold text-[#1A1414]">
               No posts yet
@@ -187,12 +169,10 @@ export default function DashboardPage() {
               {batches.map((batch) => (
                 <div
                   key={batch.id}
-                  className="grid grid-cols-1 md:grid-cols-[2fr_1fr_80px_120px_80px] gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors"
+                  className="grid grid-cols-1 md:grid-cols-[2fr_1fr_80px_120px_80px] gap-4 items-center px-5 py-4 hover:bg-[#FDF3F2] transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center shrink-0">
-                      <FileText className="w-4 h-4 text-[#C9282A]" />
-                    </div>
+                    <AccentIcon icon={FileText} accent="linkedin" size="sm" />
                     <div className="min-w-0">
                       <p className="text-[#1A1414] font-medium text-sm truncate">
                         {batch.topic || "Untitled"}
@@ -224,13 +204,23 @@ export default function DashboardPage() {
   );
 }
 
-function StatCard({ icon, label, value, loading }: { icon: React.ReactNode; label: string; value: number; loading: boolean }) {
+function StatCard({
+  icon,
+  accent,
+  label,
+  value,
+  loading,
+}: {
+  icon: React.ElementType;
+  accent: Accent;
+  label: string;
+  value: number;
+  loading: boolean;
+}) {
   return (
     <div className="rounded-2xl bg-white border border-[#F2DAD8] p-5">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl bg-[#FDF3F2] flex items-center justify-center">
-          {icon}
-        </div>
+        <AccentIcon icon={icon} accent={accent} size="md" />
       </div>
       {loading ? (
         <div className="h-8 w-16 bg-[#FAE8E6] rounded-lg animate-pulse" />

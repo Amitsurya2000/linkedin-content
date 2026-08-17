@@ -6,6 +6,7 @@ import {
   Loader2, Sparkles, Copy, Check, Download, Mail, MessageSquare, Send,
   Building2, Star, Video, UserCircle2, Upload,
 } from "lucide-react";
+import { ACCENTS, type Accent } from "@/components/accent-icon";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -13,14 +14,18 @@ import { Textarea } from "@/components/ui/textarea";
 
 type Kind = "newsletter" | "comments" | "dms" | "companyPage" | "featured" | "videoScript" | "photo";
 
-const TABS: { k: Kind; label: string; icon: React.ElementType; blurb: string }[] = [
-  { k: "newsletter", label: "Newsletter", icon: Mail, blurb: "A full issue plus a downloadable cover." },
-  { k: "comments", label: "Comments", icon: MessageSquare, blurb: "Comments that get you noticed on other people's posts." },
-  { k: "dms", label: "DMs & intros", icon: Send, blurb: "Connection notes and follow-ups, researched not sprayed." },
-  { k: "featured", label: "Featured", icon: Star, blurb: "The 4 items pinned at the top of your profile, with covers." },
-  { k: "companyPage", label: "Company page", icon: Building2, blurb: "Tagline, About and a week of page posts." },
-  { k: "videoScript", label: "Video script", icon: Video, blurb: "A 45–70s talking-head script with a shot list." },
-  { k: "photo", label: "Profile photo", icon: UserCircle2, blurb: "Turn a headshot into a proper profile photo." },
+// The accent groups the rail: blue for the LinkedIn-native surfaces, green for
+// the two that are conversations, amber for the one about standing out, slate
+// for the structural one. Seven identical grey chips gave the eye nothing to
+// sort by.
+const TABS: { k: Kind; label: string; icon: React.ElementType; accent: Accent; blurb: string }[] = [
+  { k: "newsletter", label: "Newsletter", icon: Mail, accent: "linkedin", blurb: "A full issue plus a downloadable cover." },
+  { k: "comments", label: "Comments", icon: MessageSquare, accent: "green", blurb: "Comments that get you noticed on other people's posts." },
+  { k: "dms", label: "DMs & intros", icon: Send, accent: "green", blurb: "Connection notes and follow-ups, researched not sprayed." },
+  { k: "featured", label: "Featured", icon: Star, accent: "amber", blurb: "The 4 items pinned at the top of your profile, with covers." },
+  { k: "companyPage", label: "Company page", icon: Building2, accent: "slate", blurb: "Tagline, About and a week of page posts." },
+  { k: "videoScript", label: "Video script", icon: Video, accent: "rust", blurb: "A 45–70s talking-head script with a shot list." },
+  { k: "photo", label: "Profile photo", icon: UserCircle2, accent: "linkedin", blurb: "Turn a headshot into a proper profile photo." },
 ];
 
 const THEMES = [
@@ -130,18 +135,25 @@ export default function AssetsPage() {
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-1.5">
-        {TABS.map(({ k, label, icon: Icon }) => (
-          <button
-            key={k}
-            onClick={() => { setTab(k); setError(null); }}
-            className={`flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-semibold border transition-colors ${
-              tab === k ? "bg-[#ED383B] text-white border-[#ED383B]" : "bg-white text-[#6B5B5A] border-[#F2DAD8] hover:border-[#ED383B]/50"
-            }`}
-          >
-            <Icon className="w-3.5 h-3.5" />
-            {label}
-          </button>
-        ))}
+        {TABS.map(({ k, label, icon: Icon, accent }) => {
+          const a = ACCENTS[accent];
+          const active = tab === k;
+          return (
+            <button
+              key={k}
+              onClick={() => { setTab(k); setError(null); }}
+              className="flex items-center gap-1.5 px-3 h-9 rounded-xl text-xs font-semibold border transition-colors"
+              style={
+                active
+                  ? { background: a.fg, borderColor: a.fg, color: "#FFFFFF" }
+                  : { background: "#FFFFFF", borderColor: a.ring, color: a.fg }
+              }
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       <p className="text-xs text-[#6B5B5A] -mt-3">{TABS.find((t) => t.k === tab)?.blurb}</p>
@@ -176,7 +188,7 @@ export default function AssetsPage() {
           >
             <input ref={photoRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) setPhotoFile(f); }} />
-            {photoFile ? <Check className="w-6 h-6 text-[#C9282A] mx-auto mb-1.5" /> : <Upload className="w-6 h-6 text-[#6B5B5A] mx-auto mb-1.5" />}
+            {photoFile ? <Check className="w-6 h-6 text-[#44712E] mx-auto mb-1.5" /> : <Upload className="w-6 h-6 text-[#6B5B5A] mx-auto mb-1.5" />}
             <p className="text-xs text-[#1A1414] font-semibold">{photoFile ? photoFile.name : "Drop a headshot, or click to choose"}</p>
             <p className="text-[11px] text-[#6B5B5A] mt-0.5">JPG or PNG. Shoulders-up works best. Your photo is processed and returned — never stored.</p>
           </div>
@@ -209,7 +221,7 @@ export default function AssetsPage() {
               </div>
             </div>
           )}
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-[#C21D1D]">{error}</p>}
         </div>
       ) : (
         <>
@@ -228,7 +240,7 @@ export default function AssetsPage() {
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {busy ? "Writing…" : current ? "Regenerate" : "Generate"}
             </Button>
-            {error && <p className="text-xs text-red-500">{error}</p>}
+            {error && <p className="text-xs text-[#C21D1D]">{error}</p>}
           </div>
 
           {/* ── Newsletter ── */}
@@ -317,7 +329,7 @@ export default function AssetsPage() {
                         </div>
                         <p className="text-sm text-[#1A1414]">{st.text}</p>
                         {st.charCount !== undefined && (
-                          <p className={`text-[10px] ${over ? "text-red-500 font-semibold" : "text-[#6B5B5A]"}`}>
+                          <p className={`text-[10px] ${over ? "text-[#C21D1D] font-semibold" : "text-[#6B5B5A]"}`}>
                             {st.charCount} characters{over ? " — over LinkedIn's 300 limit for connection notes" : ""}
                           </p>
                         )}

@@ -29,8 +29,11 @@ export default async function DashboardLayout({
       <aside className="w-64 shrink-0 flex flex-col text-white" style={{ background: "linear-gradient(160deg, #D4302E 0%, #A81818 100%)" }}>
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 h-16 border-b border-white/20">
-          <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-            <Linkedin className="w-4 h-4 text-white" />
+          {/* LinkedIn's own blue on a solid white chip. On the red band a blue
+              tile would fight the ground; the white chip gives the glyph a
+              surface of its own, and #0A66C2 on white is 5.69:1. */}
+          <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+            <Linkedin className="w-4 h-4 text-[#0A66C2]" />
           </div>
           <div>
             <span className="text-base font-bold text-white tracking-tight">LI Post Gen</span>

@@ -733,7 +733,7 @@ export function ResumeOnboarding({
           </div>
         )}
 
-        {error && <p className="text-xs text-red-500 mt-3">{error}</p>}
+        {error && <p className="text-xs text-[#C21D1D] mt-3">{error}</p>}
 
         {profile && (
           <button

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, TrendingUp, Lightbulb } from "lucide-react";
+import { AccentIcon, ACCENTS, type Accent } from "@/components/accent-icon";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -13,10 +14,13 @@ const BLANK = {
   impressions: "", reactions: "", comments: "", reposts: "", saves: "", profileViews: "",
 };
 
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+// The label carries the accent rather than the number: an accent as TEXT wants
+// a white ground, and the number should stay ink so the eye reads the value
+// before the category.
+function Stat({ label, value, hint, accent = "slate" }: { label: string; value: string; hint?: string; accent?: Accent }) {
   return (
     <div className="rounded-xl bg-white border border-[#F2DAD8] p-4">
-      <p className="text-[10px] uppercase tracking-wider text-[#6B5B5A] font-bold">{label}</p>
+      <p className="text-[10px] uppercase tracking-wider font-bold" style={{ color: ACCENTS[accent].fg }}>{label}</p>
       <p className="text-2xl font-bold text-[#1A1414] mt-0.5">{value}</p>
       {hint && <p className="text-[11px] text-[#6B5B5A]">{hint}</p>}
     </div>
@@ -147,22 +151,22 @@ export default function AnalyticsPage() {
 
       {rows.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-[#F2DAD8] bg-[#FDF3F2] p-8 text-center">
-          <TrendingUp className="w-7 h-7 text-[#6B5B5A] mx-auto mb-2" />
+          <div className="flex justify-center mb-3"><AccentIcon icon={TrendingUp} accent="green" size="xl" /></div>
           <p className="text-sm text-[#1A1414] font-medium">Nothing logged yet</p>
           <p className="text-xs text-[#6B5B5A] mt-1">Log 5–10 posts and this page starts telling you which format, hook and day actually work for you.</p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Stat label="Posts" value={String(insights?.totals.posts ?? 0)} />
-            <Stat label="Impressions" value={(insights?.totals.impressions ?? 0).toLocaleString()} />
-            <Stat label="Engagement" value={`${(insights?.totals.rate ?? 0).toFixed(1)}%`} hint="per 100 impressions" />
-            <Stat label="Profile views" value={(insights?.totals.profileViews ?? 0).toLocaleString()} />
+            <Stat label="Posts" value={String(insights?.totals.posts ?? 0)} accent="linkedin" />
+            <Stat label="Impressions" value={(insights?.totals.impressions ?? 0).toLocaleString()} accent="slate" />
+            <Stat label="Engagement" value={`${(insights?.totals.rate ?? 0).toFixed(1)}%`} hint="per 100 impressions" accent="green" />
+            <Stat label="Profile views" value={(insights?.totals.profileViews ?? 0).toLocaleString()} accent="amber" />
           </div>
 
           {insights?.findings.length ? (
             <div className="rounded-2xl bg-[#FDF3F2] border border-[#F2DAD8] p-5 space-y-2">
-              <h3 className="text-sm font-semibold text-[#1A1414] flex items-center gap-1.5"><Lightbulb className="w-4 h-4 text-[#C9282A]" /> What the numbers say</h3>
+              <h3 className="text-sm font-semibold text-[#1A1414] flex items-center gap-1.5"><Lightbulb className="w-4 h-4 text-[#B45309]" /> What the numbers say</h3>
               <ul className="space-y-1.5">
                 {insights.findings.map((f, i) => <li key={i} className="text-xs text-[#1A1414]">• {f}</li>)}
               </ul>

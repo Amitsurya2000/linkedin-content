@@ -64,13 +64,13 @@ export default async function BatchDetailPage({
           </span>
           <span className="text-[#1A1414]">|</span>
           <span className="flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-red-500" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#44712E]" />
             {completedCount} completed
           </span>
           {failedCount > 0 && (
             <>
               <span className="text-[#1A1414]">|</span>
-              <span className="flex items-center gap-1 text-red-500">
+              <span className="flex items-center gap-1 text-[#44712E]">
                 <XCircle className="w-3.5 h-3.5" />
                 {failedCount} failed
               </span>

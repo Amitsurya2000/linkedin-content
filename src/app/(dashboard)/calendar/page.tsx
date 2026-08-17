@@ -101,11 +101,11 @@ function PostMini({
           <ImageIcon className="w-3 h-3 text-[#6B5B5A]" />
         </div>
       )}
-      <span className="text-xs text-[#6B5B5A] truncate flex-1 group-hover:text-red-700">
+      <span className="text-xs text-[#6B5B5A] truncate flex-1 group-hover:text-[#8E1B18]">
         {post.hook || "Untitled"}
       </span>
-      {post.publishedAt && <CheckCircle2 className="w-3 h-3 text-red-500 shrink-0" />}
-      {post.scheduledAt && !post.publishedAt && <Clock className="w-3 h-3 text-amber-500 shrink-0" />}
+      {post.publishedAt && <CheckCircle2 className="w-3 h-3 text-[#44712E] shrink-0" />}
+      {post.scheduledAt && !post.publishedAt && <Clock className="w-3 h-3 text-[#B45309] shrink-0" />}
     </button>
   );
 }
@@ -285,11 +285,11 @@ function PostDetail({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {post.approvalStatus === "published" || post.publishedAt ? (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-lg">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#44712E] bg-[#D7EBCE] border border-[#B2D8A4] px-2 py-0.5 rounded-lg">
                   <CheckCircle2 className="w-3 h-3" /> Published
                 </span>
               ) : post.approvalStatus === "scheduled" || (post.scheduledAt && !post.publishedAt) ? (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#B45309] bg-[#FCE2BA] border border-[#EFCB93] px-2 py-0.5 rounded-lg">
                   <Clock className="w-3 h-3" /> Scheduled{" "}
                   {post.scheduledAt &&
                     new Date(post.scheduledAt).toLocaleDateString(undefined, {
@@ -300,11 +300,11 @@ function PostDetail({
                     })}
                 </span>
               ) : post.approvalStatus === "approved" ? (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-lg">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#0A66C2] bg-[#DCE6F1] border border-[#B7CDE7] px-2 py-0.5 rounded-lg">
                   <CheckCircle2 className="w-3 h-3" /> Approved
                 </span>
               ) : (
-                <span className="text-xs font-medium text-[#6B5B5A] bg-[#FDF3F2] px-2 py-0.5 rounded-lg">
+                <span className="text-xs font-semibold text-[#38434F] bg-[#E9E5DF] border border-[#D2CDC5] px-2 py-0.5 rounded-lg">
                   Draft
                 </span>
               )}
@@ -320,7 +320,7 @@ function PostDetail({
               <button
                 onClick={() => patchApprovalStatus("approved")}
                 disabled={statusSaving}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-600 text-[#1A1414] hover:bg-red-700 cursor-pointer disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-[#0A66C2] text-white hover:bg-[#004182] cursor-pointer disabled:opacity-50 transition-colors"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 {statusSaving ? "Saving..." : "Approve"}
@@ -331,7 +331,7 @@ function PostDetail({
                 <button
                   onClick={() => patchSchedule()}
                   disabled={statusSaving || !scheduleDate || !scheduleTime}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-amber-500 text-[#1A1414] hover:bg-amber-600 cursor-pointer disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-[#B45309] text-white hover:bg-[#915907] cursor-pointer disabled:opacity-50 transition-colors"
                 >
                   <CalendarIcon className="w-3.5 h-3.5" />
                   {statusSaving ? "Saving..." : "Schedule"}
@@ -339,7 +339,7 @@ function PostDetail({
                 <button
                   onClick={handlePublishNow}
                   disabled={statusSaving}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-600 text-[#1A1414] hover:bg-red-700 cursor-pointer disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-[#44712E] text-white hover:bg-[#375C25] cursor-pointer disabled:opacity-50 transition-colors"
                 >
                   <Send className="w-3.5 h-3.5" />
                   {statusSaving ? "Saving..." : "Publish Now"}
@@ -350,7 +350,7 @@ function PostDetail({
               <button
                 onClick={() => patchApprovalStatus("approved", { scheduledAt: null })}
                 disabled={statusSaving}
-                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-red-500 text-[#1A1414] hover:bg-red-600 cursor-pointer disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-[#B24020] text-white hover:bg-[#8E3319] cursor-pointer disabled:opacity-50 transition-colors"
               >
                 <Ban className="w-3.5 h-3.5" />
                 {statusSaving ? "Saving..." : "Cancel Schedule"}
@@ -391,7 +391,7 @@ function PostDetail({
                 <button
                   onClick={() => saveEdit("hookCategory")}
                   disabled={saving}
-                  className="text-red-600 hover:text-red-700 cursor-pointer"
+                  className="text-[#C21D1D] hover:text-[#8E1B18] cursor-pointer"
                 >
                   <Check className="w-4 h-4" />
                 </button>
@@ -404,13 +404,13 @@ function PostDetail({
               </div>
             ) : (
               <div className="flex items-center gap-2 mt-1 group">
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200">
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-red-50 text-[#8E1B18] border border-red-200">
                   <Hash className="w-3 h-3" />
                   {post.hookCategory || "None"}
                 </span>
                 <button
                   onClick={() => startEdit("hookCategory")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-red-600 cursor-pointer transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-[#C21D1D] cursor-pointer transition-opacity"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -440,7 +440,7 @@ function PostDetail({
                   <button
                     onClick={() => saveEdit("hook")}
                     disabled={saving}
-                    className="text-xs text-[#1A1414] bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
+                    className="text-xs text-white bg-[#ED383B] hover:bg-[#C21D1D] px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
@@ -453,7 +453,7 @@ function PostDetail({
                 </p>
                 <button
                   onClick={() => startEdit("hook")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-[#C21D1D] cursor-pointer transition-opacity mt-0.5 shrink-0"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -483,7 +483,7 @@ function PostDetail({
                   <button
                     onClick={() => saveEdit("body")}
                     disabled={saving}
-                    className="text-xs text-[#1A1414] bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
+                    className="text-xs text-white bg-[#ED383B] hover:bg-[#C21D1D] px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
@@ -496,7 +496,7 @@ function PostDetail({
                 </p>
                 <button
                   onClick={() => startEdit("body")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-[#C21D1D] cursor-pointer transition-opacity mt-0.5 shrink-0"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -528,7 +528,7 @@ function PostDetail({
                   <button
                     onClick={() => saveEdit("hashtags")}
                     disabled={saving}
-                    className="text-xs text-[#1A1414] bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
+                    className="text-xs text-white bg-[#ED383B] hover:bg-[#C21D1D] px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
@@ -541,7 +541,7 @@ function PostDetail({
                     post.hashtags.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-lg bg-red-50 text-red-600 border border-red-100"
+                        className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-lg bg-red-50 text-[#C21D1D] border border-red-100"
                       >
                         #{tag.replace(/^#/, "")}
                       </span>
@@ -552,7 +552,7 @@ function PostDetail({
                 </div>
                 <button
                   onClick={() => startEdit("hashtags")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-[#C21D1D] cursor-pointer transition-opacity mt-0.5 shrink-0"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -582,7 +582,7 @@ function PostDetail({
                   <button
                     onClick={() => saveEdit("whyThisWorks")}
                     disabled={saving}
-                    className="text-xs text-[#1A1414] bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
+                    className="text-xs text-white bg-[#ED383B] hover:bg-[#C21D1D] px-3 py-1 rounded-lg cursor-pointer disabled:opacity-50"
                   >
                     {saving ? "Saving..." : "Save"}
                   </button>
@@ -595,7 +595,7 @@ function PostDetail({
                 </p>
                 <button
                   onClick={() => startEdit("whyThisWorks")}
-                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-red-600 cursor-pointer transition-opacity mt-0.5 shrink-0"
+                  className="opacity-0 group-hover:opacity-100 text-[#6B5B5A] hover:text-[#C21D1D] cursor-pointer transition-opacity mt-0.5 shrink-0"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -836,7 +836,7 @@ export default function CalendarPage() {
           <strong className="text-[#1A1414]">{posts.length}</strong> posts this month
         </span>
         <span>
-          <strong className="text-red-600">
+          <strong className="text-[#C21D1D]">
             {posts.filter((p) => p.publishedAt).length}
           </strong>{" "}
           published

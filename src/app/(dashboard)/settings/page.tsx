@@ -5,6 +5,7 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sparkles, ImageIcon, Key } from "lucide-react";
+import { AccentIcon } from "@/components/accent-icon";
 import { ApiKeyCard } from "@/components/settings/api-key-card";
 
 export default async function SettingsPage() {
@@ -65,7 +66,7 @@ export default async function SettingsPage() {
         title="Google Gemini"
         description="Required for generating LinkedIn posts"
         placeholder="AIzaSy..."
-        icon={<Sparkles className="w-5 h-5 text-red-600" />}
+        icon={<AccentIcon icon={Sparkles} accent="amber" size="md" glow />}
       />
 
       {/* fal.ai API Key */}
@@ -74,7 +75,7 @@ export default async function SettingsPage() {
         title="fal.ai"
         description="Optional — enables AI image generation"
         placeholder="fal_..."
-        icon={<ImageIcon className="w-5 h-5 text-red-600" />}
+        icon={<AccentIcon icon={ImageIcon} accent="rust" size="md" />}
       />
 
       {/* Footer */}

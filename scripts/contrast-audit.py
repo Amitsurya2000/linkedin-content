@@ -56,3 +56,27 @@ else:
             continue
         seen.add((c, f))
         print(f"{ratio:6.2f}  {c:9} {gname:12} {f}")
+
+# ── the accent palette ───────────────────────────────────────────────────────
+# Accents are applied through inline style objects rather than arbitrary Tailwind
+# values, so the scan above does not see them. They are checked here against the
+# two rules the palette promises: a glyph on its own tint (icons need 3:1) and
+# text on the page ground (4.5:1).
+ACCENTS = {
+    'linkedin': ('#0A66C2', '#DCE6F1'),
+    'amber':    ('#B45309', '#FCE2BA'),
+    'green':    ('#44712E', '#D7EBCE'),
+    'slate':    ('#38434F', '#E9E5DF'),
+    'rust':     ('#B24020', '#FADFD8'),
+    'red':      ('#C9282A', '#FBDDD9'),
+}
+print(f"\n{len(ACCENTS)} accents checked\n")
+print(f"  {'accent':9} {'glyph on tint':>14} {'text on blush':>14}")
+bad = 0
+for name, (fg, tint) in ACCENTS.items():
+    on_tint, on_page = cr(fg, tint), cr(fg, '#FDF3F2')
+    ok = on_tint >= 3.0 and on_page >= 4.5
+    bad += not ok
+    print(f"  {name:9} {on_tint:13.2f}{'' if on_tint >= 3 else ' !'} {on_page:13.2f}{'' if on_page >= 4.5 else ' !'}")
+if not bad:
+    print("\n  all accents clear 3:1 as a glyph on their tint and 4.5:1 as text on the page")

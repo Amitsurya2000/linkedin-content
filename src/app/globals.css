@@ -123,6 +123,16 @@
   --red-ink: #C9282A;   /* 5.50:1 on white · 5.05:1 on blush */
   --red-deep: #B32A2C;  /* 6.39:1 on white · 5.87:1 on blush */
   --ember: #FF7A33;
+
+  /* ---- accents (see src/components/accent-icon.tsx for the reasoning) ----
+     LinkedIn's own published extended palette. Red stays the brand; these carry
+     MEANING — platform, idea, done, structural, caution. Each accent is a glyph
+     on its tint (>=3:1) or text on white (>=5:1), never small text on its tint. */
+  --acc-linkedin: #0A66C2;  --acc-linkedin-tint: #DCE6F1;
+  --acc-amber:    #B45309;  --acc-amber-tint:    #FCE2BA;
+  --acc-green:    #44712E;  --acc-green-tint:    #D7EBCE;
+  --acc-slate:    #38434F;  --acc-slate-tint:    #E9E5DF;
+  --acc-rust:     #B24020;  --acc-rust-tint:     #FADFD8;
   --red-grad: linear-gradient(135deg, #ED383B 0%, #FF6A3D 100%);
   --red-grad-soft: linear-gradient(135deg, rgba(237, 56, 59, 0.16), rgba(255, 106, 61, 0.10));
 

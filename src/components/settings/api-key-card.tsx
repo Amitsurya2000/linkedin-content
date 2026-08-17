@@ -104,9 +104,7 @@ export function ApiKeyCard({
       <div className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-              {icon}
-            </div>
+            {icon}
             <div>
               <h2 className="text-sm font-semibold text-[#1A1414]">{title}</h2>
               <p className="text-xs text-[#6B5B5A]">{description}</p>
@@ -115,12 +113,12 @@ export function ApiKeyCard({
           {loading ? (
             <Loader2 className="w-4 h-4 text-[#6B5B5A] animate-spin" />
           ) : isConnected ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-red-50 text-red-700">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#D7EBCE] border border-[#B2D8A4] text-[#44712E]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#44712E]" />
               Connected
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-[#FDF3F2] text-[#6B5B5A]">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#E9E5DF] border border-[#D2CDC5] text-[#38434F]">
               Not configured
             </span>
           )}

@@ -132,7 +132,7 @@ export default function BrandingPage() {
 
       {!hasProfile && (
         <div className="rounded-xl border border-[#F2DAD8] bg-[#FDF3F2] p-4 flex gap-3">
-          <AlertCircle className="w-4 h-4 text-[#C9282A] shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 text-[#B24020] shrink-0 mt-0.5" />
           <p className="text-sm text-[#1A1414]">
             Build your profile first — upload your CV or fill in the sections on the Create page.
             Everything here is written from it.
@@ -160,7 +160,7 @@ export default function BrandingPage() {
           {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : kit ? <RefreshCw className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
           {busy ? "Writing your kit…" : kit ? "Regenerate" : "Build my profile kit"}
         </Button>
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-[#C21D1D]">{error}</p>}
       </div>
 
       {kit && (
@@ -170,7 +170,7 @@ export default function BrandingPage() {
             <div className="p-5 pb-3 flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-[#1A1414] font-semibold flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-[#C9282A]" /> LinkedIn banner
+                  <ImageIcon className="w-4 h-4 text-[#0A66C2]" /> LinkedIn banner
                 </h2>
                 <p className="text-xs text-[#6B5B5A] mt-0.5">1584 × 396 · downloads at 2× for a sharp upload</p>
               </div>
@@ -263,7 +263,7 @@ export default function BrandingPage() {
               <CopyButton text={kit.about.text} label="Copy About" />
             </div>
             <p className="text-sm text-[#1A1414] whitespace-pre-line leading-relaxed">{kit.about.text}</p>
-            <p className={`text-xs ${kit.about.characterCount > 1600 ? "text-red-500" : "text-[#6B5B5A]"}`}>
+            <p className={`text-xs ${kit.about.characterCount > 1600 ? "text-[#C21D1D]" : "text-[#6B5B5A]"}`}>
               {kit.about.characterCount} characters {kit.about.characterCount > 1600 ? "— over the 1,600 target" : "· target 1,400–1,600"}
             </p>
           </section>
@@ -276,7 +276,7 @@ export default function BrandingPage() {
                   <h3 className="text-xs uppercase tracking-wider font-bold text-[#6B5B5A] mb-1.5">Alignment check</h3>
                   <ul className="space-y-1">
                     {kit.alignment.map((a, i) => (
-                      <li key={i} className="text-xs text-[#1A1414] flex gap-2"><Check className="w-3.5 h-3.5 text-[#C9282A] shrink-0 mt-0.5" />{a}</li>
+                      <li key={i} className="text-xs text-[#1A1414] flex gap-2"><Check className="w-3.5 h-3.5 text-[#44712E] shrink-0 mt-0.5" />{a}</li>
                     ))}
                   </ul>
                 </div>
