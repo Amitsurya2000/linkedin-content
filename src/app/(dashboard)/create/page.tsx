@@ -851,21 +851,33 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   );
 }
 
+/** The blank form. Kept as one object so the initial state and the reset cannot
+ *  drift apart — they read from the same place. */
+const BLANK_FORM = {
+  topic: "",
+  postType: "text" as PostType,
+  postsCount: 3,
+  slidesCount: 0,
+  targetAudience: "",
+  tone: "",
+  customInstructions: "",
+};
+
 export default function CreatePage() {
   const [step, setStep] = useState<Step>("form");
-  const [topic, setTopic] = useState("");
-  const [postType, setPostType] = useState<PostType>("text");
-  const [postsCount, setPostsCount] = useState(3);
+  const [topic, setTopic] = useState(BLANK_FORM.topic);
+  const [postType, setPostType] = useState<PostType>(BLANK_FORM.postType);
+  const [postsCount, setPostsCount] = useState(BLANK_FORM.postsCount);
   // Slides per carousel. 0 = let the model choose (8-10, the benchmark range).
-  const [slidesCount, setSlidesCount] = useState(0);
+  const [slidesCount, setSlidesCount] = useState(BLANK_FORM.slidesCount);
   // Optional: source files the post should be built from, and free-text
   // direction on what the client wants back. Both are additive — leaving them
   // empty gives exactly the previous behaviour.
   const [refFiles, setRefFiles] = useState<File[]>([]);
-  const [customInstructions, setCustomInstructions] = useState("");
+  const [customInstructions, setCustomInstructions] = useState(BLANK_FORM.customInstructions);
   const refInput = useRef<HTMLInputElement>(null);
-  const [targetAudience, setTargetAudience] = useState("");
-  const [tone, setTone] = useState("");
+  const [targetAudience, setTargetAudience] = useState(BLANK_FORM.targetAudience);
+  const [tone, setTone] = useState(BLANK_FORM.tone);
   const [wizardStep, setWizardStep] = useState<WizardStep>(1);
   // Set from ResumeOnboarding once a profile exists (freshly uploaded or already
   // saved), which is what unlocks step 2.
@@ -873,6 +885,32 @@ export default function CreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [posts, setPosts] = useState<GeneratedPost[]>([]);
   const [batchId, setBatchId] = useState<string | null>(null);
+
+  /**
+   * "Create More" used to reset only step, posts and batchId — so the wizard
+   * came back holding the previous brief: the same topic, the same audience,
+   * the same tone and slide count, at whatever step it was left on. The next
+   * post was being written from the last one's inputs unless the user noticed
+   * and cleared each field by hand.
+   */
+  function startNewPost() {
+    setStep("form");
+    setPosts([]);
+    setBatchId(null);
+    setTopic(BLANK_FORM.topic);
+    setPostType(BLANK_FORM.postType);
+    setPostsCount(BLANK_FORM.postsCount);
+    setSlidesCount(BLANK_FORM.slidesCount);
+    setTargetAudience(BLANK_FORM.targetAudience);
+    setTone(BLANK_FORM.tone);
+    setCustomInstructions(BLANK_FORM.customInstructions);
+    setRefFiles([]);
+    // The file input keeps its own DOM value, so clearing the array is not
+    // enough — re-picking the same file would otherwise fire no change event.
+    if (refInput.current) refInput.current.value = "";
+    // The resume is already built by this point, so step 1 has nothing to do.
+    setWizardStep(profileReady ? 2 : 1);
+  }
 
   async function handleSubmit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -1362,7 +1400,7 @@ export default function CreatePage() {
           </p>
         </div>
         <button
-          onClick={() => { setStep("form"); setPosts([]); setBatchId(null); }}
+          onClick={startNewPost}
           className="flex items-center gap-2 text-sm text-[#6B5B5A] hover:text-[#1A1414] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
