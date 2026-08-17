@@ -138,6 +138,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   const [carError, setCarError] = useState<string | null>(null);
   // Index of the slide open full screen; null when the viewer is closed.
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [pptxBusy, setPptxBusy] = useState(false);
   const slideTotal = post.carouselSlides?.length ?? 0;
 
   async function generateCarousel() {
@@ -181,6 +182,34 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       setCarError("Network error — try again");
     } finally {
       setCarLoading(false);
+    }
+  }
+
+  async function downloadPptx() {
+    setPptxBusy(true);
+    setCarError(null);
+    try {
+      const res = await fetch(`/api/posts/${post.id}/koyopo?format=pptx`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setCarError(data.error || "Could not build the .pptx");
+        return;
+      }
+      // The blob is handed to a throwaway anchor so the browser saves it instead
+      // of navigating; the object URL is revoked once the click is dispatched.
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `deck-${deckStyle}-${deckShape}.pptx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("PowerPoint downloaded");
+    } catch {
+      setCarError("Network error — try again");
+    } finally {
+      setPptxBusy(false);
     }
   }
 
@@ -515,21 +544,24 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   {genArt ? "AI art on" : "AI art off"}
                 </button>
               )}
-              <a
-                href={`/api/posts/${post.id}/koyopo?format=pptx&canvas=${deckShape}${deckCount ? `&maxSlides=${deckCount}` : ""}`}
-                className="text-[10px] rounded-lg border border-[#F2DAD8] text-[#1A1414] px-2 py-1 font-medium hover:border-[#ED383B]/50"
+              {/* Downloads through fetch rather than a bare <a href>. As a link
+                  it had no loading state and no error path: a 400 or a 500 put
+                  the route's JSON on screen in place of the app. */}
+              <button
+                onClick={downloadPptx}
+                disabled={pptxBusy || carLoading || carouselImages.length === 0}
+                className="text-[10px] rounded-lg border border-[#F2DAD8] text-[#1A1414] px-2 py-1 font-medium hover:border-[#ED383B]/50 disabled:opacity-50 flex items-center gap-1"
+                title={
+                  carouselImages.length === 0
+                    ? "Render the deck first — the .pptx is built from the slides on screen"
+                    : deckStale
+                      ? "Downloads the deck as currently rendered — apply your changes first to include them"
+                      : "Download these slides as a PowerPoint deck"
+                }
               >
-                .pptx
-              </a>
-              {/* Encodes the deck to MP4 server-side with ffmpeg — LinkedIn gives
-                  native video its own reach, and the slides already exist. */}
-              <a
-                href={`/api/posts/${post.id}/video?style=${deckStyle}&seconds=3`}
-                className="text-[10px] rounded-lg border border-[#F2DAD8] text-[#1A1414] px-2 py-1 font-medium hover:border-[#ED383B]/50"
-                title="Encode these slides into an MP4 (takes ~20-60s)"
-              >
-                .mp4
-              </a>
+                {pptxBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                {pptxBusy ? "Building…" : ".pptx"}
+              </button>
               <button
                 onClick={generateCarousel}
                 disabled={carLoading}

@@ -1,4 +1,5 @@
 import PptxGenJS from "pptxgenjs";
+import sharp from "sharp";
 import { KOYOPO, type KoyopoSlide, type CanvasName } from "./koyopo";
 
 /**
@@ -33,6 +34,58 @@ function splitItem(item: string): { prefix: string | null; rest: string } {
 export interface PptxOptions {
   canvas?: CanvasName;
   deckTitle?: string;
+}
+
+/**
+ * Rendered slides → .pptx, one full-bleed image per slide.
+ *
+ * `buildPptx` below rebuilds the deck out of live text boxes, which only the
+ * KOYOPO layout has templates for. Every other style — Minimal, Bold, Colour,
+ * Visual, Campaign and the eight spec-driven ones — is drawn by an SVG renderer
+ * with no pptxgenjs equivalent, so a text-based export could not represent them
+ * and quietly substituted KOYOPO instead. Placing the rendered frame gives a
+ * .pptx that matches what is on screen for all fifteen.
+ *
+ * The trade is that the text is no longer editable in PowerPoint. That is the
+ * right trade here: the file exists to be uploaded to LinkedIn as a document
+ * post, where it is flattened to images on arrival anyway, and a deck that
+ * matches the preview beats one that can be edited but is the wrong design.
+ *
+ * The slide size comes from the frame itself rather than a fixed layout, so a
+ * renderer that emits an unexpected aspect ratio is reproduced exactly instead
+ * of being stretched to fit.
+ */
+export async function buildPptxFromImages(
+  frames: Buffer[],
+  opts: PptxOptions = {}
+): Promise<Buffer> {
+  if (!frames.length) throw new Error("No slides to export.");
+
+  const meta = await sharp(frames[0]).metadata();
+  const pxW = meta.width ?? 1080;
+  const pxH = meta.height ?? 1350;
+  // 13.33in on the long edge is PowerPoint's own widescreen width, which keeps
+  // the deck at a familiar scale whichever way round the frame is.
+  const inW = pxW >= pxH ? 13.333 : 13.333 * (pxW / pxH);
+  const inH = inW * (pxH / pxW);
+
+  const pptx = new PptxGenJS();
+  pptx.defineLayout({ name: "DECK", width: inW, height: inH });
+  pptx.layout = "DECK";
+  if (opts.deckTitle) pptx.title = opts.deckTitle;
+
+  for (const frame of frames) {
+    const slide = pptx.addSlide();
+    slide.addImage({
+      data: `image/png;base64,${frame.toString("base64")}`,
+      x: 0,
+      y: 0,
+      w: inW,
+      h: inH,
+    });
+  }
+
+  return (await pptx.write({ outputType: "nodebuffer" })) as Buffer;
 }
 
 export async function buildPptx(slides: KoyopoSlide[], opts: PptxOptions = {}): Promise<Buffer> {

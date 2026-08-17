@@ -13,7 +13,7 @@ import { renderAttnDeck } from "@/lib/deck-attention";
 import { renderVisualDeck } from "@/lib/deck-visual";
 import { renderCampaignDeck } from "@/lib/deck-campaign";
 import { renderLabDeck, LAB_STYLES, type LabStyleName } from "@/lib/deck-lab";
-import { buildPptx } from "@/lib/koyopo-pptx";
+import { buildPptxFromImages } from "@/lib/koyopo-pptx";
 
 export const maxDuration = 300;
 
@@ -108,17 +108,41 @@ async function handle(
     }
 
     const deckTitle = "1Cr+ Career OS";
-    const slides = toKoyopoSlides(limitSlides(raw, input.maxSlides));
 
+    // .pptx is built from the slides ALREADY on screen, not from a fresh render.
+    //
+    // It used to return here from buildPptx(), a text-based rebuild that only the
+    // KOYOPO layout had templates for — so picking Campaign or Walkthrough and
+    // hitting .pptx silently produced a KOYOPO deck. Re-rendering here instead
+    // would fix the style but introduce two new problems: on the art styles it
+    // would generate fresh images, so the file would not match the preview and
+    // would spend Gemini quota on a download.
+    //
+    // Reading back what was rendered avoids all three. The file is exactly the
+    // deck the user approved, it costs nothing, and it is correct for all fifteen
+    // styles without pptxgenjs needing to know any of them.
     if (format === "pptx") {
-      const buf = await buildPptx(slides, { canvas, deckTitle });
+      const stored: string[] = post.carouselImages ? safeParse(post.carouselImages, []) : [];
+      if (!stored.length) {
+        return NextResponse.json(
+          { error: "Render the deck first — the .pptx is built from the slides on screen." },
+          { status: 400 }
+        );
+      }
+      const frames: Buffer[] = [];
+      for (const url of stored) {
+        frames.push(await fs.readFile(path.join(process.cwd(), "public", url.replace(/^\/+/, ""))));
+      }
+      const buf = await buildPptxFromImages(frames, { deckTitle });
       return new NextResponse(new Uint8Array(buf), {
         headers: {
           "Content-Type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          "Content-Disposition": `attachment; filename="koyopo-${canvas}-${postId.slice(0, 8)}.pptx"`,
+          "Content-Disposition": `attachment; filename="deck-${postId.slice(0, 8)}.pptx"`,
         },
       });
     }
+
+    const slides = toKoyopoSlides(limitSlides(raw, input.maxSlides));
 
     // The swipe deck is signed with the creator's own name — these decks read as
     // a person's, not a brand's, and the signature is part of that.
@@ -183,6 +207,7 @@ async function handle(
           : style === "editorial"
             ? await renderEditorialDeck(slides, { canvas, deckTitle, seed: postId })
             : await renderDeck(slides, { canvas, deckTitle });
+
     const dir = path.join(process.cwd(), "public", "generated");
     await fs.mkdir(dir, { recursive: true });
 
