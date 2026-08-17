@@ -55,6 +55,9 @@ export async function POST(req: NextRequest) {
       kind: kind as AssetKind,
       profile: JSON.parse(row.profileJson) as CreatorProfileData,
       brief: typeof body.brief === "string" && body.brief.trim() ? body.brief.trim() : undefined,
+      // Which angle to take. Coerced rather than trusted: the lib takes it
+      // modulo the angle count, and NaN there would silently pick nothing.
+      variant: Number.isFinite(Number(body.variant)) ? Number(body.variant) : 0,
     });
 
     return NextResponse.json(result);

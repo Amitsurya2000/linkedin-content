@@ -142,11 +142,7 @@ Write 4 outreach SEQUENCES for LinkedIn: connection note plus follow-ups.
 
 The single rule that governs all of it: research first, and open with something specific to THEM. A message that could have been sent to a hundred people gets treated like it was. Anything they have shared professionally is fair game — their posts, their company's announcements, a talk, an article, their career path. Personal information informs the TONE you use, never the content you cite.
 
-Write these 4 sequences:
-1. Hiring manager at a target company — no mutual connection.
-2. Warm intro request to a mutual connection, asking to be introduced.
-3. Someone whose post they genuinely engaged with first.
-4. Re-activating a dormant contact from a previous job or school.
+The four targets to write for are named in THIS RUN'S ANGLE below. Write those four and no others.
 
 Each sequence:
 - research: what to look up before sending, in one line. Be concrete about where to look.
@@ -171,7 +167,7 @@ Return ONLY JSON: {"tagline":"","about":"","specialties":[""],"posts":[{"day":""
 
 Design this person's LinkedIn FEATURED section — the 3-4 items pinned at the top of the profile, directly under About. It is the most-viewed real estate on a profile after the headline, and most people leave it empty or fill it with random links.
 
-Choose 4 items that together prove the claim their headline makes. Good candidates: a signature post or carousel, a case study, a tool/resource worth downloading, a talk or article, a portfolio piece. Each item needs a cover image, so give it cover copy.
+Choose 4 items that together prove the claim their headline makes. THIS RUN'S ANGLE below names the mix to build — follow it. Each item needs a cover image, so give it cover copy.
 
 - title: max 55 characters, what a visitor sees.
 - subtitle: max 90 characters of context.
@@ -200,6 +196,71 @@ Write a 45-70 second LinkedIn talking-head VIDEO script. LinkedIn video is watch
 Return ONLY JSON: {"title":"","hookLine":"","script":[{"t":"","spoken":"","onScreen":"","shot":""}],"caption":"","hashtags":[""]}`,
 };
 
+/**
+ * A named angle per kind, rotated on every press of Generate.
+ *
+ * The prompts above are constants, so two runs of the same tab used to differ
+ * only by temperature — which rewords a piece, it does not rethink it. You got
+ * the same newsletter shape, the same five weekday posts, and, because the DM
+ * prompt listed its four targets in the prompt itself, literally the same four
+ * targets every time anyone ever pressed the button.
+ *
+ * This is the mechanism the post generator already uses for hook archetypes and
+ * deck types, for the reason proved there: naming ONE angle explicitly beats
+ * asking for "something different" and hoping. Asking produces the model's
+ * favourite answer with fresh adjectives; naming produces a different piece.
+ *
+ * Rotation is by index, not random, so pressing Generate four times walks four
+ * distinct angles instead of possibly landing on the same one twice.
+ */
+const ANGLES: Record<AssetKind, string[]> = {
+  newsletter: [
+    "TEARDOWN — take one real artefact apart (a job description, a pitch, a dashboard, a process) and rebuild it in front of the reader. Sections are the stages of the rebuild.",
+    "CONTRARIAN BRIEF — argue against the consensus position in this field. Name the consensus in the hook, then dismantle it. The takeaway must be something most peers would push back on.",
+    "THE NUMBERS ISSUE — build the whole issue around three specific figures from the profile. Every section starts from a number and explains what it actually means in practice.",
+    "PLAYBOOK — a procedure the reader can run this week. Sections are numbered steps with the decision point and the failure mode at each one.",
+    "POST-MORTEM — something that did not work. Open inside the failure, spend the middle on the mechanism that caused it, and end on what is done differently now.",
+    "FIELD NOTES — what has changed in this field in the last 90 days, and what a practitioner should do about it. Concrete and dated, never trend-piece vague.",
+  ],
+  comments: [
+    "Weight the pack towards COUNTER-EXAMPLES: most comments should contradict the post with a specific case from this person's own work.",
+    "Weight the pack towards SUPPLYING THE MISSING MECHANISM: the post asserts a result, the comment explains how it actually happens.",
+    "Weight the pack towards RESPECTFUL DISAGREEMENT: name the specific thing that is wrong and why, without hedging it into meaninglessness.",
+    "Weight the pack towards EXTENDING THE IDEA: take the author's point one concrete step further than they took it.",
+    "Weight the pack towards PRACTITIONER QUESTIONS: questions only someone who has actually done the work would think to ask.",
+    "Weight the pack towards DATA AND SCALE: comments for posts that quote a statistic, a benchmark or a survey, where the value is context on the number.",
+  ],
+  dms: [
+    "Targets: (1) a hiring manager at a target company, no mutual connection. (2) a warm intro request to a mutual connection. (3) someone whose post they genuinely engaged with first. (4) a dormant contact from a previous job or school.",
+    "Targets: (1) someone who just changed jobs into a relevant role. (2) a peer doing the same job at a company they admire. (3) a speaker or panellist from an event they attended. (4) a recruiter who reached out before, being re-opened on this person's terms.",
+    "Targets: (1) a founder or director two levels above them in an adjacent company. (2) someone hiring for a role they will NOT take but can refer someone into. (3) an author whose article they can add a real correction to. (4) a former manager being re-activated with a specific update.",
+    "Targets: (1) a hiring manager who just posted about a problem this person solves. (2) a mutual connection's colleague, approached through the mutual. (3) someone whose company just announced something relevant. (4) a peer they were in a cohort, course or community with.",
+    "Targets: (1) an internal referrer at a target company, not the hiring manager. (2) a person who commented on the same post they did. (3) a vendor or partner in their space with a shared client type. (4) someone they turned down or lost a deal to, reopened cleanly.",
+  ],
+  companyPage: [
+    "This week's page strategy is PROOF: every post shows a result, an artefact or a before/after, and nothing is claimed without something behind it.",
+    "This week's page strategy is PROCESS TRANSPARENCY: show how the work is actually done, including the unglamorous parts and the decision points.",
+    "This week's page strategy is CUSTOMER OUTCOMES: each post is anchored on a client situation and what changed for them, told without naming anyone the profile does not name.",
+    "This week's page strategy is POINT OF VIEW: the company's stated position on how this work should be done, and what it refuses to do.",
+    "This week's page strategy is EDUCATION: each post teaches one thing a buyer needs to understand before they can buy well.",
+  ],
+  featured: [
+    "Mix: one signature post or carousel, one case study, one downloadable tool or template, one talk or article.",
+    "Mix: two case studies from different problem types, one framework or method they own by name, one proof-of-craft artefact.",
+    "Mix: one 'start here' explainer of what they do, one result with numbers, one teaching resource, one piece of third-party validation (a talk, a feature, a testimonial).",
+    "Mix: one contrarian piece that states their position, one worked example that backs it, one tool that makes it usable, one way to get in touch that is not 'DM me'.",
+    "Mix: one portfolio piece, one written breakdown of how it was made, one resource for people who want to do it themselves, one signature post.",
+  ],
+  videoScript: [
+    "Format: SINGLE-CLAIM EXPLAINER — one assertion in the first 3 seconds, then the argument for it, then the ask.",
+    "Format: WALKTHROUGH — show a thing being done step by step. On-screen text labels each step; the shot notes carry a screen recording or over-the-shoulder framing.",
+    "Format: MYTH-BUST — state the common belief, show why it is wrong, replace it with what is true.",
+    "Format: STORY — open inside a specific moment, hold the tension to the middle, and land the lesson only at the end.",
+    "Format: THE NUMBER — the whole video hangs off one figure. State it, break it down, say what to do about it.",
+    "Format: TEARDOWN — critique a real artefact on screen, marking what works and what does not.",
+  ],
+};
+
 /** Kinds that need the relationship-building playbook in context. */
 const NEEDS_PLAYBOOK = new Set<AssetKind>(["comments", "dms"]);
 
@@ -209,8 +270,17 @@ export async function generateAsset(params: {
   profile: CreatorProfileData;
   /** Free-text steer: the topic, the target company, the audience. */
   brief?: string;
-}): Promise<AssetResult> {
+  /**
+   * Which angle to take. The client passes a counter that increments on each
+   * press, so successive generations walk the list instead of re-rolling and
+   * sometimes landing on the same angle twice.
+   */
+  variant?: number;
+}): Promise<AssetResult & { angle: string }> {
   const genai = new GoogleGenAI({ apiKey: params.apiKey });
+
+  const angles = ANGLES[params.kind];
+  const angle = angles[Math.abs(Math.trunc(params.variant ?? 0)) % angles.length];
 
   const parts: string[] = [profileToContext(params.profile)];
   if (params.brief) parts.push(`\nBRIEF FROM THE USER: ${params.brief}`);
@@ -224,8 +294,11 @@ export async function generateAsset(params: {
   const res = await genai.models.generateContent({
     model: "gemini-3.6-flash",
     config: {
-      systemInstruction: PROMPTS[params.kind],
-      temperature: 0.8,
+      // The angle goes last so it is the freshest instruction before generation,
+      // and is stated as a requirement rather than a suggestion — a preference
+      // gets averaged away against a prompt this long.
+      systemInstruction: `${PROMPTS[params.kind]}\n\n---\n\n## THIS RUN'S ANGLE — this is a requirement, not a suggestion\n${angle}\n\nDo not hedge back towards the safe, general version of this piece. If the angle rules out your first instinct, that is the point of it.`,
+      temperature: 0.9,
       responseMimeType: "application/json",
     },
     contents: [{ role: "user", parts: [{ text: parts.join("\n") }] }],
@@ -244,5 +317,7 @@ export async function generateAsset(params: {
     }
   }
 
-  return { kind: params.kind, data } as AssetResult;
+  // The angle comes back so the UI can name which take this is — otherwise a
+  // second press looks like it did nothing until you read the whole thing.
+  return { kind: params.kind, data, angle } as AssetResult & { angle: string };
 }

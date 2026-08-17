@@ -69,6 +69,10 @@ export default function AssetsPage() {
   const [theme, setTheme] = useState<string>("navy");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [data, setData] = useState<Record<string, any>>({});
+  // Per-tab angle counter. Kept per tab so switching between Newsletter and
+  // Comments does not reset either one's position in its rotation.
+  const [variant, setVariant] = useState<Record<string, number>>({});
+  const [angle, setAngle] = useState<Record<string, string | null>>({});
 
   // Profile photo tab
   const photoRef = useRef<HTMLInputElement>(null);
@@ -83,14 +87,19 @@ export default function AssetsPage() {
     setBusy(true);
     setError(null);
     try {
+      // Each press of Generate advances this tab's angle, so a second press
+      // produces a different piece rather than the same one reworded.
+      const next = (variant[tab] ?? 0) + 1;
       const res = await fetch("/api/assets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: tab, brief: brief.trim() || undefined }),
+        body: JSON.stringify({ kind: tab, brief: brief.trim() || undefined, variant: next }),
       });
       const d = await res.json();
       if (!res.ok) { setError(d.error || "Could not generate"); return; }
       setData((prev) => ({ ...prev, [tab]: d.data }));
+      setAngle((prev) => ({ ...prev, [tab]: d.angle ?? null }));
+      setVariant((prev) => ({ ...prev, [tab]: next }));
       toast.success("Done");
     } catch { setError("Something went wrong"); }
     finally { setBusy(false); }
@@ -129,7 +138,7 @@ export default function AssetsPage() {
       <div>
         <h1 className="text-3xl font-bold text-[#1A1414] tracking-tight">Assets</h1>
         <p className="text-[#6B5B5A] text-sm mt-1">
-          Everything on LinkedIn that is not a post. All of it runs on your Gemini key — no other service.
+          Everything on LinkedIn that is not a post. The written assets run on your Gemini key; the covers and the profile photo are rendered here and need no key at all.
         </p>
       </div>
 
@@ -238,8 +247,18 @@ export default function AssetsPage() {
             </div>
             <Button onClick={generate} disabled={busy} className="w-full h-11 bg-[#ED383B] hover:bg-[#ED383B]/90 text-white font-semibold rounded-xl gap-2 disabled:opacity-50">
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {busy ? "Writing…" : current ? "Regenerate" : "Generate"}
+              {busy ? "Writing…" : current ? "Write another take" : "Generate"}
             </Button>
+            {/* Naming the angle is what makes a second press legible: without it
+                a regenerate looks like it did nothing until you read the whole
+                piece and notice it is structurally different. */}
+            {angle[tab] && !busy && (
+              <p className="text-[11px] text-[#6B5B5A] leading-relaxed">
+                <span className="font-semibold text-[#B45309]">Take {variant[tab]}</span>
+                {" — "}
+                {angle[tab]!.split(/ — |: /)[0].toLowerCase()}. Press again for a different angle.
+              </p>
+            )}
             {error && <p className="text-xs text-[#C21D1D]">{error}</p>}
           </div>
 
