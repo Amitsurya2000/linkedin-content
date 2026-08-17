@@ -401,6 +401,11 @@ ${params.customInstructions.trim()}
   }
 
   prompt += `\n\n**Never invent numbers.** Do not write a statistic, percentage, currency figure, funding amount, study or benchmark unless it appears in the creator profile or the brief above. Real numbers are powerful; fabricated ones are a liability the creator has to defend in the comments and cannot. When you have no real figure, make the point qualitatively — "we rebuilt it twice before it held" beats an invented "28% lift".`;
+  // The rule above governed numbers only, which left the more common failure
+  // untouched: the model naming a tool the creator has never used. A fabricated
+  // stack is harder to spot than a fabricated number and costs more — it is the
+  // detail a hiring manager asks about first.
+  prompt += `\n\n**The same rule governs TECHNICAL DETAIL.** Every tool, framework, library, platform, architecture and methodology you name must appear in the creator profile or the brief above. Do not reach for the plausible neighbour: if the profile says RabbitMQ, do not write Kafka; if it says FastAPI, do not write Django. Do not generalise a named project into a category it was not ("a RAG pipeline" when the profile describes a keyword search). If you need a technical example and the profile does not supply one, write about the decision or the trade-off instead of naming a technology.`;
   prompt += `\n\n**Hook discipline:** the opening line is a standalone sentence under 12 words. In the top-performing posts in your knowledge base, the best hooks average ~40 characters and the worst average ~77. Write short. One idea per line, blank line between beats.`;
   prompt += `\n\n**Important:** Generate exactly ${params.postsCount} unique post(s). Set "hookCategory" to the assigned archetype letter and name. Return a JSON array of post objects.`;
 
@@ -433,6 +438,14 @@ ${params.customInstructions.trim()}
     prompt += `\n\n**A worksheet slide renders as Q&A.** Write each item as a question followed by its answer: "Do I need Python for this? No. The reconciliation that saved us 3.5 days is pure Excel VBA." Three at most. Use it for the objections the audience actually raises.`;
     prompt += `\n\n**Every content slide needs a "takeaway"** — one sentence, max 110 characters, stating the rule or "so what" the slide proves. It renders in its own highlighted card under the body, and it is what makes the deck skimmable for someone swiping fast. It must NOT restate the title; it must land the lesson ("Most to-do lists fail from addition. Make every new task earn its place.").`;
     prompt += `\n\nEvery slide object must include "slideTemplate" (one of the ten KOYOPO template names), "sectionTag" (uppercase, 30 chars max) and "takeaway" alongside slideNumber, title and body. Obey every character limit in the KOYOPO rules below — the text is printed verbatim onto the image, so anything over budget gets clipped and cannot be fixed afterwards.`;
+    // designDirection is consumed as an ART BRIEF — deck-visual and deck-lab hand
+    // it to the image model as the prompt for that slide's picture. Nothing in
+    // the prompt ever said so, and the only example the model had was in the
+    // system prompt's sample JSON, which describes SLIDE LAYOUT ("navy
+    // background, 48px Inter"). An image model given that draws a screenshot of
+    // a slide. Sixty-three per cent of stored slides have the field empty, so
+    // most of the time it briefed nothing at all.
+    prompt += `\n\n**"designDirection" is the IMAGE PROMPT for that slide, and every slide needs one.** It is sent verbatim to an image model, so write it as a picture to draw, never as slide styling — no font sizes, no hex colours, no "title in 48px". House style: minimalist tech infographic, dark obsidian background, high contrast, restrained accent colour, plenty of negative space, no text or lettering anywhere in the image. Name the concrete subject the slide is about ("a single fibre-optic strand splitting into three, shot macro") rather than an abstraction ("innovation"). Never name the slide's title inside the prompt — the image model renders quoted words as garbled lettering.`;
     // Master file first (types and spines), then layout patterns, then the
     // character budgets — broadest structure to tightest constraint.
     if (carouselMaster) {
