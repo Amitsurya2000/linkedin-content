@@ -104,6 +104,29 @@ const SKELETONS = [
   "Skeleton 10 — 'Nothing's Changed' Ironic List",
 ] as const;
 
+/**
+ * What each deck style needs from the COPY, as structural moves.
+ *
+ * Only the two styles the client named are defined. Every other style falls
+ * through to the existing behaviour untouched — an unknown key returns undefined
+ * and no directive is added, so nothing that works today changes.
+ */
+const DECK_STYLE_DIRECTIVES: Record<string, string> = {
+  walkthrough: `- This is a PROCEDURE, not an essay. The middle slides are ordered steps that could be followed by someone else, in sequence.
+- Name the actual components at each step — the service, the library, the data structure, the command. A step that does not name what it acts on is not a step.
+- Give each step its decision point: what you chose, what you rejected, and the cost of the choice. That is the part nobody else publishes.
+- Include the failure mode. The step where it breaks in production is the most valuable slide in the deck.
+- Close on the measured outcome — latency, throughput, accuracy, time saved — taken from the creator profile, never invented.
+- Banned: "leverage", "seamlessly", "best practices", and any step that begins "Next, simply".`,
+
+  campaign: `- This is a NARRATIVE. It has a before, a turn and an after, and the middle slides carry the arc rather than a list.
+- Open inside a specific moment or a specific state of the world — the thing that was true and no longer is. Not a definition.
+- The turn is one slide and one idea: the realisation, the constraint that flipped, the thing that stopped working. Everything before it sets up that slide; everything after it pays it off.
+- Authority comes from what it COST, not from what was achieved. Name the attempt that failed, the time it took, the thing you were wrong about.
+- Speak in first person throughout. A campaign deck in the third person reads like a case study written by someone else.
+- Close on the position you now hold, stated plainly enough that a peer could disagree with it.`,
+};
+
 /** Rotate through a list so each post/variation gets a distinct assignment. */
 function pick<T>(list: readonly T[], i: number): T {
   return list[i % list.length];
@@ -184,6 +207,23 @@ interface GenerateLinkedInPostsParams {
   profileContext?: string; // client's resume-derived Creator Profile (base context)
   /** Slides per carousel. Defaults to the 8-10 the benchmarks favour. */
   slidesCount?: number;
+  /**
+   * The deck style the copy is being written FOR.
+   *
+   * Style used to be picked after generation, when the words already existed, so
+   * it could only change how they were drawn. A walkthrough deck and a campaign
+   * deck want genuinely different copy — one is a procedure, the other is a
+   * narrative — so the style has to be known before the copy is written.
+   */
+  deckStyle?: string;
+  /**
+   * Rotation offset for the hook / skeleton / carousel-type assignments.
+   *
+   * Supplied per generation so two runs of the same topic land on different
+   * structural choices. Nothing here is random inside this module — the caller
+   * owns the value, which keeps the function testable.
+   */
+  spin?: number;
   /**
    * Optional reference material the post should be built from — a PDF report,
    * a slide deck, a screenshot of a chart, a photo of a whiteboard. Gemini reads
@@ -374,12 +414,21 @@ function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
   // Assign a concrete hook archetype + skeleton to each post, and to each of its
   // 3 variations. Without this the model returns near-identical paraphrases, so
   // the "alternative versions" give the user nothing real to choose between.
+  //
+  // `spin` is what makes a SECOND run differ from the first. These indices were
+  // fixed — post 0 always got archetype 0 and skeleton 0 — so the same topic
+  // produced the same structural choices every time, forever, and only sampling
+  // noise separated the runs. Note that a model seed cannot fix this: the index
+  // is computed here, before the request is built, so no sampling parameter ever
+  // sees it. Offsetting every pick by the same spin preserves the spread WITHIN
+  // a batch while moving the whole batch between runs.
+  const spin = params.spin ?? 0;
   prompt += `\n**Assignments — follow these exactly.** Each post below is locked to one hook archetype and one skeleton from the knowledge base. Do not swap them.\n`;
   for (let i = 0; i < params.postsCount; i++) {
-    prompt += `\nPost ${i + 1}: hook = "${pick(HOOK_ARCHETYPES, i)}" | structure = "${pick(SKELETONS, i)}"`;
-    prompt += `\n  variations[0]: hook = "${pick(HOOK_ARCHETYPES, i + 3)}" | structure = "${pick(SKELETONS, i + 4)}"`;
-    prompt += `\n  variations[1]: hook = "${pick(HOOK_ARCHETYPES, i + 6)}" | structure = "${pick(SKELETONS, i + 7)}"`;
-    prompt += `\n  variations[2]: hook = "${pick(HOOK_ARCHETYPES, i + 8)}" | structure = "${pick(SKELETONS, i + 2)}"`;
+    prompt += `\nPost ${i + 1}: hook = "${pick(HOOK_ARCHETYPES, i + spin)}" | structure = "${pick(SKELETONS, i + spin)}"`;
+    prompt += `\n  variations[0]: hook = "${pick(HOOK_ARCHETYPES, i + spin + 3)}" | structure = "${pick(SKELETONS, i + spin + 4)}"`;
+    prompt += `\n  variations[1]: hook = "${pick(HOOK_ARCHETYPES, i + spin + 6)}" | structure = "${pick(SKELETONS, i + spin + 7)}"`;
+    prompt += `\n  variations[2]: hook = "${pick(HOOK_ARCHETYPES, i + spin + 8)}" | structure = "${pick(SKELETONS, i + spin + 2)}"`;
   }
 
   prompt += `\n\n**Variations are real alternatives, not paraphrases.** Each of the 3 variations must be a COMPLETE, standalone post that opens with a different first line, uses its assigned structure, and lands at that skeleton's stated word count. If two versions of the same post could be swapped without a reader noticing, you have failed.`;
@@ -424,7 +473,10 @@ ${params.customInstructions.trim()}
     // from coming back as three listicles. Same reasoning as the hook rotation.
     prompt += `\n\n**Each post gets a DIFFERENT carousel type**, and must follow that type's slide-by-slide spine from the CAROUSEL MASTER FILE below:`;
     for (let i = 0; i < params.postsCount; i++) {
-      prompt += `\n  Post ${i + 1}: carousel type = "${pick(CAROUSEL_TYPES, i * 5 + params.topic.length)}"`;
+      // Was `i * 5 + params.topic.length` — keyed on the TOPIC STRING LENGTH,
+      // so one topic always drew the same type and two unrelated topics of equal
+      // length drew the same type as each other.
+      prompt += `\n  Post ${i + 1}: carousel type = "${pick(CAROUSEL_TYPES, i * 5 + spin)}"`;
     }
     prompt += `\n\nIf an assigned type genuinely cannot carry this topic — a CASE STUDY with no before/after numbers, a DATA STORY with no data — choose the nearest type that the material actually supports, and never fabricate the missing evidence to fit the shape.`;
     prompt += `\n\n**Slide 1 states the payoff, not the topic.** "Your Edge Model Does Not Need INT8" beats "Edge Deployment and Quantization". A numbered promise also works ("10 Rules to 10X Your Output") — but only ever promise a count you actually deliver.`;
@@ -446,6 +498,16 @@ ${params.customInstructions.trim()}
     // a slide. Sixty-three per cent of stored slides have the field empty, so
     // most of the time it briefed nothing at all.
     prompt += `\n\n**"designDirection" is the IMAGE PROMPT for that slide, and every slide needs one.** It is sent verbatim to an image model, so write it as a picture to draw, never as slide styling — no font sizes, no hex colours, no "title in 48px". House style: minimalist tech infographic, dark obsidian background, high contrast, restrained accent colour, plenty of negative space, no text or lettering anywhere in the image. Name the concrete subject the slide is about ("a single fibre-optic strand splitting into three, shot macro") rather than an abstraction ("innovation"). Never name the slide's title inside the prompt — the image model renders quoted words as garbled lettering.`;
+    // The deck the copy will be drawn into changes what the copy should be. A
+    // walkthrough is a procedure and wants steps, components and trade-offs; a
+    // campaign is a narrative and wants a before, a turn and an after. Written
+    // as structural moves rather than adjectives, for the reason the tone
+    // directives are: a bare style label changed nothing measurable.
+    const styleDirective = DECK_STYLE_DIRECTIVES[params.deckStyle ?? ""];
+    if (styleDirective) {
+      prompt += `\n\n**This deck will be rendered in the "${params.deckStyle}" style — write FOR it:**\n${styleDirective}`;
+    }
+
     // Master file first (types and spines), then layout patterns, then the
     // character budgets — broadest structure to tightest constraint.
     if (carouselMaster) {

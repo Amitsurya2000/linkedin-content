@@ -861,7 +861,16 @@ const BLANK_FORM = {
   targetAudience: "",
   tone: "",
   customInstructions: "",
+  // "" = no style-specific direction, which is the previous behaviour exactly.
+  deckStyle: "",
 };
+
+/** Only the two styles whose COPY differs. Everything else renders as before. */
+const COPY_STYLES: { value: string; label: string; blurb: string }[] = [
+  { value: "", label: "No preference", blurb: "The deck type is chosen per post, as before." },
+  { value: "walkthrough", label: "Walkthrough", blurb: "Ordered steps, named components, the decision and the failure mode at each one." },
+  { value: "campaign", label: "Campaign", blurb: "A before, a turn and an after — narrative and first-person, authority from what it cost." },
+];
 
 export default function CreatePage() {
   const [step, setStep] = useState<Step>("form");
@@ -870,6 +879,7 @@ export default function CreatePage() {
   const [postsCount, setPostsCount] = useState(BLANK_FORM.postsCount);
   // Slides per carousel. 0 = let the model choose (8-10, the benchmark range).
   const [slidesCount, setSlidesCount] = useState(BLANK_FORM.slidesCount);
+  const [genDeckStyle, setGenDeckStyle] = useState(BLANK_FORM.deckStyle);
   // Optional: source files the post should be built from, and free-text
   // direction on what the client wants back. Both are additive — leaving them
   // empty gives exactly the previous behaviour.
@@ -901,6 +911,7 @@ export default function CreatePage() {
     setPostType(BLANK_FORM.postType);
     setPostsCount(BLANK_FORM.postsCount);
     setSlidesCount(BLANK_FORM.slidesCount);
+    setGenDeckStyle(BLANK_FORM.deckStyle);
     setTargetAudience(BLANK_FORM.targetAudience);
     setTone(BLANK_FORM.tone);
     setCustomInstructions(BLANK_FORM.customInstructions);
@@ -929,6 +940,7 @@ export default function CreatePage() {
       if (targetAudience) fields.targetAudience = targetAudience;
       if (tone) fields.tonePrefs = tone;
       if (postType === "carousel" && slidesCount) fields.slidesCount = String(slidesCount);
+      if (postType === "carousel" && genDeckStyle) fields.deckStyle = genDeckStyle;
       if (customInstructions.trim()) fields.customInstructions = customInstructions.trim();
 
       // Multipart only when there is a file to carry — JSON stays the common
@@ -1134,6 +1146,34 @@ export default function CreatePage() {
               {/* Slides per deck. Only the generator can create slides, so this
                   belongs here rather than on the rendered deck — the render-time
                   control can trim a deck but never extend one. */}
+              {/* Deck style is normally picked AFTER generation, where it only
+                  changes how the words are drawn. These two want different words,
+                  so they are chosen here instead — before anything is written. */}
+              {postType === "carousel" && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#1A1414]">Write for a deck style</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {COPY_STYLES.map((cs) => (
+                      <button
+                        key={cs.value || "none"}
+                        type="button"
+                        onClick={() => setGenDeckStyle(cs.value)}
+                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-all border ${
+                          genDeckStyle === cs.value
+                            ? "bg-[#ED383B] text-white border-[#ED383B]"
+                            : "bg-white text-[#6B5B5A] border-[#F2DAD8] hover:border-[#ED383B]/50"
+                        }`}
+                      >
+                        {cs.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-[#6B5B5A]">
+                    {COPY_STYLES.find((c) => c.value === genDeckStyle)?.blurb}
+                  </p>
+                </div>
+              )}
+
               {postType === "carousel" && (
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-[#1A1414]">Slides per carousel</Label>

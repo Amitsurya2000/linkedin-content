@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     }
 
-    const { topic, postType, postsCount, targetAudience, tonePrefs, slidesCount, customInstructions } = body;
+    const { topic, postType, postsCount, targetAudience, tonePrefs, slidesCount, customInstructions, deckStyle } = body;
 
     // Validate required fields
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
@@ -159,6 +159,16 @@ export async function POST(req: NextRequest) {
         // to the benchmark default, not fail the whole generation.
         slidesCount:
           Number(slidesCount) >= 3 && Number(slidesCount) <= 15 ? Number(slidesCount) : undefined,
+        // The deck the copy is being written for. Unrecognised values are passed
+        // through and ignored downstream, so an old client that sends nothing
+        // behaves exactly as before.
+        deckStyle: typeof deckStyle === "string" && deckStyle ? deckStyle : undefined,
+        // Rotation offset for the hook / skeleton / carousel-type assignments.
+        // Generated HERE rather than inside the generator so the generator stays
+        // deterministic for a given input and can be tested. Date.now() moves on
+        // every request, which is the whole point: the same topic submitted twice
+        // gets a different structural draw.
+        spin: Date.now() % 1000,
         referenceDocs: referenceDocs.length ? referenceDocs : undefined,
         customInstructions:
           typeof customInstructions === "string" && customInstructions.trim() ? customInstructions.trim() : undefined,
