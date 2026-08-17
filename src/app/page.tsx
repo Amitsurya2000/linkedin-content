@@ -14,6 +14,21 @@ import {
   Star,
 } from "lucide-react";
 
+/**
+ * Colour rules this page follows, all measured rather than eyeballed:
+ *
+ * · Body copy is #6B5B5A (6.4:1 on white, 5.9:1 on blush). It used to be
+ *   #C9B4B2 — the --text-deco token, which is decorative-only at 1.97:1 and was
+ *   never meant to carry a sentence.
+ * · Red as TEXT is #C9282A, never #ED383B. Brand red is 4.02:1 on white, which
+ *   is fine for an icon (3:1) and short of AA for a word.
+ * · Text on a red fill is white, and the fill is #D4302E→#C21D1D rather than
+ *   #ED383B→#FF6A3D. White on that orange end was 2.85:1; on this one the worst
+ *   end is 4.93:1.
+ * · No near-black at partial alpha. #1A1414/30 on blush is 2.2:1 — the alpha was
+ *   a holdover from the dark theme, where the same utility lightened text
+ *   towards the background instead of erasing it.
+ */
 export default async function LandingPage() {
   const session = await auth();
   const isLoggedIn = !!session;
@@ -21,25 +36,25 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen bg-[#FDF3F2] text-[#1A1414] antialiased">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-[#FDF3F2]/80 backdrop-blur-xl border-b border-white/5">
+      <nav className="sticky top-0 z-50 bg-[#FDF3F2]/85 backdrop-blur-xl border-b border-[#F2DAD8]">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#ED383B] flex items-center justify-center shadow-lg shadow-[#ED383B]/25">
-              <Linkedin className="w-4 h-4 text-[#1A1414]" />
+            <div className="w-8 h-8 rounded-lg bg-[#D4302E] flex items-center justify-center shadow-lg shadow-[#ED383B]/25">
+              <Linkedin className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold tracking-tight">LI Post Gen</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="#features" className="text-sm text-[#1A1414]/50 hover:text-[#1A1414] transition-colors hidden sm:block">
+            <a href="#features" className="text-sm font-medium text-[#6B5B5A] hover:text-[#1A1414] transition-colors hidden sm:block">
               Features
             </a>
-            <a href="#how-it-works" className="text-sm text-[#1A1414]/50 hover:text-[#1A1414] transition-colors hidden sm:block">
+            <a href="#how-it-works" className="text-sm font-medium text-[#6B5B5A] hover:text-[#1A1414] transition-colors hidden sm:block">
               How it works
             </a>
             {isLoggedIn ? (
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#ED383B] text-white text-sm font-semibold hover:bg-[#ED383B]/90 transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#D4302E] text-white text-sm font-semibold hover:bg-[#C21D1D] transition-colors"
               >
                 Dashboard
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -48,13 +63,13 @@ export default async function LandingPage() {
               <div className="flex items-center gap-3">
                 <Link
                   href="/login"
-                  className="text-sm text-[#1A1414]/60 hover:text-[#1A1414] font-medium transition-colors"
+                  className="text-sm text-[#6B5B5A] hover:text-[#1A1414] font-medium transition-colors"
                 >
                   Log In
                 </Link>
                 <Link
                   href="/signup"
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#ED383B] text-white text-sm font-semibold hover:bg-[#ED383B]/90 transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#D4302E] text-white text-sm font-semibold hover:bg-[#C21D1D] transition-colors"
                 >
                   Sign Up
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -72,37 +87,38 @@ export default async function LandingPage() {
         <div className="absolute top-40 left-1/4 w-[400px] h-[400px] bg-[#ED383B]/[.10] blur-3xl rounded-full" />
         <div className="absolute top-60 right-1/4 w-[300px] h-[300px] bg-[#ED383B]/8 blur-3xl rounded-full" />
 
-        {/* Grid pattern overlay */}
+        {/* Grid pattern overlay. Stroked in red — it was stroked in white, which
+            on a blush ground drew nothing at all. */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.06]"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0H0v60' fill='none' stroke='white' stroke-width='0.5'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 0H0v60' fill='none' stroke='%23C21D1D' stroke-width='0.5'/%3E%3C/svg%3E")`,
           }}
         />
 
         <div className="relative max-w-5xl mx-auto px-6 pt-28 pb-24 text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FDF3F2] border border-[#F2DAD8] text-[#ED383B] text-xs font-medium mb-8 backdrop-blur-sm">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#F2DAD8] text-[#C9282A] text-xs font-semibold mb-8 shadow-sm">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#D4302E] animate-pulse" />
             AI-Powered LinkedIn Content
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
             Generate LinkedIn Posts{" "}
-            <span className="bg-gradient-to-r from-[#ED383B] via-[#DB272A] to-[#ED383B] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#D4302E] via-[#C21D1D] to-[#D4302E] bg-clip-text text-transparent">
               That Go Viral
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-[#C9B4B2] max-w-2xl mx-auto mb-12 leading-relaxed">
+          <p className="text-lg md:text-xl text-[#6B5B5A] max-w-2xl mx-auto mb-12 leading-relaxed">
             AI-powered content engine that crafts scroll-stopping LinkedIn posts,
-            carousels, articles, and polls. Write once, get noticed everywhere.
+            carousels, and articles. Write once, get noticed everywhere.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <Link
               href={isLoggedIn ? "/create" : "/signup"}
-              className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] hover:from-[#ED383B]/90 hover:to-[#DB272A]/90 text-[#1A1414] font-semibold transition-all shadow-xl shadow-[#ED383B]/25 hover:shadow-[#ED383B]/40"
+              className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-gradient-to-r from-[#D4302E] to-[#C21D1D] hover:from-[#C21D1D] hover:to-[#A81818] text-white font-semibold transition-all shadow-xl shadow-[#ED383B]/25 hover:shadow-[#ED383B]/40"
             >
               <Zap className="w-4 h-4" />
               {isLoggedIn ? "Create Posts" : "Start Creating for Free"}
@@ -110,7 +126,7 @@ export default async function LandingPage() {
             </Link>
             <a
               href="#how-it-works"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-[#FDF3F2] border border-[#F2DAD8] text-[#1A1414]/70 font-semibold hover:bg-white/10 hover:text-[#1A1414] transition-all backdrop-blur-sm"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-white border border-[#F2DAD8] text-[#453838] font-semibold hover:border-[#ED383B]/50 hover:text-[#1A1414] transition-all shadow-sm"
             >
               See How It Works
             </a>
@@ -122,7 +138,7 @@ export default async function LandingPage() {
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="w-9 h-9 rounded-full border-2 border-[#F2DAD8] bg-gradient-to-br from-[#ED383B] to-[#FF6A3D] flex items-center justify-center text-[#1A1414] text-xs font-bold"
+                  className="w-9 h-9 rounded-full border-2 border-white bg-gradient-to-br from-[#D4302E] to-[#C21D1D] flex items-center justify-center text-white text-xs font-bold"
                 >
                   {String.fromCharCode(64 + i)}
                 </div>
@@ -131,10 +147,10 @@ export default async function LandingPage() {
             <div className="flex items-center gap-2">
               <div className="flex gap-0.5">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <Star key={i} className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                 ))}
               </div>
-              <span className="text-sm text-[#C9B4B2]">
+              <span className="text-sm text-[#6B5B5A]">
                 Loved by content creators
               </span>
             </div>
@@ -142,21 +158,22 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* How it Works - 3 Steps */}
-      <section id="how-it-works" className="border-y border-white/5 bg-white/[0.02]">
+      {/* How it Works - 3 Steps. White band against the blush page, which is the
+          alternation the design system asks for — bg-white/[0.02] was invisible. */}
+      <section id="how-it-works" className="border-y border-[#F2DAD8] bg-white">
         <div className="max-w-5xl mx-auto px-6 py-28">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FDF3F2] border border-[#F2DAD8] text-[#ED383B] text-xs font-medium mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FDF3F2] border border-[#F2DAD8] text-[#C9282A] text-xs font-semibold mb-6">
               <TrendingUp className="w-3.5 h-3.5" />
               Simple Workflow
             </div>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
               Three steps to{" "}
-              <span className="bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#D4302E] to-[#C21D1D] bg-clip-text text-transparent">
                 viral content
               </span>
             </h2>
-            <p className="text-[#C9B4B2] max-w-xl mx-auto">
+            <p className="text-[#6B5B5A] max-w-xl mx-auto">
               No copywriter needed. Just tell us your topic and let AI do the heavy lifting.
             </p>
           </div>
@@ -166,19 +183,19 @@ export default async function LandingPage() {
               number="01"
               title="Enter Your Topic"
               description="Type what you want to post about. Add your target audience and preferred tone for best results."
-              gradient="from-[#ED383B] to-[#FF6A3D]"
+              gradient="from-[#D4302E] to-[#C21D1D]"
             />
             <StepCard
               number="02"
               title="AI Generates Posts"
               description="Our AI crafts multiple post variations with hooks, body text, hashtags, and engagement strategies tailored to LinkedIn."
-              gradient="from-[#DB272A] to-[#F77274]"
+              gradient="from-[#C21D1D] to-[#8E1B18]"
             />
             <StepCard
               number="03"
               title="Copy & Post to LinkedIn"
               description="Review the LinkedIn-style previews, pick your favorite, copy with one click, and paste directly into LinkedIn."
-              gradient="from-[#F77274] to-[#ED383B]"
+              gradient="from-[#8E1B18] to-[#D4302E]"
             />
           </div>
         </div>
@@ -187,45 +204,39 @@ export default async function LandingPage() {
       {/* Features Grid */}
       <section id="features" className="max-w-6xl mx-auto px-6 py-28">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FDF3F2] border border-[#F2DAD8] text-[#ED383B] text-xs font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#F2DAD8] text-[#C9282A] text-xs font-semibold mb-6">
             <Zap className="w-3.5 h-3.5" />
             Content Types
           </div>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
             Everything you need to{" "}
-            <span className="bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#D4302E] to-[#C21D1D] bg-clip-text text-transparent">
               dominate LinkedIn
             </span>
           </h2>
-          <p className="text-[#C9B4B2] max-w-xl mx-auto">
-            Four content formats, endless possibilities. Generate the right format for your message.
+          <p className="text-[#6B5B5A] max-w-xl mx-auto">
+            Three content formats, endless possibilities. Generate the right format for your message.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FeatureCard
-            icon={<FileText className="w-6 h-6 text-[#ED383B]" />}
+            icon={<FileText className="w-6 h-6 text-[#D4302E]" />}
             title="Text Posts"
             description="Classic LinkedIn text posts with scroll-stopping hooks, compelling body copy, and strategic hashtags. The most popular format on LinkedIn."
             tag="Most Popular"
           />
           <FeatureCard
-            icon={<Layers className="w-6 h-6 text-[#ED383B]" />}
+            icon={<Layers className="w-6 h-6 text-[#D4302E]" />}
             title="Carousel Posts"
             description="Multi-slide document posts that drive the highest engagement. Each slide crafted with clear messaging and visual flow."
             tag="Highest Engagement"
           />
           <FeatureCard
-            icon={<MessageSquare className="w-6 h-6 text-[#ED383B]" />}
+            icon={<MessageSquare className="w-6 h-6 text-[#D4302E]" />}
             title="Article Outlines"
             description="Long-form article outlines with structured sections, key talking points, and SEO-optimized headlines for LinkedIn articles."
             tag="Thought Leadership"
-          />
-          <FeatureCard
-            icon={<BarChart3 className="w-6 h-6 text-[#ED383B]" />}
-            title="Poll Ideas"
-            description="Interactive polls with context posts that spark conversation and boost your visibility in the LinkedIn algorithm."
-            tag="Algorithm Boost"
           />
         </div>
       </section>
@@ -235,11 +246,11 @@ export default async function LandingPage() {
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
             Built for LinkedIn{" "}
-            <span className="bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#D4302E] to-[#C21D1D] bg-clip-text text-transparent">
               creators
             </span>
           </h2>
-          <p className="text-[#C9B4B2] max-w-xl mx-auto">
+          <p className="text-[#6B5B5A] max-w-xl mx-auto">
             Every feature is designed to maximize your LinkedIn reach and engagement.
           </p>
         </div>
@@ -255,10 +266,10 @@ export default async function LandingPage() {
           ].map(({ icon: Icon, text }, i) => (
             <div
               key={i}
-              className="flex items-center gap-4 rounded-xl bg-[#FDF3F2]0 border border-[#F2DAD8] px-5 py-4 hover:border-[#ED383B]/50/40 transition-all"
+              className="flex items-center gap-4 rounded-xl bg-white border border-[#F2DAD8] px-5 py-4 hover:border-[#ED383B]/40 transition-all shadow-sm"
             >
-              <Icon className="w-5 h-5 text-[#ED383B] shrink-0" />
-              <span className="text-sm text-[#1A1414]/60">{text}</span>
+              <Icon className="w-5 h-5 text-[#D4302E] shrink-0" />
+              <span className="text-sm text-[#453838]">{text}</span>
             </div>
           ))}
         </div>
@@ -272,24 +283,24 @@ export default async function LandingPage() {
         <div className="relative max-w-4xl mx-auto px-6 py-28 text-center">
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6">
             Stop overthinking.{" "}
-            <span className="bg-gradient-to-r from-[#ED383B] via-[#DB272A] to-[#F77274] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#D4302E] via-[#C21D1D] to-[#8E1B18] bg-clip-text text-transparent">
               Start posting.
             </span>
           </h2>
-          <p className="text-lg text-[#C9B4B2] mb-10 max-w-lg mx-auto">
+          <p className="text-lg text-[#6B5B5A] mb-10 max-w-lg mx-auto">
             Join thousands of professionals creating high-impact LinkedIn content with AI.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href={isLoggedIn ? "/dashboard" : "/login"}
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r from-[#ED383B] to-[#FF6A3D] hover:from-[#ED383B]/90 hover:to-[#DB272A]/90 text-[#1A1414] font-bold text-lg transition-all shadow-xl shadow-[#ED383B]/25 hover:shadow-[#ED383B]/40"
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-gradient-to-r from-[#D4302E] to-[#C21D1D] hover:from-[#C21D1D] hover:to-[#A81818] text-white font-bold text-lg transition-all shadow-xl shadow-[#ED383B]/25 hover:shadow-[#ED383B]/40"
             >
               {isLoggedIn ? "Go to Dashboard" : "Get Started Free"}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-[#FDF3F2] border border-[#F2DAD8] text-[#1A1414]/70 font-semibold hover:bg-white/10 hover:text-[#1A1414] transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-white border border-[#F2DAD8] text-[#453838] font-semibold hover:border-[#ED383B]/50 hover:text-[#1A1414] transition-all shadow-sm"
             >
               Create Account
             </Link>
@@ -298,21 +309,21 @@ export default async function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5">
+      <footer className="border-t border-[#F2DAD8] bg-white">
         <div className="max-w-6xl mx-auto px-6 py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-[#ED383B] flex items-center justify-center">
-                <Linkedin className="w-3.5 h-3.5 text-[#1A1414]" />
+              <div className="w-7 h-7 rounded-lg bg-[#D4302E] flex items-center justify-center">
+                <Linkedin className="w-3.5 h-3.5 text-white" />
               </div>
               <span className="text-sm font-bold">LI Post Gen</span>
             </div>
-            <div className="flex items-center gap-6 text-xs text-[#1A1414]/30">
-              <span className="hover:text-[#1A1414]/60 cursor-pointer transition-colors">Privacy</span>
-              <span className="hover:text-[#1A1414]/60 cursor-pointer transition-colors">Terms</span>
-              <span className="hover:text-[#1A1414]/60 cursor-pointer transition-colors">Support</span>
+            <div className="flex items-center gap-6 text-xs font-medium text-[#6B5B5A]">
+              <span className="hover:text-[#C9282A] cursor-pointer transition-colors">Privacy</span>
+              <span className="hover:text-[#C9282A] cursor-pointer transition-colors">Terms</span>
+              <span className="hover:text-[#C9282A] cursor-pointer transition-colors">Support</span>
             </div>
-            <p className="text-xs text-[#1A1414]/20">
+            <p className="text-xs text-[#776462]">
               &copy; {new Date().getFullYear()} LI Post Gen. All rights reserved.
             </p>
           </div>
@@ -334,17 +345,17 @@ function FeatureCard({
   tag: string;
 }) {
   return (
-    <div className="rounded-2xl bg-white/60 border border-[#F2DAD8] p-8 hover:border-[#ED383B]/50/40 transition-all group">
+    <div className="rounded-2xl bg-white border border-[#F2DAD8] p-8 hover:border-[#ED383B]/40 transition-all group shadow-sm">
       <div className="flex items-center justify-between mb-5">
         <div className="w-12 h-12 rounded-xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
           {icon}
         </div>
-        <span className="text-[10px] font-medium uppercase tracking-wider text-[#ED383B] bg-[#ED383B]/[.10] px-2.5 py-1 rounded-full border border-[#ED383B]/20">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#B32A2C] bg-[#ED383B]/[.10] px-2.5 py-1 rounded-full border border-[#ED383B]/20">
           {tag}
         </span>
       </div>
       <h3 className="text-xl font-bold mb-2">{title}</h3>
-      <p className="text-[#C9B4B2] leading-relaxed text-sm">{description}</p>
+      <p className="text-[#6B5B5A] leading-relaxed text-sm">{description}</p>
     </div>
   );
 }
@@ -361,12 +372,15 @@ function StepCard({
   gradient: string;
 }) {
   return (
-    <div className="relative rounded-2xl bg-white/40 border border-[#F2DAD8] p-8 hover:border-[#ED383B]/50/30 transition-all group">
-      <div className={`text-5xl font-extrabold bg-gradient-to-br ${gradient} bg-clip-text text-transparent opacity-30 mb-4`}>
+    <div className="relative rounded-2xl bg-[#FDF3F2] border border-[#F2DAD8] p-8 hover:border-[#ED383B]/30 transition-all group">
+      {/* The step number used to sit at opacity-30 over a light gradient, which
+          measured about 1.3:1 — a numeral nobody could read. At full strength on
+          the darkened ramp it clears AA-large several times over. */}
+      <div className={`text-5xl font-extrabold bg-gradient-to-br ${gradient} bg-clip-text text-transparent mb-4`}>
         {number}
       </div>
       <h3 className="text-lg font-bold mb-3">{title}</h3>
-      <p className="text-sm text-[#C9B4B2] leading-relaxed">{description}</p>
+      <p className="text-sm text-[#6B5B5A] leading-relaxed">{description}</p>
     </div>
   );
 }

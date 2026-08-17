@@ -44,7 +44,7 @@ function CopyBtn({ text, label = "Copy" }: { text: string; label?: string }) {
           toast.success("Copied");
         } catch { toast.error("Could not copy"); }
       }}
-      className="flex items-center gap-1.5 text-xs font-medium text-[#ED383B] px-2.5 py-1.5 rounded-lg border border-[#ED383B]/40 hover:bg-[#ED383B]/[.10] shrink-0"
+      className="flex items-center gap-1.5 text-xs font-medium text-[#C9282A] px-2.5 py-1.5 rounded-lg border border-[#ED383B]/40 hover:bg-[#ED383B]/[.10] shrink-0"
     >
       {done ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
       {done ? "Copied" : label}
@@ -155,7 +155,7 @@ export default function AssetsPage() {
               key={t.k}
               onClick={() => setTheme(t.k)}
               className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border font-medium ${
-                theme === t.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
+                theme === t.k ? "border-[#ED383B] text-[#C9282A] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
               }`}
             >
               <span className="w-3 h-3 rounded-full border border-black/10" style={{ background: t.dot }} />
@@ -172,11 +172,11 @@ export default function AssetsPage() {
             onClick={() => photoRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) setPhotoFile(f); }}
-            className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer ${photoFile ? "border-[#ED383B]/60 bg-[#ED383B]/5" : "border-[#F2DAD8] hover:border-[#ED383B]/50/50"}`}
+            className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer ${photoFile ? "border-[#ED383B]/60 bg-[#ED383B]/5" : "border-[#F2DAD8] hover:border-[#ED383B]/50"}`}
           >
             <input ref={photoRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) setPhotoFile(f); }} />
-            {photoFile ? <Check className="w-6 h-6 text-[#ED383B] mx-auto mb-1.5" /> : <Upload className="w-6 h-6 text-[#6B5B5A] mx-auto mb-1.5" />}
+            {photoFile ? <Check className="w-6 h-6 text-[#C9282A] mx-auto mb-1.5" /> : <Upload className="w-6 h-6 text-[#6B5B5A] mx-auto mb-1.5" />}
             <p className="text-xs text-[#1A1414] font-semibold">{photoFile ? photoFile.name : "Drop a headshot, or click to choose"}</p>
             <p className="text-[11px] text-[#6B5B5A] mt-0.5">JPG or PNG. Shoulders-up works best. Your photo is processed and returned — never stored.</p>
           </div>
@@ -187,7 +187,7 @@ export default function AssetsPage() {
               <button
                 key={k}
                 onClick={() => setPhotoStyle(k)}
-                className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium ${photoStyle === k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"}`}
+                className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium ${photoStyle === k ? "border-[#ED383B] text-[#C9282A] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"}`}
               >{l}</button>
             ))}
           </div>
@@ -286,7 +286,7 @@ export default function AssetsPage() {
                 <Card key={i}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-[10px] uppercase tracking-wider text-[#ED383B] font-bold">{c.scenario}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-[#C9282A] font-bold">{c.scenario}</p>
                       <p className="text-sm text-[#1A1414] mt-1">{c.text}</p>
                     </div>
                     <CopyBtn text={c.text} />
@@ -336,7 +336,7 @@ export default function AssetsPage() {
                 <div key={i} className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#ED383B] font-bold">{it.kind}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-[#C9282A] font-bold">{it.kind}</p>
                       <h3 className="text-sm font-semibold text-[#1A1414]">{it.title}</h3>
                       <p className="text-xs text-[#6B5B5A]">{it.subtitle}</p>
                     </div>
@@ -387,7 +387,7 @@ export default function AssetsPage() {
                 <Card key={i}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-[#ED383B] font-bold">{p.day}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-[#C9282A] font-bold">{p.day}</p>
                       <p className="text-xs text-[#6B5B5A]">{p.angle}</p>
                     </div>
                     <CopyBtn text={p.text} />
@@ -403,7 +403,7 @@ export default function AssetsPage() {
             <div className="space-y-4">
               <div className="rounded-2xl bg-white border border-[#F2DAD8] p-5 space-y-2">
                 <h3 className="text-sm font-semibold text-[#1A1414]">{current.title}</h3>
-                <p className="text-sm text-[#ED383B] font-semibold">{current.hookLine}</p>
+                <p className="text-sm text-[#C9282A] font-semibold">{current.hookLine}</p>
                 <p className="text-xs text-[#6B5B5A]">First 3 seconds. Spoken and on screen — LinkedIn video plays muted.</p>
               </div>
               <div className="rounded-2xl bg-white border border-[#F2DAD8] overflow-hidden">
@@ -414,7 +414,7 @@ export default function AssetsPage() {
                 <div className="divide-y divide-[#F2DAD8]">
                   {(current.script ?? []).map((b: { t: string; spoken: string; onScreen: string; shot: string }, i: number) => (
                     <div key={i} className="p-4 space-y-1">
-                      <p className="text-[10px] uppercase tracking-wider text-[#ED383B] font-bold">{b.t}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-[#C9282A] font-bold">{b.t}</p>
                       <p className="text-sm text-[#1A1414]">{b.spoken}</p>
                       <p className="text-xs text-[#6B5B5A]"><span className="font-medium">On screen:</span> {b.onScreen}</p>
                       <p className="text-xs text-[#6B5B5A]"><span className="font-medium">Shot:</span> {b.shot}</p>
@@ -428,7 +428,7 @@ export default function AssetsPage() {
                   <CopyBtn text={`${current.caption}\n\n${(current.hashtags ?? []).map((h: string) => `#${h.replace(/^#/, "")}`).join(" ")}`} />
                 </div>
                 <p className="text-sm text-[#1A1414] whitespace-pre-line">{current.caption}</p>
-                <p className="text-xs text-[#ED383B]">{(current.hashtags ?? []).map((h: string) => `#${h.replace(/^#/, "")}`).join("  ")}</p>
+                <p className="text-xs text-[#C9282A]">{(current.hashtags ?? []).map((h: string) => `#${h.replace(/^#/, "")}`).join("  ")}</p>
               </Card>
             </div>
           )}

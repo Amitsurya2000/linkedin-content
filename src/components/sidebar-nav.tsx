@@ -36,7 +36,7 @@ function NavItem({ href, label, icon: Icon }: { href: string; label: string; ico
         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
         isActive
           ? "bg-white text-[#C21D1D] shadow-sm"
-          : "text-white/90 hover:text-white hover:bg-white/15"
+          : "text-white hover:bg-white/20"
       )}
     >
       <Icon className={cn("w-4 h-4 shrink-0 transition-colors", isActive ? "text-[#C21D1D]" : "group-hover:text-white")} />

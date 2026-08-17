@@ -49,7 +49,7 @@ function PostItem({ post }: { post: Post }) {
   return (
     <div className="bg-white border border-[#F2DAD8] rounded-2xl overflow-hidden">
       <div className="p-5 space-y-3">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-[#ED383B]/[.10] text-[#ED383B] border border-[#ED383B]/20">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full bg-[#ED383B]/[.10] text-[#C9282A] border border-[#ED383B]/20">
           {post.hookCategory}
         </span>
         <p className="text-[#1A1414] font-semibold leading-snug">{post.hook}</p>
@@ -59,7 +59,7 @@ function PostItem({ post }: { post: Post }) {
       {carousel.length > 0 ? (
         <div className="px-5 pb-3">
           <p className="text-xs text-[#6B5B5A] mb-2 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-[#ED383B]" /> {carousel.length} slides
+            <Layers className="w-3.5 h-3.5 text-[#C9282A]" /> {carousel.length} slides
           </p>
           <SwipeDeck slideClassName="w-[45%]" label="Carousel slides">
             {carousel.map((url, i) => (

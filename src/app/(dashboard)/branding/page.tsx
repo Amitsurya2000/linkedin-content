@@ -51,7 +51,7 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
           toast.success("Copied");
         } catch { toast.error("Could not copy"); }
       }}
-      className="flex items-center gap-1.5 text-xs font-medium text-[#ED383B] px-2.5 py-1.5 rounded-lg border border-[#ED383B]/40 hover:bg-[#ED383B]/[.10] shrink-0"
+      className="flex items-center gap-1.5 text-xs font-medium text-[#C9282A] px-2.5 py-1.5 rounded-lg border border-[#ED383B]/40 hover:bg-[#ED383B]/[.10] shrink-0"
     >
       {done ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
       {done ? "Copied" : label}
@@ -115,7 +115,7 @@ export default function BrandingPage() {
   if (loading) {
     return (
       <div className="flex items-center gap-3 text-sm text-[#6B5B5A]">
-        <Loader2 className="w-4 h-4 animate-spin text-[#ED383B]" /> Loading your profile kit…
+        <Loader2 className="w-4 h-4 animate-spin text-[#C9282A]" /> Loading your profile kit…
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function BrandingPage() {
 
       {!hasProfile && (
         <div className="rounded-xl border border-[#F2DAD8] bg-[#FDF3F2] p-4 flex gap-3">
-          <AlertCircle className="w-4 h-4 text-[#ED383B] shrink-0 mt-0.5" />
+          <AlertCircle className="w-4 h-4 text-[#C9282A] shrink-0 mt-0.5" />
           <p className="text-sm text-[#1A1414]">
             Build your profile first — upload your CV or fill in the sections on the Create page.
             Everything here is written from it.
@@ -170,7 +170,7 @@ export default function BrandingPage() {
             <div className="p-5 pb-3 flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-[#1A1414] font-semibold flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4 text-[#ED383B]" /> LinkedIn banner
+                  <ImageIcon className="w-4 h-4 text-[#C9282A]" /> LinkedIn banner
                 </h2>
                 <p className="text-xs text-[#6B5B5A] mt-0.5">1584 × 396 · downloads at 2× for a sharp upload</p>
               </div>
@@ -198,7 +198,7 @@ export default function BrandingPage() {
                     key={t.k}
                     onClick={() => setTheme(t.k)}
                     className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border font-medium ${
-                      theme === t.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
+                      theme === t.k ? "border-[#ED383B] text-[#C9282A] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
                     }`}
                   >
                     <span className="w-3 h-3 rounded-full border border-black/10" style={{ background: t.dot }} />
@@ -214,7 +214,7 @@ export default function BrandingPage() {
                     onClick={() => setVisual(v.k)}
                     title={v.hint}
                     className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium ${
-                      (visual || kit.banner.visual) === v.k ? "border-[#ED383B] text-[#ED383B] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
+                      (visual || kit.banner.visual) === v.k ? "border-[#ED383B] text-[#C9282A] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
                     }`}
                   >
                     {v.label}
@@ -243,7 +243,7 @@ export default function BrandingPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     {h.recommended && (
-                      <span className="inline-block text-[10px] uppercase tracking-wider font-bold text-[#ED383B] mb-1">Recommended</span>
+                      <span className="inline-block text-[10px] uppercase tracking-wider font-bold text-[#C9282A] mb-1">Recommended</span>
                     )}
                     <p className="text-sm text-[#1A1414] font-medium break-words">{h.text}</p>
                   </div>
@@ -276,7 +276,7 @@ export default function BrandingPage() {
                   <h3 className="text-xs uppercase tracking-wider font-bold text-[#6B5B5A] mb-1.5">Alignment check</h3>
                   <ul className="space-y-1">
                     {kit.alignment.map((a, i) => (
-                      <li key={i} className="text-xs text-[#1A1414] flex gap-2"><Check className="w-3.5 h-3.5 text-[#ED383B] shrink-0 mt-0.5" />{a}</li>
+                      <li key={i} className="text-xs text-[#1A1414] flex gap-2"><Check className="w-3.5 h-3.5 text-[#C9282A] shrink-0 mt-0.5" />{a}</li>
                     ))}
                   </ul>
                 </div>

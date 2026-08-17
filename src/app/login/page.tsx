@@ -53,7 +53,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex flex-col items-center gap-3 mb-8">
           <div className="w-12 h-12 rounded-2xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
-            <Linkedin className="w-6 h-6 text-[#ED383B]" />
+            <Linkedin className="w-6 h-6 text-[#C9282A]" />
           </div>
         </div>
 
@@ -89,7 +89,7 @@ export default function LoginPage() {
                 <Label htmlFor="password" className="text-sm text-[#6B5B5A] font-medium">
                   Password
                 </Label>
-                <span className="text-xs text-[#ED383B] hover:text-[#FF6A3D] cursor-pointer font-medium">
+                <span className="text-xs text-[#C9282A] hover:text-[#8E1B18] cursor-pointer font-medium">
                   Forgot password?
                 </span>
               </div>
@@ -127,7 +127,7 @@ export default function LoginPage() {
 
         <p className="text-center text-[#6B5B5A] text-sm mt-6">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-[#ED383B] hover:text-[#FF6A3D] font-medium transition-colors">
+          <Link href="/signup" className="text-[#C9282A] hover:text-[#8E1B18] font-medium transition-colors">
             Sign up
           </Link>
         </p>

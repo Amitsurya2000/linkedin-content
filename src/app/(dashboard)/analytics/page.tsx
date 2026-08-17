@@ -35,7 +35,7 @@ function BucketTable({ title, rows, unit = "" }: { title: string; rows: Insights
             <div className="flex items-center justify-between text-xs">
               <span className="text-[#1A1414] font-medium">{r.key}{unit}</span>
               <span className="text-[#6B5B5A]">
-                <span className="text-[#ED383B] font-bold">{r.rate.toFixed(1)}%</span> · {r.posts} post{r.posts === 1 ? "" : "s"} · {r.avgImpressions.toLocaleString()} avg views
+                <span className="text-[#C9282A] font-bold">{r.rate.toFixed(1)}%</span> · {r.posts} post{r.posts === 1 ? "" : "s"} · {r.avgImpressions.toLocaleString()} avg views
               </span>
             </div>
             <div className="h-2 rounded-full bg-[#FDF3F2] overflow-hidden">
@@ -93,7 +93,7 @@ export default function AnalyticsPage() {
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   if (loading) {
-    return <div className="flex items-center gap-3 text-sm text-[#6B5B5A]"><Loader2 className="w-4 h-4 animate-spin text-[#ED383B]" /> Loading…</div>;
+    return <div className="flex items-center gap-3 text-sm text-[#6B5B5A]"><Loader2 className="w-4 h-4 animate-spin text-[#C9282A]" /> Loading…</div>;
   }
 
   return (
@@ -162,7 +162,7 @@ export default function AnalyticsPage() {
 
           {insights?.findings.length ? (
             <div className="rounded-2xl bg-[#FDF3F2] border border-[#F2DAD8] p-5 space-y-2">
-              <h3 className="text-sm font-semibold text-[#1A1414] flex items-center gap-1.5"><Lightbulb className="w-4 h-4 text-[#ED383B]" /> What the numbers say</h3>
+              <h3 className="text-sm font-semibold text-[#1A1414] flex items-center gap-1.5"><Lightbulb className="w-4 h-4 text-[#C9282A]" /> What the numbers say</h3>
               <ul className="space-y-1.5">
                 {insights.findings.map((f, i) => <li key={i} className="text-xs text-[#1A1414]">• {f}</li>)}
               </ul>
@@ -184,7 +184,7 @@ export default function AnalyticsPage() {
                       {r.postType} · {(r.impressions ?? 0).toLocaleString()} views · {((r.reactions ?? 0) + (r.comments ?? 0) + (r.reposts ?? 0) + (r.saves ?? 0)).toLocaleString()} engagements
                     </p>
                   </div>
-                  <button onClick={() => remove(r.id)} className="p-2 rounded-lg text-[#6B5B5A] hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] shrink-0">
+                  <button onClick={() => remove(r.id)} className="p-2 rounded-lg text-[#6B5B5A] hover:text-[#C9282A] hover:bg-[#ED383B]/[.10] shrink-0">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

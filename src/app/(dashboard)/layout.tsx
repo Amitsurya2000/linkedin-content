@@ -24,7 +24,9 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 shrink-0 flex flex-col text-white" style={{ background: "linear-gradient(160deg, #E5413F 0%, #C21D1D 100%)" }}>
+      {/* The ramp starts at #D4302E, not #E5413F: white on #E5413F is 4.07:1, so
+          nothing written on the top of the sidebar could reach AA. */}
+      <aside className="w-64 shrink-0 flex flex-col text-white" style={{ background: "linear-gradient(160deg, #D4302E 0%, #A81818 100%)" }}>
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 h-16 border-b border-white/20">
           <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
@@ -32,7 +34,7 @@ export default async function DashboardLayout({
           </div>
           <div>
             <span className="text-base font-bold text-white tracking-tight">LI Post Gen</span>
-            <p className="text-[11px] font-medium text-white/90 -mt-0.5 tracking-wide">LinkedIn Content AI</p>
+            <p className="text-[11px] font-medium text-white -mt-0.5 tracking-wide">LinkedIn Content AI</p>
           </div>
         </div>
 
@@ -50,7 +52,7 @@ export default async function DashboardLayout({
               <p className="text-sm font-semibold text-white truncate leading-none mb-0.5">
                 {user.name || "User"}
               </p>
-              <p className="text-xs text-white/90 truncate">{user.email}</p>
+              <p className="text-xs text-white truncate">{user.email}</p>
             </div>
           </div>
 

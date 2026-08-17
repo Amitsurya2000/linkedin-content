@@ -107,11 +107,21 @@
   --line-red: rgba(237, 56, 59, 0.28);
 
   /* The saturated band from the reference: a diagonal red that sections sit on
-     with white type over it. */
-  --band-red: linear-gradient(135deg, #E5413F 0%, #C21D1D 100%);
+     with white type over it. The light end was #E5413F, where even SOLID white
+     measures 4.07:1 — so no label on the top of that band could reach AA, alpha
+     or not. #D4302E is the lightest red that lets white clear 4.5:1, and the
+     ramp is the same colour to the eye. */
+  --band-red: linear-gradient(135deg, #D4302E 0%, #A81818 100%);
   --blush: #FDF3F2;
 
+  /* Brand red measures 4.02:1 on white — fine as a FILL (icons and rules need
+     only 3:1) but under AA for anything at body size. So the red splits in two:
+     --red stays the fill, --red-ink is the one to use when the red IS the text.
+     --red-deep is for 10-12px labels, which usually sit on a red-tinted chip
+     rather than plain white and so start from a darker ground. */
   --red: #ED383B;
+  --red-ink: #C9282A;   /* 5.50:1 on white · 5.05:1 on blush */
+  --red-deep: #B32A2C;  /* 6.39:1 on white · 5.87:1 on blush */
   --ember: #FF7A33;
   --red-grad: linear-gradient(135deg, #ED383B 0%, #FF6A3D 100%);
   --red-grad-soft: linear-gradient(135deg, rgba(237, 56, 59, 0.16), rgba(255, 106, 61, 0.10));

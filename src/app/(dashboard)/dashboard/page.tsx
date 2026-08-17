@@ -91,7 +91,7 @@ export default function DashboardPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
-          icon={<FileText className="w-5 h-5 text-[#ED383B]" />}
+          icon={<FileText className="w-5 h-5 text-[#C9282A]" />}
           label="Total Posts Generated"
           value={stats.total}
           loading={loading}
@@ -103,13 +103,13 @@ export default function DashboardPage() {
           loading={loading}
         />
         <StatCard
-          icon={<Layers className="w-5 h-5 text-[#F77274]" />}
+          icon={<Layers className="w-5 h-5 text-[#D4302E]" />}
           label="Drafts Ready"
           value={stats.drafts}
           loading={loading}
         />
         <StatCard
-          icon={<CalendarDays className="w-5 h-5 text-[#ED383B]" />}
+          icon={<CalendarDays className="w-5 h-5 text-[#C9282A]" />}
           label="Scheduled"
           value={stats.scheduled}
           loading={loading}
@@ -145,7 +145,7 @@ export default function DashboardPage() {
       {!loading && batches.length === 0 && (
         <div className="rounded-2xl border border-dashed border-[#F2DAD8] bg-white flex flex-col items-center text-center py-16 space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
-            <FileText className="w-7 h-7 text-[#ED383B]" />
+            <FileText className="w-7 h-7 text-[#C9282A]" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-[#1A1414]">
@@ -169,7 +169,7 @@ export default function DashboardPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-[#1A1414]">Recent Batches</h2>
-            <Link href="/history" className="text-sm text-[#ED383B] hover:text-[#FF6A3D] transition-colors">
+            <Link href="/history" className="text-sm text-[#C9282A] hover:text-[#8E1B18] transition-colors">
               View all
             </Link>
           </div>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-9 h-9 rounded-xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center shrink-0">
-                      <FileText className="w-4 h-4 text-[#ED383B]" />
+                      <FileText className="w-4 h-4 text-[#C9282A]" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[#1A1414] font-medium text-sm truncate">
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <Link href={`/history/${batch.id}`}>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[#776462] hover:text-[#ED383B] hover:bg-[#ED383B]/[.10] rounded-lg cursor-pointer">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[#776462] hover:text-[#C9282A] hover:bg-[#ED383B]/[.10] rounded-lg cursor-pointer">
                         <Eye className="w-3.5 h-3.5" />
                       </Button>
                     </Link>

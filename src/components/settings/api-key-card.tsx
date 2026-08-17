@@ -135,7 +135,7 @@ export function ApiKeyCard({
               </div>
               <button
                 onClick={() => setShowInput(true)}
-                className="w-10 h-10 rounded-xl border border-[#F2DAD8] bg-white flex items-center justify-center text-[#6B5B5A] hover:text-[#ED383B] hover:border-[#ED383B]/50 transition-colors cursor-pointer"
+                className="w-10 h-10 rounded-xl border border-[#F2DAD8] bg-white flex items-center justify-center text-[#6B5B5A] hover:text-[#C9282A] hover:border-[#ED383B]/50 transition-colors cursor-pointer"
                 title="Update key"
               >
                 <Eye className="w-4 h-4" />
@@ -143,7 +143,7 @@ export function ApiKeyCard({
               <button
                 onClick={handleRevoke}
                 disabled={revoking}
-                className="w-10 h-10 rounded-xl border border-[#F2DAD8] bg-white flex items-center justify-center text-[#6B5B5A] hover:text-[#ED383B] hover:border-[#ED383B]/50 transition-colors cursor-pointer disabled:opacity-50"
+                className="w-10 h-10 rounded-xl border border-[#F2DAD8] bg-white flex items-center justify-center text-[#6B5B5A] hover:text-[#C9282A] hover:border-[#ED383B]/50 transition-colors cursor-pointer disabled:opacity-50"
                 title="Revoke key"
               >
                 {revoking ? (

@@ -71,7 +71,7 @@ export default function SignupPage() {
         {/* Logo */}
         <div className="flex flex-col items-center gap-2 mb-8">
           <div className="w-12 h-12 rounded-2xl bg-[#ED383B]/[.10] border border-[#ED383B]/20 flex items-center justify-center">
-            <Linkedin className="w-6 h-6 text-[#ED383B]" />
+            <Linkedin className="w-6 h-6 text-[#C9282A]" />
           </div>
         </div>
 
@@ -155,7 +155,7 @@ export default function SignupPage() {
 
         <p className="text-center text-[#6B5B5A] text-sm mt-6">
           Already have an account?{" "}
-          <Link href="/login" className="text-[#ED383B] hover:text-[#FF6A3D] font-medium transition-colors">
+          <Link href="/login" className="text-[#C9282A] hover:text-[#8E1B18] font-medium transition-colors">
             Sign in
           </Link>
         </p>
@@ -163,8 +163,8 @@ export default function SignupPage() {
 
       {/* Footer */}
       <div className="absolute bottom-6 flex items-center gap-6 text-xs text-[#776462]">
-        <span className="hover:text-[#1A1414]/60 cursor-pointer">Privacy Policy</span>
-        <span className="hover:text-[#1A1414]/60 cursor-pointer">Terms of Service</span>
+        <span className="hover:text-[#1A1414] cursor-pointer">Privacy Policy</span>
+        <span className="hover:text-[#1A1414] cursor-pointer">Terms of Service</span>
       </div>
     </div>
   );
