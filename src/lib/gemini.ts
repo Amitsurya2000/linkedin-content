@@ -355,19 +355,17 @@ function buildUserPrompt(params: GenerateLinkedInPostsParams): string {
     if (directive) prompt += `\n**What "${params.tonePrefs}" means here — follow it structurally, not just in word choice:**\n${directive}\n`;
   }
 
-  // Industry and audience used to be bare labels, which the model largely
-  // ignored — the same topic produced near-identical posts whoever it was aimed
-  // at. Naming what each one must CHANGE is what makes them bite, the same way
-  // assigning a hook archetype by name beats asking for "variety".
+  // Audience used to be a bare label, which the model largely ignored — the same
+  // topic produced near-identical posts whoever it was aimed at. Naming what it
+  // must CHANGE is what makes it bite, the same way assigning a hook archetype
+  // by name beats asking for "variety".
   if (params.targetAudience) {
-    prompt += `\n**Write for that specific reader.** The audience and industry above are not decoration — they change the post:\n`;
-    if (params.targetAudience) {
-      prompt += `- **Vocabulary:** use the words this reader uses at work. Explain a term only if THIS reader would not already know it; explaining something they use daily reads as condescension.\n`;
-      prompt += `- **Proof:** different readers accept different evidence. Executives want money, risk and time. Practitioners want the mechanism, the tool and the trade-off. Peers want the honest thing nobody says out loud. Pick the proof THIS reader finds convincing.\n`;
-      prompt += `- **Objection:** name the specific push-back this reader would raise, and answer it inside the post. Ignoring the obvious objection reads as naive to the person who holds it.\n`;
-      prompt += `- **Stakes:** frame the cost in terms this reader personally feels — their budget, their weekend, their credibility in a meeting.\n`;
-      prompt += `- **CTA:** ask for something this reader could actually do next.\n`;
-    }
+    prompt += `\n**Write for that specific reader.** The audience above is not decoration — it changes the post:\n`;
+    prompt += `- **Vocabulary:** use the words this reader uses at work. Explain a term only if THIS reader would not already know it; explaining something they use daily reads as condescension.\n`;
+    prompt += `- **Proof:** different readers accept different evidence. Executives want money, risk and time. Practitioners want the mechanism, the tool and the trade-off. Peers want the honest thing nobody says out loud. Pick the proof THIS reader finds convincing.\n`;
+    prompt += `- **Objection:** name the specific push-back this reader would raise, and answer it inside the post. Ignoring the obvious objection reads as naive to the person who holds it.\n`;
+    prompt += `- **Stakes:** frame the cost in terms this reader personally feels — their budget, their weekend, their credibility in a meeting.\n`;
+    prompt += `- **CTA:** ask for something this reader could actually do next.\n`;
     prompt += `\nIf the same post could be sent unchanged to a different audience, you have not used this brief.\n`;
   }
 

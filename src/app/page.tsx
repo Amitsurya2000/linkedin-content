@@ -165,7 +165,7 @@ export default async function LandingPage() {
             <StepCard
               number="01"
               title="Enter Your Topic"
-              description="Type what you want to post about. Add your industry, target audience, and preferred tone for best results."
+              description="Type what you want to post about. Add your target audience and preferred tone for best results."
               gradient="from-[#ED383B] to-[#FF6A3D]"
             />
             <StepCard

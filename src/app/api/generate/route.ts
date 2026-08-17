@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     }
 
-    const { topic, postType, postsCount, industry, targetAudience, tonePrefs, slidesCount, customInstructions } = body;
+    const { topic, postType, postsCount, targetAudience, tonePrefs, slidesCount, customInstructions } = body;
 
     // Validate required fields
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
@@ -134,7 +134,8 @@ export async function POST(req: NextRequest) {
         id: crypto.randomUUID(),
         userId,
         topic: topic.trim(),
-        industry: industry || null,
+        // The industry column stays for the batches already in the table; the
+        // field itself is gone from the form, so new rows leave it null.
         targetAudience: targetAudience || null,
         tonePrefs: tonePrefs || null,
         postType,
