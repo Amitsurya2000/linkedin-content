@@ -1,13 +1,22 @@
 import { generateImage as gathosGenerate, isGathosConfigured } from "./gathos";
+import { findPhoto, isTavilyConfigured } from "./tavily";
 import { generateImage as geminiGenerate } from "./gemini-image";
 
 /**
- * One entry point for photographic image generation, with two engines behind it.
+ * One entry point for photographic imagery, with three sources behind it.
  *
- * Gathos is primary when a key is present: it is the tuned engine these 36
- * prompt styles were written against. Gemini is the fallback, and the only
- * engine on an account with no Gathos key — so image generation never becomes
- * a dead button just because a server-side key is missing or its quota ran out.
+ * Tavily is tried FIRST, and only when the caller supplies a `photoQuery`. A
+ * searched photograph beats a generated one for any slide whose subject is a
+ * real scene, because a real photo cannot contain invented lettering — the
+ * failure that made a generated stopwatch read "71:88" with START / LAP / RESET
+ * burned into it. It is also two orders of magnitude faster: a search and
+ * download is about a second against 49-126 for a Gathos render.
+ *
+ * Gathos is next: it is the tuned engine these 36 prompt styles were written
+ * against, and it is what an abstract or stylised subject still needs. Gemini is
+ * the last fallback, and the only source on an account with no Gathos key — so
+ * image generation never becomes a dead button because one provider is missing
+ * or out of quota.
  *
  * Callers pass LinkedIn-native pixel sizes. Each engine's constraints are
  * handled inside it: Gathos snaps to multiples of 16, Gemini takes an aspect
@@ -17,9 +26,11 @@ import { generateImage as geminiGenerate } from "./gemini-image";
 export interface EngineImage {
   buffer: Buffer;
   contentType: string;
-  engine: "gathos" | "gemini";
+  engine: "tavily" | "gathos" | "gemini";
   model?: string;
   elapsedMs: number;
+  /** Where a searched photo came from, so it can be credited or re-checked. */
+  sourceUrl?: string;
 }
 
 function aspectFor(width: number, height: number): "1:1" | "4:5" | "16:9" {
@@ -31,10 +42,36 @@ function aspectFor(width: number, height: number): "1:1" | "4:5" | "16:9" {
 
 export async function generateBackground(
   prompt: string,
-  opts: { width: number; height: number; geminiKey?: string }
+  opts: {
+    width: number;
+    height: number;
+    geminiKey?: string;
+    /**
+     * A plain-language description of a real scene to search for. Supplying it
+     * opts this call into photography; omitting it keeps the previous
+     * generate-only behaviour exactly.
+     */
+    photoQuery?: string;
+  }
 ): Promise<EngineImage> {
   const start = Date.now();
   const errors: string[] = [];
+
+  if (opts.photoQuery && isTavilyConfigured()) {
+    // findPhoto walks its candidates and returns null rather than throwing, so
+    // a dead image URL costs one fall-through instead of the whole image.
+    const found = await findPhoto(opts.photoQuery);
+    if (found) {
+      return {
+        buffer: found.buffer,
+        contentType: found.contentType,
+        engine: "tavily",
+        elapsedMs: Date.now() - start,
+        sourceUrl: found.photo.url,
+      };
+    }
+    errors.push("tavily: no usable photo for that query");
+  }
 
   if (isGathosConfigured()) {
     try {
@@ -72,6 +109,6 @@ export async function generateBackground(
   throw new Error(
     errors.length
       ? `Image generation failed. ${errors.join(" | ")}`
-      : "No image engine is available. Add a Gemini key in Settings, or set GATHOS_IMAGE_API_KEY."
+      : "No image source is available. Add a Gemini key in Settings, or set GATHOS_IMAGE_API_KEY or TAVILY_API_KEY."
   );
 }

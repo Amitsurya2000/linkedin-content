@@ -506,6 +506,14 @@ ${params.customInstructions.trim()}
     // a slide. Sixty-three per cent of stored slides have the field empty, so
     // most of the time it briefed nothing at all.
     prompt += `\n\n**"designDirection" is the IMAGE PROMPT for that slide, and every slide needs one.** It is sent verbatim to an image model, so write it as a picture to draw, never as slide styling — no font sizes, no hex colours, no "title in 48px". **Use the visual language named in "Visual language for their slide art" in the creator profile above.** That line is derived from this person's actual field, so an ML engineer gets glowing vector nodes and a finance lead gets paper texture and line charts — the same picture cannot serve both. If the profile does not carry that line, fall back to: minimalist tech infographic, dark obsidian background, high contrast, restrained accent colour, plenty of negative space. Whatever the language, no text or lettering anywhere in the image, and avoid subjects that are MADE of numbers — a stopwatch, a dashboard, a terminal, a gauge. The model draws their readouts as garbled digits every time. Prefer materials and forms: strands, planes, particles, lattices, flow. Name the concrete subject the slide is about ("a single fibre-optic strand splitting into three, shot macro") rather than an abstraction ("innovation"). Never name the slide's title inside the prompt — the image model renders quoted words as garbled lettering.`;
+    // A photo search finds a REAL scene; an art prompt synthesises one. They
+    // want different words — "a warehouse manager checking stock on a tablet"
+    // finds a photograph, while "glowing lattice of supply nodes" cannot. The
+    // slide carries both so the image engine can search first and generate
+    // only when no photograph fits.
+    prompt += `
+
+**Also give every slide a "photoQuery": a real scene to photograph.** Six to twelve plain words describing something that exists and could be shot with a camera — "a warehouse manager checking stock levels on a tablet", "two engineers reviewing a dashboard on a wall screen". No adjectives about rendering, no lighting notes, no style words: those belong in designDirection. If the slide is genuinely abstract and no real photograph would carry it, set "photoQuery" to an empty string rather than inventing a scene.`;
     // The deck the copy will be drawn into changes what the copy should be. A
     // walkthrough is a procedure and wants steps, components and trade-offs; a
     // campaign is a narrative and wants a before, a turn and an after. Written
