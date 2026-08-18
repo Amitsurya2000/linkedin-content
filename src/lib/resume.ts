@@ -27,6 +27,13 @@ export interface CreatorProfileData {
   goals?: string; // one-line summary of what they want from LinkedIn
   objectives?: string[]; // specific outcomes they're after
   contentStrategy?: string; // the sharp strategic angle tying resume + goals together
+  /**
+   * The visual language this person's slide art should use, derived from their
+   * field. Optional because profiles extracted before this existed do not carry
+   * it — those fall back to the generator's default house style rather than
+   * needing a migration.
+   */
+  aestheticStyle?: string;
 }
 
 const ANALYSIS_PROMPT = `You are an elite LinkedIn ghostwriter and personal-brand strategist. You are given a person's CV / resume, and OPTIONALLY a SECOND document — usually an experience transcript (a detailed account of what they actually did, often transcribed from a conversation), sometimes a one-pager of goals. Analyze BOTH deeply and extract a structured "Creator Profile" that becomes the BASE context for ALL of their LinkedIn content (posts, carousels, articles, image concepts).
@@ -59,7 +66,8 @@ Return ONLY a valid JSON object (no markdown, no code fences) with exactly this 
   "postIdeas": ["8-10 concrete, specific LinkedIn post ideas grounded in THIS person's actual experience AND their goals — not generic advice"],
   "goals": "one sharp line: what they want LinkedIn to do for them (from the one-pager; empty if none)",
   "objectives": ["3-5 specific outcomes they're after (from the one-pager; empty array if none)"],
-  "contentStrategy": "2-3 sentences: the strategic through-line that connects their proven experience to where they want to go — the spine of their whole content plan"
+  "contentStrategy": "2-3 sentences: the strategic through-line that connects their proven experience to where they want to go — the spine of their whole content plan",
+  "aestheticStyle": "one sentence naming the VISUAL language their carousel art should use, chosen from their field. AI/ML/data science: dark mode, glowing neural networks, 3D vector nodes, blue-cyan lighting, glassmorphism. Software engineering: minimal dark code editor, syntax highlighting, clean architecture diagrams, terminal aesthetics. Finance/management/consulting: corporate navy or deep green, paper texture, sleek line charts, minimalist 3D shapes. Design/creative: bold flat colour, editorial layout, generous negative space. Anything else: pick the language a senior person in THAT field would recognise as their own. Describe materials, lighting and subject matter — never fonts or layout."
 }
 
 Rules:
@@ -153,5 +161,6 @@ export function profileToContext(p: CreatorProfileData): string {
   if (p.goals) lines.push(`- Their GOAL (steer content toward this): ${p.goals}`);
   if (p.objectives?.length) lines.push(`- Objectives: ${p.objectives.join("; ")}`);
   if (p.contentStrategy) lines.push(`- Content strategy through-line: ${p.contentStrategy}`);
+  if (p.aestheticStyle) lines.push(`- Visual language for their slide art: ${p.aestheticStyle}`);
   return lines.join("\n");
 }
