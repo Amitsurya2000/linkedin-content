@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Copy, Check, Layers } from "lucide-react";
 import { SwipeDeck } from "@/components/swipe-deck";
+import { composePost } from "@/lib/utils";
 
 interface Post {
   id: string;
@@ -34,8 +35,7 @@ function PostItem({ post }: { post: Post }) {
   const carousel = parseArr(post.carouselImages);
 
   async function copyPost() {
-    const tags = hashtags.map((h) => `#${h.replace(/^#/, "")}`).join(" ");
-    const full = `${post.hook}\n\n${post.body}${tags ? `\n\n${tags}` : ""}`;
+    const full = composePost(post.hook, post.body, hashtags);
     try {
       await navigator.clipboard.writeText(full);
       setCopied(true);

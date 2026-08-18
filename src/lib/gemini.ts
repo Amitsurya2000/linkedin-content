@@ -455,6 +455,14 @@ ${params.customInstructions.trim()}
   // stack is harder to spot than a fabricated number and costs more — it is the
   // detail a hiring manager asks about first.
   prompt += `\n\n**The same rule governs TECHNICAL DETAIL.** Every tool, framework, library, platform, architecture and methodology you name must appear in the creator profile or the brief above. Do not reach for the plausible neighbour: if the profile says RabbitMQ, do not write Kafka; if it says FastAPI, do not write Django. Do not generalise a named project into a category it was not ("a RAG pipeline" when the profile describes a keyword search). If you need a technical example and the profile does not supply one, write about the decision or the trade-off instead of naming a technology.`;
+  // The schema stores hook, body and hashtags separately and the UI joins them.
+  // The model was writing a COMPLETE post into body — its own opening line and
+  // its hashtags included — so 39% of stored posts pasted with the hook twice
+  // and 87% with the hashtags twice. Invisible in the preview, which renders
+  // the fields separately; you only see it after pasting into LinkedIn.
+  prompt += `
+
+**"body" must NOT repeat the hook and must NOT contain hashtags.** These are three separate fields and the app joins them itself. "body" starts at the line AFTER the hook and ends at the last sentence — no opening line repeated from "hook", no hashtag block at the bottom, not even one. Put every hashtag in the "hashtags" array and nowhere else.`;
   prompt += `\n\n**Hook discipline:** the opening line is a standalone sentence under 12 words. In the top-performing posts in your knowledge base, the best hooks average ~40 characters and the worst average ~77. Write short. One idea per line, blank line between beats.`;
   prompt += `\n\n**Important:** Generate exactly ${params.postsCount} unique post(s). Set "hookCategory" to the assigned archetype letter and name. Return a JSON array of post objects.`;
 

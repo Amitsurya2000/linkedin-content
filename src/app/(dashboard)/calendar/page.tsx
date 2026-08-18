@@ -5,6 +5,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { useWorkspace } from "@/components/workspace-context";
 import { Button } from "@/components/ui/button";
+import { composePost } from "@/lib/utils";
 import {
   ChevronLeft,
   ChevronRight,
@@ -220,8 +221,7 @@ function PostDetail({
     setStatusSaving(true);
     try {
       // Copy the full post so it's ready to paste into LinkedIn's composer.
-      const tags = (post.hashtags || []).map((t) => `#${t.replace(/^#/, "")}`).join(" ");
-      const full = `${post.hook || ""}\n\n${post.body || ""}${tags ? `\n\n${tags}` : ""}`.trim();
+      const full = composePost(post.hook || "", post.body || "", post.hashtags || []);
       try { await navigator.clipboard.writeText(full); } catch { /* clipboard may be blocked */ }
 
       const res = await fetch("/api/posts/publish", {

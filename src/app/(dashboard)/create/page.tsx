@@ -35,6 +35,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { AccentIcon, ACCENTS, type Accent } from "@/components/accent-icon";
+import { composePost } from "@/lib/utils";
 
 type PostType = "text" | "carousel" | "article";
 type Step = "form" | "generating" | "done";
@@ -251,9 +252,10 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   const settingsKey = `${deckStyle}:${deckShape}:${deckCount}:${genArt}`;
   const deckStale = carouselImages.length > 0 && renderedKey.current !== null && renderedKey.current !== settingsKey;
 
+  // Delegates so the de-duplication lives in one place. This used to join the
+  // three fields blindly, which pasted the hook and the hashtags twice.
   function buildFullPost(hook: string, body: string, hashtags: string[]) {
-    const hashtagStr = hashtags.map((h) => `#${h.replace(/^#/, "")}`).join(" ");
-    return `${hook}\n\n${body}\n\n${hashtagStr}`;
+    return composePost(hook, body, hashtags);
   }
 
   async function copyToClipboard(text: string, idx?: number) {
