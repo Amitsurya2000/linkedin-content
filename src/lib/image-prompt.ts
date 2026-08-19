@@ -687,6 +687,76 @@ export const STYLE_IDS = STYLES.map((s) => s.id);
 export const DEFAULT_STYLE_IDS = STYLES.filter(
   (s) => s.category === "Authority" || ["auth-desk", "auth-portrait", "auth-window-light"].includes(s.id)
 ).map((s) => s.id);
+/**
+ * The 29 design movements, as a data table.
+ *
+ * These are AESTHETICS, not layouts — Brutalism and Wabi Sabi describe how a
+ * picture should feel, not where the text sits. So each one supplies only the
+ * scene fragment and inherits the same quality and no-text rules every other
+ * style obeys, rather than repeating a hand-written prompt 29 times.
+ *
+ * Each fragment names materials, colour and light, because that is what an image
+ * model can actually act on. "Y2K aesthetic" alone produces a stock collage;
+ * "translucent blue plastic, chrome bubbles, lens flare on white" produces Y2K.
+ *
+ * Every fragment also avoids subjects that are made of text or numbers — screens
+ * of code, dashboards, signage — for the reason recorded elsewhere in this file:
+ * an image model renders their content as garbled lettering however firmly the
+ * prompt forbids it.
+ */
+export const AESTHETICS: { id: string; name: string; scene: string }[] = [
+  { id: "aes-minimalism", name: "Minimalism", scene: "vast empty off-white space with a single small object placed off-centre, one soft shadow, restrained neutral palette" },
+  { id: "aes-maximalism", name: "Maximalism", scene: "densely layered pattern on pattern, saturated jewel tones, ornate repeating motifs filling every inch, rich and deliberately excessive" },
+  { id: "aes-swiss", name: "Swiss Design", scene: "strict grid, enormous negative space, one red rule crossing a white field, precise geometric alignment, objective and cool" },
+  { id: "aes-brutalism", name: "Brutalism", scene: "raw board-marked concrete, heavy monolithic forms, hard directional daylight, stark unpolished surfaces" },
+  { id: "aes-surrealism", name: "Surrealism", scene: "impossible scale and floating objects in a calm dreamlike landscape, long shadows, soft unreal light" },
+  { id: "aes-neo-brutalism", name: "Neo-Brutalism", scene: "flat blocks of clashing saturated colour, thick black outlines, hard offset shadows, deliberately crude geometry" },
+  { id: "aes-neoclassical", name: "Neo-classical", scene: "white marble columns and carved drapery, symmetrical composition, cool museum light, restrained classical ornament" },
+  { id: "aes-neumorphism", name: "Neumorphism", scene: "soft extruded shapes in a single pale grey, gentle inner and outer shadows, tactile pillowy surfaces, almost no contrast" },
+  { id: "aes-scrapbook", name: "Scrapbook", scene: "torn paper layers, masking tape, thread and pressed flowers on kraft card, handmade collage with visible edges" },
+  { id: "aes-glassmorphism", name: "Glassmorphism", scene: "frosted translucent glass panels floating over a soft colour gradient, blurred depth, thin bright edges, luminous" },
+  { id: "aes-claymorphism", name: "Claymorphism", scene: "rounded matte clay forms in soft pastel, chunky friendly volumes, gentle studio light, 3D and toy-like" },
+  { id: "aes-bento", name: "Bento Grid", scene: "a grid of rounded rectangular compartments of varying size, each holding one simple object, clean and orderly, soft even light" },
+  { id: "aes-pixel", name: "Pixel Art", scene: "chunky visible pixels, limited 16-colour palette, crisp dithering, retro game rendering with hard square edges" },
+  { id: "aes-sketch", name: "Conceptual Sketch", scene: "loose graphite lines on textured paper, visible construction marks and smudges, unfinished hand-drawn study" },
+  { id: "aes-luxury-type", name: "Luxury Typography", scene: "deep black ground with fine gold foil linework, generous margins, subtle emboss and grain, restrained and expensive" },
+  { id: "aes-editorial", name: "Editorial Design", scene: "magazine spread photography, strong single subject, wide margins, muted print-like colour and paper grain" },
+  { id: "aes-y2k", name: "Y2K Aesthetic", scene: "translucent blue plastic, chrome bubbles and metallic gradients, lens flare on glossy white, late-nineties optimism" },
+  { id: "aes-ethereal", name: "Ethereal", scene: "pale mist and diffused backlight, weightless floating fabric, near-white palette with the faintest blush, dreamlike and soft" },
+  { id: "aes-bohemian", name: "Bohemian", scene: "warm terracotta and ochre textiles, woven rattan and dried grasses, low golden afternoon light, layered and lived-in" },
+  { id: "aes-dark-ui", name: "Dark Mode UI", scene: "near-black surface with one cold accent glow, subtle depth and soft rim light on simple geometric forms, quiet and precise" },
+  { id: "aes-cyberpunk", name: "Cyberpunk", scene: "rain-slick street at night, magenta and cyan neon reflections, dense atmosphere and haze, high contrast" },
+  { id: "aes-anthropomorphic", name: "Anthropomorphic", scene: "everyday objects given faces and posture, warm character lighting, playful expressive forms, charming and slightly absurd" },
+  { id: "aes-victorian", name: "Victorian", scene: "engraved botanical ornament, oxblood and forest green, aged paper and gilt edging, dense decorative framing" },
+  { id: "aes-cybercore", name: "Cybercore", scene: "exposed circuitry and ribbon cable, brushed aluminium and acid green, cold technical light, machine-like detail" },
+  { id: "aes-synthwave", name: "Synthwave", scene: "purple to orange gradient sunset, a glowing horizon grid receding to a vanishing point, chrome highlights, retro-futurist" },
+  { id: "aes-graffiti", name: "Graffiti", scene: "spray paint on weathered concrete, overlapping tags and drips, bold colour over grit, urban and energetic" },
+  { id: "aes-gothic", name: "Gothic", scene: "pointed arches and deep shadow, cold stone and stained-glass colour cast, dramatic vertical light, sombre" },
+  { id: "aes-mixed-media", name: "Mixed Media", scene: "photography torn and layered with painted brushwork, ink and cut paper, visible seams between materials, textural" },
+  { id: "aes-wabi-sabi", name: "Wabi Sabi", scene: "a single imperfect ceramic vessel, visible repair and asymmetry, raw linen and unglazed clay, soft north light, quiet and worn" },
+];
+
+/**
+ * Turn an aesthetic into a full StyleDef.
+ *
+ * The overlay is deliberately the same restrained editorial treatment for all
+ * of them: the movement should show in the IMAGE, not in a different text
+ * layout per style. 1024x1280 is 4:5, the feed-native ratio.
+ */
+const AESTHETIC_STYLES: StyleDef[] = AESTHETICS.map(({ id, name, scene }) => ({
+  id,
+  name,
+  category: "Aesthetic",
+  ...P(1024, 1280),
+  build: () => compose(`${scene}, 4:5 composition.`, QUALITY + ".", NO_TEXT + "."),
+  overlay: (i: PostImageInput) => editorialOverlay(i, { font: "sans", graphic: "none", eyebrow: true }),
+}));
+
+// Appended rather than spliced in, so every existing style keeps its index —
+// styleForIndex() rotates by position, and inserting above would silently
+// change which style an existing post maps to.
+STYLES.push(...AESTHETIC_STYLES);
+
 export const STYLE_BY_ID: Record<string, StyleDef> = Object.fromEntries(STYLES.map((s) => [s.id, s]));
 
 export interface StyleMeta {
