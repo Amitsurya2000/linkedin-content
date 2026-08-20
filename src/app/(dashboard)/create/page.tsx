@@ -8,6 +8,7 @@ import { SwipeDeck } from "@/components/swipe-deck";
 import { DeckLightbox } from "@/components/deck-lightbox";
 import { STYLE_META } from "@/lib/image-prompt";
 import { LAB_STYLES } from "@/lib/deck-lab-styles";
+import { AESTHETICS } from "@/lib/image-prompt";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -132,6 +133,9 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   // Illustrated deck: generate art for slides with no uploaded image. Off by
   // default — a 10-slide deck is 10 image calls.
   const [genArt, setGenArt] = useState(false);
+  // Which of the 29 design movements the slide art adopts. "" = the renderer's
+  // own default look, i.e. exactly the previous behaviour.
+  const [deckAesthetic, setDeckAesthetic] = useState("");
   // How many slides to render. 0 = every slide the model wrote. Trimming keeps
   // the cover and the closing CTA and cuts the middle, so a shorter deck still
   // opens and closes properly.
@@ -168,6 +172,8 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 // only for "visual" meant the button did nothing on the seven
                 // spec styles — it rendered, it just never reached the server.
                 generateArt: deckStyle === "visual" || deckStyle in LAB_STYLES ? genArt : undefined,
+                // Only meaningful when art is actually being generated.
+                aesthetic: genArt && deckAesthetic ? deckAesthetic : undefined,
               }
         ),
       });
@@ -249,7 +255,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   // Changing style/shape/slide-count marks the deck on screen as stale rather
   // than re-rendering behind the user's back. They press Render when ready.
   const renderedKey = useRef<string | null>(null);
-  const settingsKey = `${deckStyle}:${deckShape}:${deckCount}:${genArt}`;
+  const settingsKey = `${deckStyle}:${deckShape}:${deckCount}:${genArt}:${deckAesthetic}`;
   const deckStale = carouselImages.length > 0 && renderedKey.current !== null && renderedKey.current !== settingsKey;
 
   // Delegates so the de-duplication lives in one place. This used to join the
@@ -545,6 +551,22 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 >
                   {genArt ? "AI art on" : "AI art off"}
                 </button>
+              )}
+              {/* The 29 movements, shown only when art is actually being drawn —
+                  a vector deck has no image for an aesthetic to act on. */}
+              {genArt && (deckStyle === "visual" || (deckStyle in LAB_STYLES && LAB_STYLES[deckStyle].imageFit !== "none")) && (
+                <select
+                  value={deckAesthetic}
+                  onChange={(e) => setDeckAesthetic(e.target.value)}
+                  disabled={carLoading}
+                  className="text-[10px] rounded-lg border border-[#EFCB93] bg-[#FCE2BA] text-[#B45309] px-2 py-1 font-medium outline-none disabled:opacity-50"
+                  title="Draw every slide in one design movement"
+                >
+                  <option value="">Default look</option>
+                  {AESTHETICS.map((a) => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
               )}
               {/* Downloads through fetch rather than a bare <a href>. As a link
                   it had no loading state and no error path: a 400 or a 500 put

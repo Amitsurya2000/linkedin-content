@@ -56,6 +56,8 @@ export async function POST(
   return handle(ctx, {
     canvas: body.canvas, format: body.format, style: body.style,
     maxSlides: body.maxSlides, generateArt: body.generateArt,
+    // Which of the 29 design movements the slide art should adopt.
+    aesthetic: typeof body.aesthetic === "string" && body.aesthetic ? body.aesthetic : undefined,
   });
 }
 
@@ -76,7 +78,7 @@ function limitSlides(raw: RawSlide[], max?: number): RawSlide[] {
 
 async function handle(
   { params }: { params: Promise<{ postId: string }> },
-  input: { canvas?: string; format?: string; style?: string; maxSlides?: number; generateArt?: boolean }
+  input: { canvas?: string; format?: string; style?: string; maxSlides?: number; generateArt?: boolean; aesthetic?: string }
 ) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -192,6 +194,7 @@ async function handle(
       ? await renderLabDeck(slides, {
           style: labStyle, author,
           generateArt: input.generateArt === true,
+          aesthetic: input.aesthetic,
           ...visualExtras,
         })
       : style === "paper"
@@ -202,6 +205,7 @@ async function handle(
         ? await renderVisualDeck(slides, {
             seed: postId, author, pageTotal: slides.length,
             generateArt: input.generateArt === true,
+            aesthetic: input.aesthetic,
             ...visualExtras,
           })
         : style === "attention"

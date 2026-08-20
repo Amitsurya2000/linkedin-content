@@ -4,6 +4,7 @@ import path from "path";
 import { generateBackground } from "./image-engine";
 import type { KoyopoSlide, SlideTemplate } from "./koyopo";
 import { LAB_STYLES, FACE, GLYPH_W, type FaceKind, type StyleSpec, type LabStyleName } from "./deck-lab-styles";
+import { AESTHETICS } from "./image-prompt";
 
 export { LAB_STYLES, type StyleSpec, type LabStyleName };
 
@@ -100,6 +101,13 @@ export interface LabOptions {
   designDirections?: (string | undefined)[];
   geminiKey?: string;
   topic?: string;
+  /**
+   * An aesthetic id from AESTHETICS (image-prompt.ts). Its scene fragment is
+   * folded into every slide's art prompt, so a whole deck reads as one movement
+   * rather than each slide drifting to whatever the brief implied.
+   */
+  aesthetic?: string;
+
   /** Draw every slide with the image model. Off by default — a 10-slide deck
    *  is 10 image calls. */
   generateArt?: boolean;
@@ -120,18 +128,34 @@ async function loadUpload(publicPath: string): Promise<Buffer | null> {
  * Same prompt discipline as the illustrated deck: the slide TITLE is never
  * quoted, because naming it makes image models letter it onto the artwork.
  */
-function artPrompt(designDirection: string | undefined, topic: string): string {
+/**
+ * An aesthetic id -> its scene fragment, from the shared AESTHETICS table.
+ *
+ * Imported by id rather than passed as free text so the deck and the single-post
+ * image cannot drift apart: "Glassmorphism" means exactly one thing in this app.
+ */
+function aestheticScene(id: string): string | null {
+  return AESTHETICS.find((a) => a.id === id)?.scene ?? null;
+}
+
+function artPrompt(designDirection: string | undefined, topic: string, aesthetic?: string): string {
   const brief = (designDirection ?? "")
     .replace(/\d+px/g, "")
     .replace(/#[0-9A-Fa-f]{3,8}/g, "")
     .replace(/(font|typography|title|subtitle|heading|body text|left-aligned|right-aligned|watermark|corner)/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
+  // The aesthetic replaces the default "muted professional palette" line rather
+  // than being appended to it: two competing style instructions in one prompt
+  // average into neither, which is how a Cyberpunk deck came back beige.
+  const look = aesthetic ? aestheticScene(aesthetic) : null;
   return [
     "TEXT-FREE IMAGE. No words, letters, numbers, captions, labels, logos, watermarks or UI chrome anywhere.",
     "If the subject would normally carry writing — a page, screen, sign or calendar — show it blank.",
     brief ? `Subject and art direction: ${brief}.` : `Subject: a visual metaphor for ${topic}.`,
-    "One strong focal subject, generous negative space, muted professional palette.",
+    look
+      ? `Render it in this visual language: ${look}.`
+      : "One strong focal subject, generous negative space, muted professional palette.",
     "Remember: absolutely no text of any kind.",
   ].filter(Boolean).join(" ");
 }
@@ -376,7 +400,7 @@ export async function renderLabDeck(slides: KoyopoSlide[], opts: LabOptions): Pr
     const fit = spec?.imageFit ?? "band";
     if (wantsArt && opts.generateArt) {
       try {
-        const img = await generateBackground(artPrompt(opts.designDirections?.[i], opts.topic ?? ""), {
+        const img = await generateBackground(artPrompt(opts.designDirections?.[i], opts.topic ?? "", opts.aesthetic), {
           width: LAB_CANVAS.width,
           height: fit === "bleed" ? LAB_CANVAS.height : Math.round(LAB_CANVAS.height * (fit === "bottom" ? 0.46 : 0.42)),
           geminiKey: opts.geminiKey,

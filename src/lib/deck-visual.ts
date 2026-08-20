@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import { type KoyopoSlide, type SlideTemplate } from "./koyopo";
 import { generateBackground } from "./image-engine";
+import { AESTHETICS } from "./image-prompt";
 
 /**
  * Illustrated deck — the style with real pictures in it.
@@ -94,7 +95,18 @@ const HERO = new Set<SlideTemplate>(["title", "divider", "quote"]);
  * mood, plus a hard no-text rule, because generated lettering is the single
  * fastest way to make a deck look machine-made.
  */
-function promptFor(slide: KoyopoSlide, designDirection: string | undefined, topic: string): string {
+/**
+ * An aesthetic id -> its scene fragment, from the shared AESTHETICS table.
+ *
+ * Imported by id rather than passed as free text so the deck and the single-post
+ * image cannot drift apart: "Glassmorphism" means exactly one thing in this app.
+ */
+function aestheticScene(id: string): string | null {
+  return AESTHETICS.find((a) => a.id === id)?.scene ?? null;
+}
+
+function promptFor(slide: KoyopoSlide, designDirection: string | undefined, topic: string, aesthetic?: string): string {
+  const look = aesthetic ? aestheticScene(aesthetic) : null;
   const brief = (designDirection ?? "")
     .replace(/\b\d+px\b/g, "")
     .replace(/#[0-9A-Fa-f]{3,8}/g, "")
@@ -111,8 +123,12 @@ function promptFor(slide: KoyopoSlide, designDirection: string | undefined, topi
     "If the subject would normally carry writing — a page, a screen, a sign, a calendar, a book — show it blank, or with abstract marks that are clearly not letters.",
     brief ? `Subject and art direction: ${brief}.` : `Subject: a visual metaphor for ${topic}.`,
     topic && brief ? `Wider context: ${topic}.` : "",
-    "Rich, human-made feel — a real photograph, a hand-drawn illustration, a character, or a textured graphic pattern, whichever suits the subject.",
-    "One strong focal subject, generous negative space, muted professional palette.",
+    // A chosen aesthetic REPLACES the default look rather than stacking on it:
+    // two competing style instructions in one prompt average into neither.
+    look
+      ? `Render it in this visual language: ${look}.`
+      : "Rich, human-made feel — a real photograph, a hand-drawn illustration, a character, or a textured graphic pattern, whichever suits the subject.",
+    look ? "" : "One strong focal subject, generous negative space, muted professional palette.",
     "Do not draw readable numerals either — a calendar, clock or chart should show blank cells or abstract marks.",
     "Remember: absolutely no text of any kind.",
   ].filter(Boolean).join(" ");
@@ -128,6 +144,13 @@ export interface VisualOptions {
   /** Per-slide art briefs, index-aligned with the slides. */
   designDirections?: (string | undefined)[];
   geminiKey?: string;
+  /**
+   * An aesthetic id from AESTHETICS (image-prompt.ts). Its scene fragment is
+   * folded into every slide's art prompt, so a whole deck reads as one movement
+   * rather than each slide drifting to whatever the brief implied.
+   */
+  aesthetic?: string;
+
   /**
    * Generate art for slides with no uploaded image. Off by default: a 10-slide
    * deck is 10 image calls, which is minutes of wall clock and real quota, and
@@ -178,7 +201,7 @@ export async function renderVisualDeck(
         // into a wide band loses the top and bottom of its subject — the first
         // run cut the head off the illustration.
         const img = await generateBackground(
-          promptFor(slide, opts.designDirections?.[i], opts.topic ?? ""),
+          promptFor(slide, opts.designDirections?.[i], opts.topic ?? "", opts.aesthetic),
           { width: 1080, height: Math.round(H * 0.52), geminiKey: opts.geminiKey }
         );
         art = img.buffer;
