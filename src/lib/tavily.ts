@@ -1,5 +1,7 @@
 /**
- * Tavily image search — real photography instead of generated art.
+ * Photo search — real photography instead of generated art.
+ *
+ * Two providers, tried in order: Pexels, then Tavily.
  *
  * Every image source in this app until now SYNTHESISED a picture, and that
  * carries a failure the prompt cannot fix: an image model asked for a stopwatch
@@ -19,6 +21,8 @@
  */
 
 const BASE = process.env.TAVILY_BASE_URL || "https://api.tavily.com";
+const PEXELS_URL = "https://api.pexels.com/v1/search";
+const PEXELS_KEY = process.env.PEXELS_API_KEY || "";
 const KEY = process.env.TAVILY_API_KEY || "";
 
 /** 12MB matches the resume uploader's ceiling — beyond it, something is wrong. */
@@ -71,6 +75,45 @@ function isPublishable(url: string): boolean {
 
 export function isTavilyConfigured(): boolean {
   return Boolean(KEY);
+}
+
+export function isPexelsConfigured(): boolean {
+  return Boolean(PEXELS_KEY);
+}
+
+/** True when ANY photo provider is available. */
+export function isPhotoSearchConfigured(): boolean {
+  return Boolean(PEXELS_KEY || KEY);
+}
+
+/**
+ * Pexels. Licensed photography by definition, and `src.large` is a direct
+ * download URL — which is why it goes first.
+ *
+ * Tavily, by contrast, is a general web search: measured on six generic queries
+ * it returned a publishable photo twice, and its first live run gave a product
+ * screenshot carrying another company's branding followed by two watermarked
+ * stock previews.
+ */
+export async function searchPexels(query: string, limit = 8): Promise<TavilyPhoto[]> {
+  if (!PEXELS_KEY) throw new Error("PEXELS_API_KEY is not configured");
+
+  const url = `${PEXELS_URL}?query=${encodeURIComponent(query)}&per_page=${limit}&orientation=landscape`;
+  const res = await fetch(url, { headers: { Authorization: PEXELS_KEY } });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Pexels search failed (${res.status})${detail ? `: ${detail.slice(0, 160)}` : ""}`);
+  }
+
+  const data = (await res.json()) as {
+    photos?: Array<{ src?: { large?: string }; alt?: string; photographer?: string; url?: string }>;
+  };
+
+  return (data.photos ?? [])
+    .map((p): TavilyPhoto | null =>
+      p.src?.large ? { url: p.src.large, description: p.alt || undefined, sourceUrl: p.url } : null
+    )
+    .filter((p): p is TavilyPhoto => p !== null);
 }
 
 export interface TavilyPhoto {
@@ -169,19 +212,26 @@ export async function downloadPhoto(url: string): Promise<{ buffer: Buffer; cont
  * than one source.
  */
 export async function findPhoto(query: string): Promise<{ buffer: Buffer; contentType: string; photo: TavilyPhoto } | null> {
-  let photos: TavilyPhoto[];
-  try {
-    photos = await searchPhotos(query);
-  } catch {
-    return null;
-  }
+  // Pexels first, Tavily behind it. A provider with no key is skipped rather
+  // than attempted; a provider that throws costs a fall-through, not the image.
+  const providers: Array<[string, () => Promise<TavilyPhoto[]>]> = [];
+  if (PEXELS_KEY) providers.push(["pexels", () => searchPexels(query)]);
+  if (KEY) providers.push(["tavily", () => searchPhotos(query)]);
 
-  for (const photo of photos) {
+  for (const [, search] of providers) {
+    let photos: TavilyPhoto[];
     try {
-      const { buffer, contentType } = await downloadPhoto(photo.url);
-      return { buffer, contentType, photo };
+      photos = await search();
     } catch {
-      // Try the next candidate.
+      continue;
+    }
+    for (const photo of photos) {
+      try {
+        const { buffer, contentType } = await downloadPhoto(photo.url);
+        return { buffer, contentType, photo };
+      } catch {
+        // Dead URL — try the next candidate.
+      }
     }
   }
   return null;

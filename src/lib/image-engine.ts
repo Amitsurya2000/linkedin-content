@@ -1,5 +1,5 @@
 import { generateImage as gathosGenerate, isGathosConfigured } from "./gathos";
-import { findPhoto, isTavilyConfigured } from "./tavily";
+import { findPhoto, isPhotoSearchConfigured } from "./tavily";
 import { generateImage as geminiGenerate } from "./gemini-image";
 
 /**
@@ -57,7 +57,7 @@ export async function generateBackground(
   const start = Date.now();
   const errors: string[] = [];
 
-  if (opts.photoQuery && isTavilyConfigured()) {
+  if (opts.photoQuery && isPhotoSearchConfigured()) {
     // findPhoto walks its candidates and returns null rather than throwing, so
     // a dead image URL costs one fall-through instead of the whole image.
     const found = await findPhoto(opts.photoQuery);
@@ -70,7 +70,7 @@ export async function generateBackground(
         sourceUrl: found.photo.url,
       };
     }
-    errors.push("tavily: no usable photo for that query");
+    errors.push("photo search: no usable photo for that query");
   }
 
   if (isGathosConfigured()) {
