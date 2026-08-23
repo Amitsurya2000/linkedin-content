@@ -17,6 +17,8 @@ import { type KoyopoSlide, type SlideTemplate, type RawSlide, toKoyopoSlides } f
 export const DECK_CANVASES = {
   tall: { width: 1080, height: 1350, ptScale: 1080 / 620 },
   wide: { width: 2000, height: 1125, ptScale: 2000 / 960 },
+  // 1080x1080 — the size LinkedIn's own carousel guidance recommends.
+  square: { width: 1080, height: 1080, ptScale: 1080 / 620 },
 } as const;
 
 export type DeckCanvas = keyof typeof DECK_CANVASES;

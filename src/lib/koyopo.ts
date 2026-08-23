@@ -39,6 +39,11 @@ const FONT = "Poppins";
 export const CANVASES = {
   wide: { width: 2000, height: 1125, ptScale: 2000 / 960 },
   tall: { width: 1080, height: 1350, ptScale: 1080 / 620 },
+  // 1080x1080 is the size LinkedIn's own documentation recommends for a
+  // carousel. 4:5 remains the default because it occupies more vertical space
+  // in the feed, but square is what the platform asks for and several template
+  // libraries assume, so a deck built to spec needs it available.
+  square: { width: 1080, height: 1080, ptScale: 1080 / 620 },
 } as const;
 
 export type CanvasName = keyof typeof CANVASES;

@@ -19,6 +19,7 @@ import { KOYOPO, type KoyopoSlide, type CanvasName } from "./koyopo";
 const LAYOUTS: Record<CanvasName, { w: number; h: number; name: string }> = {
   wide: { w: 13.33, h: 7.5, name: "KOYOPO_WIDE" },
   tall: { w: 7.5, h: 9.375, name: "KOYOPO_TALL" }, // 4:5, matching the PNG ratio
+  square: { w: 9, h: 9, name: "KOYOPO_SQUARE" }, // 1:1, LinkedIn's recommended size
 };
 
 const FONT = "Poppins";

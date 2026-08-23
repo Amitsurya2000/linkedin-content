@@ -85,7 +85,8 @@ async function handle(
 
   try {
     const { postId } = await params;
-    const canvas: CanvasName = input.canvas === "wide" ? "wide" : "tall";
+    const canvas: CanvasName =
+      input.canvas === "wide" ? "wide" : input.canvas === "square" ? "square" : "tall";
     const format: "png" | "pptx" | "pdf" =
       input.format === "pptx" ? "pptx" : input.format === "pdf" ? "pdf" : "png";
     const STYLES = ["koyopo", "editorial", "swipe", "attention", "visual", "campaign", "paper"] as const;

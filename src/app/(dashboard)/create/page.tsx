@@ -70,6 +70,10 @@ const TONES = [
 
 const COUNTS = [1, 2, 3, 5];
 
+// Styles whose renderer reads the canvas argument. The rest hard-code their
+// dimensions, so offering a shape there would be accepted and then ignored.
+const CANVAS_AWARE = new Set(["swipe", "attention", "editorial", "koyopo"]);
+
 // Reference files per generation. Gemini takes them all inline, so the ceiling
 // is request size rather than the model — 8 files at 12MB each is the practical
 // limit before the request itself becomes the problem.
@@ -125,7 +129,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   const [carouselImages, setCarouselImages] = useState<string[]>(post.carouselImages ?? []);
   const [carLoading, setCarLoading] = useState(false);
   // "tall" (4:5) is the LinkedIn-native ratio; "wide" is the spec's 16:9 deck.
-  const [deckShape, setDeckShape] = useState<"tall" | "wide">("tall");
+  const [deckShape, setDeckShape] = useState<"tall" | "wide" | "square">("tall");
   // "swipe" = the minimalist creator deck (default — it is what wins on LinkedIn);
   // "attention" = swipe plus highlight chips, Q&A, bar charts and a follow CTA;
   // "editorial" = multi-colour with icons/charts; "koyopo" = the flat red brand deck.
@@ -489,7 +493,12 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               )}
               {/* Shape picker — tall renders 1080x1350, wide renders 2000x1125.
                   Hidden for Photo, whose size comes from the image style preset. */}
-              {deckStyle !== "photo" && (["tall", "wide"] as const).map((s) => (
+              {/* 1:1 only for the four canvas-aware renderers — Campaign,
+                  Visual, Paper and the lab styles draw at a fixed size, so the
+                  choice would be accepted and silently ignored. */}
+              {deckStyle !== "photo" && ((CANVAS_AWARE.has(deckStyle)
+                ? ["tall", "wide", "square"]
+                : ["tall", "wide"]) as readonly ("tall" | "wide" | "square")[]).map((s) => (
                 <button
                   key={s}
                   onClick={() => setDeckShape(s)}
@@ -500,7 +509,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                       : "border-[#F2DAD8] text-[#6B5B5A]"
                   }`}
                 >
-                  {s === "tall" ? "4:5" : "16:9"}
+                  {s === "tall" ? "4:5" : s === "wide" ? "16:9" : "1:1"}
                 </button>
               ))}
               {/* Style switch — same copy, four visual languages. */}

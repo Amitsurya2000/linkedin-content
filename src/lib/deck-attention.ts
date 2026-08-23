@@ -22,6 +22,8 @@ import type { KoyopoSlide, SlideTemplate } from "./koyopo";
 export const ATTN_CANVASES = {
   tall: { width: 1080, height: 1350, scale: 1 },
   wide: { width: 1920, height: 1080, scale: 1.22 },
+  // 1080x1080 — the size LinkedIn's own carousel guidance recommends.
+  square: { width: 1080, height: 1080, scale: 1 },
 } as const;
 
 export type AttnCanvas = keyof typeof ATTN_CANVASES;
