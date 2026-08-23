@@ -7,8 +7,6 @@ import { ResumeOnboarding } from "@/components/resume-onboarding";
 import { SwipeDeck } from "@/components/swipe-deck";
 import { DeckLightbox } from "@/components/deck-lightbox";
 import { STYLE_META } from "@/lib/image-prompt";
-import { LAB_STYLES } from "@/lib/deck-lab-styles";
-import { AESTHETICS } from "@/lib/image-prompt";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,11 +66,7 @@ const TONES = [
   "Provocative", "Storytelling",
 ];
 
-const COUNTS = [1, 2, 3, 5];
-
-// Styles whose renderer reads the canvas argument. The rest hard-code their
-// dimensions, so offering a shape there would be accepted and then ignored.
-const CANVAS_AWARE = new Set(["swipe", "attention", "editorial", "koyopo"]);
+const COUNTS = [1, 7];
 
 // Reference files per generation. Gemini takes them all inline, so the ceiling
 // is request size rather than the model — 8 files at 12MB each is the practical
@@ -128,58 +122,23 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   const isCarousel = post.postType === "carousel";
   const [carouselImages, setCarouselImages] = useState<string[]>(post.carouselImages ?? []);
   const [carLoading, setCarLoading] = useState(false);
-  // "tall" (4:5) is the LinkedIn-native ratio; "wide" is the spec's 16:9 deck.
-  const [deckShape, setDeckShape] = useState<"tall" | "wide" | "square">("tall");
-  // "swipe" = the minimalist creator deck (default — it is what wins on LinkedIn);
-  // "attention" = swipe plus highlight chips, Q&A, bar charts and a follow CTA;
-  // "editorial" = multi-colour with icons/charts; "koyopo" = the flat red brand deck.
-  const [deckStyle, setDeckStyle] = useState<"swipe" | "attention" | "editorial" | "koyopo" | "photo" | "visual" | "campaign" | string>("swipe");
-  // Illustrated deck: generate art for slides with no uploaded image. Off by
-  // default — a 10-slide deck is 10 image calls.
-  const [genArt, setGenArt] = useState(false);
-  // Which of the 29 design movements the slide art adopts. "" = the renderer's
-  // own default look, i.e. exactly the previous behaviour.
-  const [deckAesthetic, setDeckAesthetic] = useState("");
-  // How many slides to render. 0 = every slide the model wrote. Trimming keeps
-  // the cover and the closing CTA and cuts the middle, so a shorter deck still
-  // opens and closes properly.
-  const [deckCount, setDeckCount] = useState<number>(0);
   const [carError, setCarError] = useState<string | null>(null);
   // Index of the slide open full screen; null when the viewer is closed.
   const [lightbox, setLightbox] = useState<number | null>(null);
-  const [dlBusy, setDlBusy] = useState<"pdf" | "pptx" | null>(null);
-  const slideTotal = post.carouselSlides?.length ?? 0;
 
   async function generateCarousel() {
     setCarLoading(true);
     setCarError(null);
     try {
-      // Two engines behind one button. The vector styles draw flat colour and
-      // type directly — no key, nothing per deck. "Photo" composes the same copy
-      // over a generated photographic background, which is how a carousel gets a
-      // premium image: a LinkedIn document post is ONE upload, so the visual has
-      // to live inside the deck rather than beside it.
-      const isPhoto = deckStyle === "photo";
-      const res = await fetch(`/api/posts/${post.id}/${isPhoto ? "carousel" : "koyopo"}`, {
+      // One engine, no choices. Every deck is composed by Gathos: the copy is
+      // drawn over a generated photographic background, which is how a carousel
+      // gets a premium image — a LinkedIn document post is ONE upload, so the
+      // visual has to live inside the deck rather than beside it. Every slide
+      // the model wrote is rendered.
+      const res = await fetch(`/api/posts/${post.id}/carousel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          isPhoto
-            ? { maxSlides: deckCount || undefined }
-            : {
-                canvas: deckShape,
-                format: "png",
-                style: deckStyle,
-                maxSlides: deckCount || undefined,
-                // The toggle is shown for every style that can carry a picture,
-                // so the request has to carry it for all of them. Sending it
-                // only for "visual" meant the button did nothing on the seven
-                // spec styles — it rendered, it just never reached the server.
-                generateArt: deckStyle === "visual" || deckStyle in LAB_STYLES ? genArt : undefined,
-                // Only meaningful when art is actually being generated.
-                aesthetic: genArt && deckAesthetic ? deckAesthetic : undefined,
-              }
-        ),
+        body: JSON.stringify({}),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -188,39 +147,10 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       }
       setCarouselImages(data.images || []);
       post.carouselImages = data.images || [];
-      renderedKey.current = settingsKey;
     } catch {
       setCarError("Network error — try again");
     } finally {
       setCarLoading(false);
-    }
-  }
-
-  async function downloadDeck(format: "pdf" | "pptx") {
-    setDlBusy(format);
-    setCarError(null);
-    try {
-      const res = await fetch(`/api/posts/${post.id}/koyopo?format=${format}`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setCarError(data.error || `Could not build the .${format}`);
-        return;
-      }
-      // The blob is handed to a throwaway anchor so the browser saves it instead
-      // of navigating; the object URL is revoked once the click is dispatched.
-      const url = URL.createObjectURL(await res.blob());
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `deck-${deckStyle}-${deckShape}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      toast.success(format === "pdf" ? "PDF downloaded — upload it to LinkedIn as a document post" : "PowerPoint downloaded");
-    } catch {
-      setCarError("Network error — try again");
-    } finally {
-      setDlBusy(null);
     }
   }
 
@@ -255,12 +185,6 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   // the user clicks a button — previously both auto-started, which meant a
   // generation the user never asked for (and, on the Photo style, quota spent
   // before they had chosen anything).
-
-  // Changing style/shape/slide-count marks the deck on screen as stale rather
-  // than re-rendering behind the user's back. They press Render when ready.
-  const renderedKey = useRef<string | null>(null);
-  const settingsKey = `${deckStyle}:${deckShape}:${deckCount}:${genArt}:${deckAesthetic}`;
-  const deckStale = carouselImages.length > 0 && renderedKey.current !== null && renderedKey.current !== settingsKey;
 
   // Delegates so the de-duplication lives in one place. This used to join the
   // three fields blindly, which pasted the hook and the hashtags twice.
@@ -467,79 +391,6 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               Carousel {carouselImages.length > 0 && <span className="text-[#6B5B5A]">· {carouselImages.length} slides</span>}
             </p>
             <div className="flex items-center gap-1.5 flex-wrap justify-end max-w-full">
-              {/* Render 1-15 slides. Counts above what the model wrote are
-                  disabled rather than hidden, so it is clear the ceiling is the
-                  deck's own length — rendering cannot invent a slide. Set the
-                  higher number on the Format step to get a longer deck. */}
-              {slideTotal > 1 && (
-                <span className="flex items-center gap-1">
-                  <span className="text-[10px] text-[#6B5B5A]">Slides</span>
-                  <select
-                    value={deckCount}
-                    onChange={(e) => setDeckCount(Number(e.target.value))}
-                    disabled={carLoading}
-                    className="text-[10px] rounded-lg border border-[#F2DAD8] bg-white text-[#1A1414] px-1.5 py-1 font-medium focus:border-[#ED383B] outline-none disabled:opacity-50 [&>option]:bg-white [&>option]:text-[#1A1414]"
-                    title="How many slides to render"
-                  >
-                    <option value={0}>All {slideTotal}</option>
-                    {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
-                      <option key={n} value={n} disabled={n > slideTotal}>
-                        {n}
-                        {n > slideTotal ? " — needs a longer deck" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </span>
-              )}
-              {/* Shape picker — tall renders 1080x1350, wide renders 2000x1125.
-                  Hidden for Photo, whose size comes from the image style preset. */}
-              {/* 1:1 only for the four canvas-aware renderers — Campaign,
-                  Visual, Paper and the lab styles draw at a fixed size, so the
-                  choice would be accepted and silently ignored. */}
-              {deckStyle !== "photo" && ((CANVAS_AWARE.has(deckStyle)
-                ? ["tall", "wide", "square"]
-                : ["tall", "wide"]) as readonly ("tall" | "wide" | "square")[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setDeckShape(s)}
-                  disabled={carLoading}
-                  className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
-                    deckShape === s
-                      ? "border-[#ED383B] text-[#C9282A] bg-[#ED383B]/[.10]"
-                      : "border-[#F2DAD8] text-[#6B5B5A]"
-                  }`}
-                >
-                  {s === "tall" ? "4:5" : s === "wide" ? "16:9" : "1:1"}
-                </button>
-              ))}
-              {/* Style switch — same copy, four visual languages. */}
-              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"], ["visual", "Visual"], ["campaign", "Campaign"], ["paper", "Paper"], ["scrapbook", "Scrapbook"], ["photo", "Photo"]] as const).map(([v, label]) => (
-                <button
-                  key={v}
-                  onClick={() => setDeckStyle(v)}
-                  disabled={carLoading}
-                  className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
-                    deckStyle === v ? "border-[#ED383B] text-[#C9282A] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-              {/* Spec-driven styles: one button per row in LAB_STYLES, so the
-                  shelf grows without touching this file. */}
-              {Object.entries(LAB_STYLES).map(([k, spec]) => (
-                <button
-                  key={k}
-                  onClick={() => setDeckStyle(k)}
-                  disabled={carLoading}
-                  title={spec.blurb}
-                  className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
-                    deckStyle === k ? "border-[#ED383B] text-[#C9282A] bg-[#ED383B]/[.10]" : "border-[#F2DAD8] text-[#6B5B5A]"
-                  }`}
-                >
-                  {spec.label}
-                </button>
-              ))}
               {carouselImages.length > 0 && (
                 <button
                   onClick={() => setLightbox(0)}
@@ -549,70 +400,13 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   <Maximize2 className="w-3 h-3" /> Expand
                 </button>
               )}
-              {(deckStyle === "visual" || (deckStyle in LAB_STYLES && LAB_STYLES[deckStyle].imageFit !== "none")) && (
-                <button
-                  onClick={() => setGenArt(!genArt)}
-                  disabled={carLoading}
-                  className={`text-[10px] rounded-lg px-2 py-1 font-medium border disabled:opacity-50 ${
-                    genArt ? "border-[#EFCB93] text-[#B45309] bg-[#FCE2BA]" : "border-[#F2DAD8] text-[#6B5B5A]"
-                  }`}
-                  title="Generate an image for slides with no uploaded picture (slow, uses quota)"
-                >
-                  {genArt ? "AI art on" : "AI art off"}
-                </button>
-              )}
-              {/* The 29 movements, shown only when art is actually being drawn —
-                  a vector deck has no image for an aesthetic to act on. */}
-              {genArt && (deckStyle === "visual" || (deckStyle in LAB_STYLES && LAB_STYLES[deckStyle].imageFit !== "none")) && (
-                <select
-                  value={deckAesthetic}
-                  onChange={(e) => setDeckAesthetic(e.target.value)}
-                  disabled={carLoading}
-                  className="text-[10px] rounded-lg border border-[#EFCB93] bg-[#FCE2BA] text-[#B45309] px-2 py-1 font-medium outline-none disabled:opacity-50"
-                  title="Draw every slide in one design movement"
-                >
-                  <option value="">Default look</option>
-                  {AESTHETICS.map((a) => (
-                    <option key={a.id} value={a.id}>{a.name}</option>
-                  ))}
-                </select>
-              )}
-              {/* Downloads through fetch rather than a bare <a href>. As a link
-                  it had no loading state and no error path: a 400 or a 500 put
-                  the route's JSON on screen in place of the app. */}
-              {/* PDF first: it is what LinkedIn wants for a document post, and
-                  it uploads without the re-flow a .pptx goes through. */}
-              {(["pdf", "pptx"] as const).map((fmt) => (
-                <button
-                  key={fmt}
-                  onClick={() => downloadDeck(fmt)}
-                  disabled={!!dlBusy || carLoading || carouselImages.length === 0}
-                  className={`text-[10px] rounded-lg border px-2 py-1 font-medium disabled:opacity-50 flex items-center gap-1 ${
-                    fmt === "pdf"
-                      ? "border-[#0A66C2] text-[#0A66C2] hover:bg-[#DCE6F1]"
-                      : "border-[#F2DAD8] text-[#1A1414] hover:border-[#ED383B]/50"
-                  }`}
-                  title={
-                    carouselImages.length === 0
-                      ? `Render the deck first — the .${fmt} is built from the slides on screen`
-                      : deckStale
-                        ? "Downloads the deck as currently rendered — apply your changes first to include them"
-                        : fmt === "pdf"
-                          ? "Download as PDF — the format LinkedIn accepts for a document post"
-                          : "Download these slides as a PowerPoint deck"
-                  }
-                >
-                  {dlBusy === fmt ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                  {dlBusy === fmt ? "Building…" : `.${fmt}`}
-                </button>
-              ))}
               <button
                 onClick={generateCarousel}
                 disabled={carLoading}
                 className="text-[11px] rounded-lg bg-[#ED383B] text-white px-2.5 py-1 font-medium disabled:opacity-50 flex items-center gap-1"
               >
                 {carLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                {carouselImages.length === 0 ? "Render deck" : deckStale ? "Apply changes" : "Re-render"}
+                {carouselImages.length === 0 ? "Render deck" : "Re-render"}
               </button>
             </div>
           </div>
@@ -621,22 +415,10 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               <div className="text-center px-4">
                 <Loader2 className="w-7 h-7 text-[#C9282A] animate-spin mx-auto mb-2" />
                 <p className="text-xs text-[#6B5B5A]">Designing your carousel slides…</p>
-                <p className="text-[10px] text-[#6B5B5A] mt-0.5">
-                  {deckStyle === "photo"
-                    ? "Gathos / Gemini · ~40–90s"
-                    : deckStyle === "visual" && genArt
-                      ? "One image per slide · this takes minutes"
-                      : "Local render · a few seconds"}
-                </p>
+                <p className="text-[10px] text-[#6B5B5A] mt-0.5">Gathos / Gemini · ~40–90s</p>
               </div>
             </div>
           ) : carouselImages.length > 0 ? (
-            <>
-              {deckStale && (
-                <p className="text-[11px] text-[#C9282A] bg-[#ED383B]/[.10] border border-[#ED383B]/30 rounded-lg px-2.5 py-1.5 mb-2">
-                  Settings changed — press <span className="font-semibold">Apply changes</span> to re-render.
-                </p>
-              )}
             <SwipeDeck slideClassName={solo ? "w-[210px] sm:w-[240px]" : "w-[190px] sm:w-[220px]"} label="Carousel slides">
               {carouselImages.map((url, i) => (
                 <div
@@ -655,7 +437,6 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 </div>
               ))}
             </SwipeDeck>
-            </>
           ) : (
             <div className="rounded-xl border border-dashed border-[#F2DAD8] bg-[#FDF3F2] p-6 text-center">
               <Layers className="w-7 h-7 text-[#6B5B5A] mx-auto mb-2" />
@@ -669,8 +450,8 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       )}
 
       {/* Standalone image — text/article/poll only. A carousel is a document
-          post and takes ONE upload, so its visual belongs inside the deck: use
-          the "Photo" deck style above. */}
+          post and takes ONE upload, so its visual lives inside the deck, which
+          is rendered by Gathos above. */}
       {!isCarousel && (
       <div className="px-5 mt-3">
         <div className="flex items-center justify-between mb-2">
@@ -889,30 +670,22 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
 const BLANK_FORM = {
   topic: "",
   postType: "text" as PostType,
-  postsCount: 3,
-  slidesCount: 0,
+  postsCount: 1,
+  // Fixed: every carousel is written as a 5-slide deck — a cover, three content
+  // slides and a closing CTA. There is no picker, so this is the only value.
+  slidesCount: 5,
   targetAudience: "",
   tone: "",
   customInstructions: "",
-  // "" = no style-specific direction, which is the previous behaviour exactly.
-  deckStyle: "",
 };
-
-/** Only the two styles whose COPY differs. Everything else renders as before. */
-const COPY_STYLES: { value: string; label: string; blurb: string }[] = [
-  { value: "", label: "No preference", blurb: "The deck type is chosen per post, as before." },
-  { value: "walkthrough", label: "Walkthrough", blurb: "Ordered steps, named components, the decision and the failure mode at each one." },
-  { value: "campaign", label: "Campaign", blurb: "A before, a turn and an after — narrative and first-person, authority from what it cost." },
-];
 
 export default function CreatePage() {
   const [step, setStep] = useState<Step>("form");
   const [topic, setTopic] = useState(BLANK_FORM.topic);
   const [postType, setPostType] = useState<PostType>(BLANK_FORM.postType);
   const [postsCount, setPostsCount] = useState(BLANK_FORM.postsCount);
-  // Slides per carousel. 0 = let the model choose (8-10, the benchmark range).
-  const [slidesCount, setSlidesCount] = useState(BLANK_FORM.slidesCount);
-  const [genDeckStyle, setGenDeckStyle] = useState(BLANK_FORM.deckStyle);
+  // Slides per carousel. Fixed at BLANK_FORM.slidesCount — nothing changes it.
+  const [slidesCount] = useState(BLANK_FORM.slidesCount);
   // Optional: source files the post should be built from, and free-text
   // direction on what the client wants back. Both are additive — leaving them
   // empty gives exactly the previous behaviour.
@@ -943,8 +716,6 @@ export default function CreatePage() {
     setTopic(BLANK_FORM.topic);
     setPostType(BLANK_FORM.postType);
     setPostsCount(BLANK_FORM.postsCount);
-    setSlidesCount(BLANK_FORM.slidesCount);
-    setGenDeckStyle(BLANK_FORM.deckStyle);
     setTargetAudience(BLANK_FORM.targetAudience);
     setTone(BLANK_FORM.tone);
     setCustomInstructions(BLANK_FORM.customInstructions);
@@ -973,7 +744,6 @@ export default function CreatePage() {
       if (targetAudience) fields.targetAudience = targetAudience;
       if (tone) fields.tonePrefs = tone;
       if (postType === "carousel" && slidesCount) fields.slidesCount = String(slidesCount);
-      if (postType === "carousel" && genDeckStyle) fields.deckStyle = genDeckStyle;
       if (customInstructions.trim()) fields.customInstructions = customInstructions.trim();
 
       // Multipart only when there is a file to carry — JSON stays the common
@@ -1175,77 +945,6 @@ export default function CreatePage() {
                   Each post also comes with 3 alternative versions, so {postsCount} gives you {postsCount * 4} to choose from.
                 </p>
               </div>
-
-              {/* Slides per deck. Only the generator can create slides, so this
-                  belongs here rather than on the rendered deck — the render-time
-                  control can trim a deck but never extend one. */}
-              {/* Deck style is normally picked AFTER generation, where it only
-                  changes how the words are drawn. These two want different words,
-                  so they are chosen here instead — before anything is written. */}
-              {postType === "carousel" && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-[#1A1414]">Write for a deck style</Label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {COPY_STYLES.map((cs) => (
-                      <button
-                        key={cs.value || "none"}
-                        type="button"
-                        onClick={() => setGenDeckStyle(cs.value)}
-                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-all border ${
-                          genDeckStyle === cs.value
-                            ? "bg-[#ED383B] text-white border-[#ED383B]"
-                            : "bg-white text-[#6B5B5A] border-[#F2DAD8] hover:border-[#ED383B]/50"
-                        }`}
-                      >
-                        {cs.label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-[#6B5B5A]">
-                    {COPY_STYLES.find((c) => c.value === genDeckStyle)?.blurb}
-                  </p>
-                </div>
-              )}
-
-              {postType === "carousel" && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-[#1A1414]">Slides per carousel</Label>
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setSlidesCount(0)}
-                      className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                        slidesCount === 0
-                          ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
-                          : "bg-white text-[#6B5B5A] border border-[#F2DAD8] hover:border-[#ED383B]/50"
-                      }`}
-                    >
-                      Auto
-                    </button>
-                    {Array.from({ length: 13 }, (_, i) => i + 3).map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setSlidesCount(n)}
-                        className={`w-10 py-2 rounded-xl text-sm font-medium transition-all ${
-                          slidesCount === n
-                            ? "bg-[#ED383B] text-white shadow-lg shadow-[#ED383B]/25"
-                            : "bg-white text-[#6B5B5A] border border-[#F2DAD8] hover:border-[#ED383B]/50"
-                        }`}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-[#6B5B5A]">
-                    {slidesCount === 0
-                      ? "Auto picks 8–10, where completion rates peak."
-                      : slidesCount > 12
-                        ? `${slidesCount} slides. Completion drops off past 12 — worth it only if every slide carries real material.`
-                        : `${slidesCount} slides: a cover, ${slidesCount - 2} content slide${slidesCount - 2 === 1 ? "" : "s"}, and a closing CTA.`}
-                  </p>
-                </div>
-              )}
             </div>
           )}
 
