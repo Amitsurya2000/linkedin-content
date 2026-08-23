@@ -27,7 +27,10 @@ function directives(src: string): string[] {
 
 /** A named const holding a template/string literal or an object literal. */
 function block(src: string, name: string): string {
-  const re = new RegExp(`(?:const|export const) ${name}[^=]*=\\s*([\\s\\S]*?);\\n\\n`, "m");
+  // \r? matters: assets-gen.ts is CRLF while gemini.ts and image-prompt.ts are
+  // LF, so a terminator written as ;\n\n matched three blocks and silently
+  // returned empty for the three in the CRLF file.
+  const re = new RegExp(`(?:const|export const) ${name}[^=]*=\\s*([\\s\\S]*?);\\r?\\n\\r?\\n`, "m");
   return src.match(re)?.[1]?.trim() ?? "";
 }
 
