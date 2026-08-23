@@ -23,10 +23,14 @@ import type { KoyopoSlide } from "./koyopo";
  */
 
 const W = 1080;
-const H = 1350;
+// 1:1. The spec calls for LinkedIn's square ratio, not the 4:5 the other decks
+// default to, so this renderer is fixed at 1080x1080 rather than canvas-aware.
+const H = 1080;
+/** The spec's 80px page padding, used as the left margin for every element. */
+const PAD = 80;
 
 const C = {
-  cream: "#F7F3EC",
+  cream: "#faf7f2",
   ink: "#141414",
   body: "#3A3733",
   muted: "#77706A",
@@ -34,7 +38,7 @@ const C = {
   line: "#E4DDD2",
   // The highlighter set - deliberately pastel so ink stays readable through it.
   mint: "#B9E8C0",
-  pink: "#FBC5D8",
+  pink: "#fce7f3",
   lemon: "#FBE7A1",
   // Sticker colours.
   cherry: "#D8384A",
@@ -43,7 +47,9 @@ const C = {
   gold: "#E8A33E",
 };
 
-const SANS = "Poppins, 'Segoe UI', Arial, sans-serif";
+// Inter first per the spec; Poppins is the face actually installed here, so it
+// carries the weight when Inter is absent rather than falling to Arial.
+const SANS = "Inter, Poppins, 'Segoe UI', Arial, sans-serif";
 const SERIF = "Georgia, 'Times New Roman', serif";
 const GW = { sans: 0.545, sansBold: 0.575, serif: 0.5 };
 
@@ -151,8 +157,8 @@ const STICKERS = [sCherry, sStar, sSparkle, sArrow, sCursor];
 function decorate(seed: string, count: number): string {
   const r = rng(seed);
   const spots: Array<[number, number]> = [
-    [90, 150], [W - 110, 210], [70, H - 260], [W - 90, H - 190],
-    [W - 150, 470], [130, 620], [W - 80, 820], [120, 980],
+    [PAD + 10, 140], [W - PAD - 30, 190], [PAD - 10, H - 210], [W - PAD - 10, H - 160],
+    [W - PAD - 70, 430], [PAD + 50, 560], [W - PAD, 700], [PAD + 40, 860],
   ];
   const used = new Set<number>();
   let out = "";
@@ -164,41 +170,69 @@ function decorate(seed: string, count: number): string {
     used.add(idx);
     const [x, y] = spots[idx];
     const draw = STICKERS[Math.floor(r() * STICKERS.length)];
-    out += draw(x, y, 0.9 + r() * 0.7, -25 + r() * 50);
+    // The spec sets sticker width to 60px; the glyphs are drawn on roughly a
+    // 36px box, so 1.65 is 60px, with a little jitter either side.
+    out += draw(x, y, 1.5 + r() * 0.3, -25 + r() * 50);
   }
   return out;
 }
 
 // -- slide parts ------------------------------------------------------------
 
-/** A marker swipe behind a phrase, overshooting the text as a real one does. */
+/**
+ * The spec's `.highlight` rule, as SVG:
+ *   background #fce7f3, padding 2px 8px, border-radius 4px, rotate(-1deg)
+ *
+ * Scaled from its 16px CSS reference to whatever size the headline settled at,
+ * so the padding stays proportional instead of vanishing under 70px type.
+ */
 function highlightRect(x: number, y: number, w: number, size: number, fill: string): string {
-  return `<rect x="${(x - 6).toFixed(1)}" y="${(y - size * 0.78).toFixed(1)}" width="${(w + 12).toFixed(1)}" height="${(size * 0.96).toFixed(1)}" rx="${(size * 0.22).toFixed(1)}" fill="${fill}" opacity="0.85"/>`;
+  const padX = size * 0.5;    // 8px at a 16px base
+  const padY = size * 0.125;  // 2px at a 16px base
+  const rx = size * 0.25;     // 4px at a 16px base
+  const bx = x - padX;
+  const by = y - size * 0.80 - padY;
+  const bw = w + padX * 2;
+  const bh = size + padY * 2;
+  // rotate(-1deg) about the box's own centre, matching transform-origin: center.
+  return `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="${rx.toFixed(1)}" fill="${fill}" transform="rotate(-1 ${(bx + bw / 2).toFixed(1)} ${(by + bh / 2).toFixed(1)})"/>`;
 }
 
 /**
- * Draw the headline, painting a highlighter behind any line containing a marked
- * phrase. The swipe is sized from the whole line rather than the phrase alone:
- * measuring a substring without a real text engine is guesswork, and a swipe
- * that misses its words looks worse than one covering the line.
+ * Draw the headline, painting the highlighter behind THE MARKED PHRASE ONLY.
+ *
+ * The first pass swiped the whole line, reasoning that measuring a substring
+ * without a text engine is guesswork. That was wrong: a substring's offset is
+ * measured with exactly the same glyph-width approximation already used to wrap
+ * the line, so it is no more of a guess than the wrapping is. And the spec's
+ * `display: inline-block` means the swipe belongs to the phrase, not the line —
+ * a line-wide swipe reads as a redaction bar.
  */
 function headline(title: string, y0: number, seed: string): { svg: string; endY: number } {
   const { plain, marked } = parseHighlights(title);
-  const t = fit(plain, 880, 76, 40, 4, GW.sansBold);
-  const inks = [C.lemon, C.mint, C.pink];
+  const t = fit(plain, W - PAD * 2, 72, 38, 4, GW.sansBold);
+  const per = t.size * GW.sansBold;
   const r = rng(seed + "hl");
   let out = "";
   let y = y0;
 
-  t.lines.forEach((line, i) => {
-    const w = line.length * t.size * GW.sansBold;
-    const first = (m: string) => m.toLowerCase().split(/\s+/)[0] ?? "";
-    const hit = marked.some((m) => first(m) && line.toLowerCase().includes(first(m)));
-    if (hit) out += highlightRect(96, y, Math.min(w, 880), t.size, inks[i % inks.length]);
+  t.lines.forEach((line) => {
+    const lower = line.toLowerCase();
+    // Wrapping can split a phrase across two lines, so each line is searched for
+    // whichever part of it landed there.
+    for (const phrase of marked) {
+      for (const frag of [phrase, ...phrase.split(/\s+/)]) {
+        if (frag.length < 3) continue;
+        const at = lower.indexOf(frag.toLowerCase());
+        if (at === -1) continue;
+        out += highlightRect(PAD + at * per, y, frag.length * per, t.size, C.pink);
+        break;
+      }
+    }
     // A degree of rotation per line is what stops this reading as a text box.
     const rot = (r() * 1.6 - 0.8).toFixed(2);
-    out += `<text x="96" y="${y}" transform="rotate(${rot} 96 ${y})" font-family="${SANS}" font-size="${t.size}" font-weight="800" fill="${C.ink}">${esc(line)}</text>`;
-    y += t.size * 1.12;
+    out += `<text x="${PAD}" y="${y}" transform="rotate(${rot} ${PAD} ${y})" font-family="${SANS}" font-size="${t.size}" font-weight="800" fill="${C.ink}">${esc(line)}</text>`;
+    y += t.size * 1.14;
   });
   return { svg: out, endY: y };
 }
@@ -254,7 +288,7 @@ export async function renderScrapbookDeck(
     let svg = ground(slideSeed);
 
     const isCover = i === 0 || s.template === "title";
-    const head = headline(s.title ?? "", isCover ? 300 : 210, slideSeed);
+    const head = headline(s.title ?? "", isCover ? 330 : 200, slideSeed);
     svg += head.svg;
 
     // Quote slides get the pasted card; everything else gets its body as prose.
@@ -265,7 +299,7 @@ export async function renderScrapbookDeck(
       const b = fit(s.body.replace(/\n+/g, " "), 840, 30, 21, 6, GW.sans);
       let y = head.endY + 54;
       b.lines.forEach((line) => {
-        svg += `<text x="96" y="${y}" font-family="${SANS}" font-size="${b.size}" fill="${C.body}">${esc(line)}</text>`;
+        svg += `<text x="${PAD}" y="${y}" font-family="${SANS}" font-size="${b.size}" fill="${C.body}">${esc(line)}</text>`;
         y += b.size + 14;
       });
     }
@@ -274,7 +308,7 @@ export async function renderScrapbookDeck(
     svg += decorate(slideSeed, isCover ? 3 : 4);
 
     if (!isCover) {
-      svg += `<text x="${W / 2}" y="${H - 58}" text-anchor="middle" font-family="${SANS}" font-size="20" font-weight="600" fill="${C.muted}">${i}</text>`;
+      svg += `<text x="${W / 2}" y="${H - 46}" text-anchor="middle" font-family="${SANS}" font-size="20" font-weight="600" fill="${C.muted}">${i}</text>`;
     }
 
     out.push(await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${svg}</svg>`)).png().toBuffer());
