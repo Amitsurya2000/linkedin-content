@@ -15,6 +15,7 @@ import { renderCampaignDeck } from "@/lib/deck-campaign";
 import { renderLabDeck, LAB_STYLES, type LabStyleName } from "@/lib/deck-lab";
 import { buildPptxFromImages, buildPdfFromImages } from "@/lib/koyopo-pptx";
 import { renderPaperDeck } from "@/lib/deck-paper";
+import { renderScrapbookDeck } from "@/lib/deck-scrapbook";
 
 export const maxDuration = 300;
 
@@ -89,7 +90,7 @@ async function handle(
       input.canvas === "wide" ? "wide" : input.canvas === "square" ? "square" : "tall";
     const format: "png" | "pptx" | "pdf" =
       input.format === "pptx" ? "pptx" : input.format === "pdf" ? "pdf" : "png";
-    const STYLES = ["koyopo", "editorial", "swipe", "attention", "visual", "campaign", "paper"] as const;
+    const STYLES = ["koyopo", "editorial", "swipe", "attention", "visual", "campaign", "paper", "scrapbook"] as const;
     // Spec-driven styles live in their own table; any name in it is valid.
     const labStyle = input.style && input.style in LAB_STYLES ? (input.style as LabStyleName) : null;
     type Style = (typeof STYLES)[number];
@@ -198,6 +199,8 @@ async function handle(
           aesthetic: input.aesthetic,
           ...visualExtras,
         })
+      : style === "scrapbook"
+        ? await renderScrapbookDeck(slides, { seed: postId, author })
       : style === "paper"
         ? await renderPaperDeck(slides, { seed: postId, author })
       : style === "campaign"

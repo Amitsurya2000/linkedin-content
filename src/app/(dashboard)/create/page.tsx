@@ -513,7 +513,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 </button>
               ))}
               {/* Style switch — same copy, four visual languages. */}
-              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"], ["visual", "Visual"], ["campaign", "Campaign"], ["paper", "Paper"], ["photo", "Photo"]] as const).map(([v, label]) => (
+              {([["swipe", "Minimal"], ["attention", "Bold"], ["editorial", "Colour"], ["koyopo", "Brand"], ["visual", "Visual"], ["campaign", "Campaign"], ["paper", "Paper"], ["scrapbook", "Scrapbook"], ["photo", "Photo"]] as const).map(([v, label]) => (
                 <button
                   key={v}
                   onClick={() => setDeckStyle(v)}
