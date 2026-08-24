@@ -6,9 +6,11 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generatedPosts, postBatches, creatorProfiles, userApiKeys } from "@/lib/db/schema";
 import { decrypt } from "@/lib/crypto";
-import { generateBackground } from "@/lib/image-engine";
+import { generateBackground, newSeed } from "@/lib/image-engine";
 import { buildStyledPrompt, STYLE_BY_ID, DEFAULT_STYLE_IDS } from "@/lib/image-prompt";
 import { composeCard } from "@/lib/compose";
+import { findPhoto, isPhotoSearchConfigured } from "@/lib/tavily";
+import type { VisualDirective } from "@/lib/content-agent";
 
 export const maxDuration = 300;
 
@@ -72,6 +74,13 @@ export async function POST(
       .where(eq(creatorProfiles.userId, session.user.id))
       .limit(1);
 
+    // The visual brief the content agent wrote alongside the copy. When it is
+    // present it OVERRIDES the preset prompt: the whole point of the brief is
+    // that the picture matches the post it was written for.
+    const directive: VisualDirective | null = post.visualDirective
+      ? safeParse<VisualDirective | null>(post.visualDirective, null)
+      : null;
+
     const { prompt, width, height, styleName, overlay } = buildStyledPrompt(
       {
         hook: post.hook,
@@ -123,15 +132,44 @@ export async function POST(
       }
     }
 
-    const img = await generateBackground(prompt, {
-      width,
-      height,
+    // 4:5 is what the brief asks for; the preset's own size applies otherwise.
+    const ratio = directive?.aspectRatio === "4:5" ? { width: 1080, height: 1350 } : { width, height };
+
+    // Step 3 — web image search agent. Runs when the brief asks for it, and
+    // finds the contextual picture the copy was written around.
+    let reference: string | undefined;
+    let referenceUrl: string | undefined;
+    if (directive?.searchRequired && directive.searchQuery && isPhotoSearchConfigured()) {
+      try {
+        const found = await findPhoto(directive.searchQuery);
+        if (found) {
+          reference = found.buffer.toString("base64");
+          referenceUrl = found.photo.url;
+        }
+      } catch (e) {
+        // A failed search falls through to plain generation rather than failing
+        // the request — the brief still carries a text-to-image prompt.
+        console.error("web image search failed, generating instead:", e);
+      }
+    }
+
+    // Step 4/5 — Gethos input assembly and render. The searched picture is an
+    // INPUT to Gathos alongside the merge instruction, not the output itself;
+    // when i2i is unavailable the chain falls back to text-to-image, and the
+    // seed is fresh either way so a re-render never repeats the last picture.
+    const seed = newSeed();
+    const img = await generateBackground(directive?.textToImagePrompt || prompt, {
+      width: ratio.width,
+      height: ratio.height,
+      seed,
+      reference,
+      mergeInstruction: directive?.multimodalInstruction || undefined,
       geminiKey: keyRow ? decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag) : undefined,
     });
     let outBuf: Buffer = img.buffer;
     if (overlay && overlay.text) {
       try {
-        outBuf = await composeCard(outBuf, { width, height, text: overlay.text, theme: overlay.theme });
+        outBuf = await composeCard(outBuf, { width: ratio.width, height: ratio.height, text: overlay.text, theme: overlay.theme });
       } catch (e) {
         console.error("compose overlay failed, using raw bg:", e);
       }
@@ -149,12 +187,17 @@ export async function POST(
       .set({ imageUrl })
       .where(eq(generatedPosts.id, postId));
 
+    // The new picture is saved, so the previous render's files can go.
+    await purgeOldImages(dir, [imageUrl], postId);
+
     return NextResponse.json({
       imageUrl,
       style: styleId,
       styleName,
       engine: img.engine,
       model: img.model,
+      seed: img.seed ?? seed,
+      referenceUrl,
       elapsedMs: img.elapsedMs,
     });
   } catch (err) {
@@ -164,6 +207,26 @@ export async function POST(
   }
 }
 
+
+/**
+ * Delete images this post rendered earlier.
+ *
+ * Called only AFTER a new render has succeeded and been saved: purging first
+ * would mean a failed render leaves the post with no picture at all. Paths are
+ * confined to public/generated and matched against the post id, so nothing
+ * outside this post's own output can be reached.
+ */
+async function purgeOldImages(dir: string, keep: string[], postId: string) {
+  try {
+    const kept = new Set(keep.map((u) => u.split("/").pop()));
+    for (const name of await fs.readdir(dir)) {
+      if (!name.startsWith(`${postId}-`) || kept.has(name)) continue;
+      await fs.unlink(path.join(dir, name)).catch(() => {});
+    }
+  } catch {
+    // A cache that will not clear is not worth failing a good render over.
+  }
+}
 
 function safeParse<T>(v: string, fb: T): T {
   try { return JSON.parse(v); } catch { return fb; }

@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, generatedPosts, postBatches, users, userApiKeys } from "@/lib/db/schema";
 import { decrypt } from "@/lib/crypto";
-import { generateLinkedInPosts } from "@/lib/gemini";
+import { generateContentAgentPosts } from "@/lib/content-agent";
 import { profileToContext, type CreatorProfileData } from "@/lib/resume";
 import { composePost } from "@/lib/utils";
 import { context, divider, isSlackConfigured, respond, section, verifySlackRequest } from "@/lib/slack";
@@ -116,15 +116,13 @@ async function generate(topic: string, responseUrl: string, slackUser: string): 
       })
       .returning();
 
-    const posts = await generateLinkedInPosts({
+    // Same prompt the web route uses for text posts — see
+    // src/lib/prompts/linkedin-content-agent.md.
+    const posts = await generateContentAgentPosts({
       apiKey: decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag),
       topic,
-      postType: "text",
       postsCount: DEFAULT_COUNT,
       profileContext,
-      // Same rotation the web route uses, so a topic asked twice in Slack does
-      // not come back with the same hook and skeleton.
-      spin: Date.now() % 1000,
     });
 
     // Stored so the post appears in History alongside anything made in the app,
@@ -142,6 +140,9 @@ async function generate(topic: string, responseUrl: string, slackUser: string): 
         cta: p.cta ?? "",
         whyThisWorks: p.whyThisWorks ?? "",
         variations: JSON.stringify(p.variations ?? []),
+        // The visual brief written alongside the copy, so a post asked for in
+        // Slack can still be illustrated later from the app.
+        visualDirective: p.visualDirective ? JSON.stringify(p.visualDirective) : null,
         status: "draft",
         approvalStatus: "draft",
       });

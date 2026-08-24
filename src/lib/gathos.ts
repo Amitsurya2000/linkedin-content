@@ -34,6 +34,19 @@ async function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/**
+ * A fresh seed per call.
+ *
+ * Gathos reads -1 as "pick one for me", which returns the same picture for the
+ * same prompt often enough to be visible across a deck. An explicit random
+ * integer is what guarantees two renders differ; a caller that wants a
+ * repeatable render passes its own seed. Same rule as image-engine's newSeed(),
+ * duplicated here so no call path can reach the API without a seed.
+ */
+function randomSeed(): number {
+  return 1 + Math.floor(Math.random() * 999999);
+}
+
 export interface GathosImage {
   base64: string; // raw base64 (no data: prefix)
   contentType: string; // e.g. "image/png"
@@ -147,7 +160,7 @@ export async function generateImage(
     guidance_scale: opts.guidanceScale ?? 1.0,
     steps: opts.steps ?? 8,
     use_prompt_enhancer: opts.usePromptEnhancer ?? true,
-    seed: opts.seed ?? -1,
+    seed: opts.seed ?? randomSeed(),
   };
   const jobId = await submit("/image-generation", IMAGE_KEY, payload);
   const { result } = await poll(`/image-generation/jobs/${jobId}`, IMAGE_KEY);
@@ -177,11 +190,16 @@ export async function editImage(
   const payload = {
     prompt: prompt.slice(0, 2000),
     image: sourceBase64OrDataUrl.startsWith("data:") ? sourceBase64OrDataUrl : `data:image/png;base64,${sourceBase64OrDataUrl}`,
-    strength: opts.strength ?? 0.55,
+    // 0.55 held the reference photo's palette, framing and layout so tightly
+    // that a render came back looking like the searched image recoloured. 0.75
+    // keeps its subject while letting the prompt redraw the composition; past
+    // ~0.85 the reference stops registering at all, which is what
+    // text-to-image is already for.
+    strength: opts.strength ?? 0.75,
     guidance_scale: opts.guidanceScale ?? 1.0,
     steps: opts.steps ?? 8,
     use_prompt_enhancer: true,
-    seed: opts.seed ?? -1,
+    seed: opts.seed ?? randomSeed(),
   };
   try {
     const jobId = await submit("/image-to-image", I2I_KEY, payload);

@@ -126,10 +126,53 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   // Index of the slide open full screen; null when the viewer is closed.
   const [lightbox, setLightbox] = useState<number | null>(null);
 
-  async function generateCarousel() {
+  /**
+   * Rewrite the post before drawing it.
+   *
+   * Rendering only ever redrew what was already stored, so a re-render could
+   * not change the topic, the headline or the palette however the seed moved.
+   * This asks for fresh copy first; the render that follows then has new
+   * material. Returns false if the rewrite failed, so the caller can stop
+   * rather than redrawing the deck it just cleared.
+   */
+  async function regeneratePost(): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/posts/${post.id}/regenerate`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCarError(data.error || "Could not rewrite this post");
+        return false;
+      }
+      post.hook = data.hook ?? post.hook;
+      post.body = data.body ?? post.body;
+      post.cta = data.cta ?? post.cta;
+      post.hookCategory = data.hookCategory ?? post.hookCategory;
+      post.whyThisWorks = data.whyThisWorks ?? post.whyThisWorks;
+      if (Array.isArray(data.hashtags)) post.hashtags = data.hashtags;
+      post.carouselSlides = data.carouselSlides ?? post.carouselSlides;
+      setEditHook(post.hook);
+      setEditBody(post.body);
+      return true;
+    } catch {
+      setCarError("Network error — try again");
+      return false;
+    }
+  }
+
+  async function generateCarousel(rewrite = false) {
     setCarLoading(true);
     setCarError(null);
+    // Re-render starts from empty. The previous deck is dropped from state and
+    // from the post object BEFORE the request goes out, so a slow render can
+    // never show the old slides as if they were the new ones, and a failed one
+    // cannot leave a stale deck on screen pretending to be current.
+    setCarouselImages([]);
+    setLightbox(null);
+    post.carouselImages = [];
     try {
+      // A re-render draws a new topic, angle, hook and palette. The first
+      // render of a post does not: it draws the copy that was just written.
+      if (rewrite && !(await regeneratePost())) return;
       // One engine, no choices. Every deck is composed by Gathos: the copy is
       // drawn over a generated photographic background, which is how a carousel
       // gets a premium image — a LinkedIn document post is ONE upload, so the
@@ -158,6 +201,11 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
     setImgLoading(true);
     setImgError(null);
     setImgStyle(style);
+    // Same reset as the deck: the old picture goes before the new one is asked
+    // for, so nothing stale survives a re-render.
+    setImageUrl(null);
+    setImgStyleName(null);
+    post.imageUrl = null;
     try {
       const res = await fetch(`/api/posts/${post.id}/image`, {
         method: "POST",
@@ -401,7 +449,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                 </button>
               )}
               <button
-                onClick={generateCarousel}
+                onClick={() => generateCarousel(carouselImages.length > 0)}
                 disabled={carLoading}
                 className="text-[11px] rounded-lg bg-[#ED383B] text-white px-2.5 py-1 font-medium disabled:opacity-50 flex items-center gap-1"
               >
@@ -441,7 +489,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
             <div className="rounded-xl border border-dashed border-[#F2DAD8] bg-[#FDF3F2] p-6 text-center">
               <Layers className="w-7 h-7 text-[#6B5B5A] mx-auto mb-2" />
               <p className="text-xs text-[#6B5B5A]">{carError || "No carousel yet"}</p>
-              <button onClick={generateCarousel} className="mt-2 text-xs text-[#C9282A] hover:text-[#8E1B18] font-medium">
+              <button onClick={() => generateCarousel(false)} className="mt-2 text-xs text-[#C9282A] hover:text-[#8E1B18] font-medium">
                 Generate carousel slides
               </button>
             </div>
@@ -671,9 +719,6 @@ const BLANK_FORM = {
   topic: "",
   postType: "text" as PostType,
   postsCount: 1,
-  // Fixed: every carousel is written as a 5-slide deck — a cover, three content
-  // slides and a closing CTA. There is no picker, so this is the only value.
-  slidesCount: 5,
   targetAudience: "",
   tone: "",
   customInstructions: "",
@@ -684,8 +729,6 @@ export default function CreatePage() {
   const [topic, setTopic] = useState(BLANK_FORM.topic);
   const [postType, setPostType] = useState<PostType>(BLANK_FORM.postType);
   const [postsCount, setPostsCount] = useState(BLANK_FORM.postsCount);
-  // Slides per carousel. Fixed at BLANK_FORM.slidesCount — nothing changes it.
-  const [slidesCount] = useState(BLANK_FORM.slidesCount);
   // Optional: source files the post should be built from, and free-text
   // direction on what the client wants back. Both are additive — leaving them
   // empty gives exactly the previous behaviour.
@@ -743,7 +786,6 @@ export default function CreatePage() {
       };
       if (targetAudience) fields.targetAudience = targetAudience;
       if (tone) fields.tonePrefs = tone;
-      if (postType === "carousel" && slidesCount) fields.slidesCount = String(slidesCount);
       if (customInstructions.trim()) fields.customInstructions = customInstructions.trim();
 
       // Multipart only when there is a file to carry — JSON stays the common
@@ -942,7 +984,9 @@ export default function CreatePage() {
                   ))}
                 </div>
                 <p className="text-xs text-[#6B5B5A]">
-                  Each post also comes with 3 alternative versions, so {postsCount} gives you {postsCount * 4} to choose from.
+                  {postType === "carousel"
+                    ? `${postsCount} deck${postsCount !== 1 ? "s" : ""}, each a different angle, hook and visual theme. Rendering again on the same topic never repeats one.`
+                    : `Each post also comes with 3 alternative versions, so ${postsCount} gives you ${postsCount * 4} to choose from.`}
                 </p>
               </div>
             </div>
@@ -1068,7 +1112,7 @@ export default function CreatePage() {
                 <p className="text-xs text-[#1A1414]">
                   <span className="text-[#6B5B5A]">Format:</span>{" "}
                   {POST_TYPES.find((p) => p.value === postType)?.label} · {postsCount} post{postsCount !== 1 ? "s" : ""}
-                  {postType === "carousel" && slidesCount ? ` · ${slidesCount} slides` : ""}
+                  {postType === "carousel" ? " · 8–10 slides" : ""}
                 </p>
                 {(refFiles.length > 0 || customInstructions.trim()) && (
                   <p className="text-xs text-[#1A1414]">

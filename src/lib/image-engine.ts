@@ -1,4 +1,4 @@
-import { generateImage as gathosGenerate, isGathosConfigured } from "./gathos";
+import { generateImage as gathosGenerate, editImage as gathosEdit, isGathosConfigured } from "./gathos";
 import { findPhoto, isPhotoSearchConfigured } from "./tavily";
 import { generateImage as geminiGenerate } from "./gemini-image";
 
@@ -26,11 +26,24 @@ import { generateImage as geminiGenerate } from "./gemini-image";
 export interface EngineImage {
   buffer: Buffer;
   contentType: string;
-  engine: "tavily" | "gathos" | "gemini";
+  engine: "tavily" | "gathos" | "gathos-i2i" | "gemini";
   model?: string;
   elapsedMs: number;
   /** Where a searched photo came from, so it can be credited or re-checked. */
   sourceUrl?: string;
+  /** The seed the image was drawn with, so a render can be explained or repeated. */
+  seed?: number;
+}
+
+/**
+ * A fresh seed per render.
+ *
+ * Gathos treats -1 as "pick one", which is fine until two renders of the same
+ * prompt come back identical. An explicit random integer is what guarantees the
+ * picture moves even when the text does not.
+ */
+export function newSeed(): number {
+  return 1 + Math.floor(Math.random() * 999999);
 }
 
 function aspectFor(width: number, height: number): "1:1" | "4:5" | "16:9" {
@@ -43,6 +56,18 @@ function aspectFor(width: number, height: number): "1:1" | "4:5" | "16:9" {
 export async function generateBackground(
   prompt: string,
   opts: {
+    /**
+     * Seed handed to the image model. Defaults to a fresh random one, so a
+     * re-render never repeats the previous picture by accident.
+     */
+    seed?: number;
+    /**
+     * A reference picture (base64) to merge with, plus how to merge it. This is
+     * the multimodal path: the searched web image goes IN to Gathos rather than
+     * being used as the background directly.
+     */
+    reference?: string;
+    mergeInstruction?: string;
     width: number;
     height: number;
     geminiKey?: string;
@@ -56,6 +81,32 @@ export async function generateBackground(
 ): Promise<EngineImage> {
   const start = Date.now();
   const errors: string[] = [];
+  const seed = opts.seed ?? newSeed();
+
+  // Multimodal assembly: a reference picture was supplied (normally the web
+  // image the search agent found), so it is fed INTO Gathos with the merge
+  // instruction rather than used as the background as-is. Best-effort by
+  // design — editImage returns null instead of throwing, and the chain below
+  // carries on as if no reference had been given.
+  if (opts.reference && isGathosConfigured()) {
+    const merged = await gathosEdit(
+      opts.reference,
+      opts.mergeInstruction ? `${prompt}
+
+${opts.mergeInstruction}` : prompt,
+      { seed }
+    );
+    if (merged) {
+      return {
+        buffer: Buffer.from(merged.base64, "base64"),
+        contentType: merged.contentType || "image/png",
+        engine: "gathos-i2i",
+        elapsedMs: Date.now() - start,
+        seed,
+      };
+    }
+    errors.push("gathos i2i: no result, falling back");
+  }
 
   if (opts.photoQuery && isPhotoSearchConfigured()) {
     // findPhoto walks its candidates and returns null rather than throwing, so
@@ -75,12 +126,13 @@ export async function generateBackground(
 
   if (isGathosConfigured()) {
     try {
-      const img = await gathosGenerate(prompt, { width: opts.width, height: opts.height });
+      const img = await gathosGenerate(prompt, { width: opts.width, height: opts.height, seed });
       return {
         buffer: Buffer.from(img.base64, "base64"),
         contentType: img.contentType || "image/png",
         engine: "gathos",
         elapsedMs: Date.now() - start,
+        seed: img.seedUsed ?? seed,
       };
     } catch (err) {
       // Falling through to Gemini rather than failing: a quota error or a queue

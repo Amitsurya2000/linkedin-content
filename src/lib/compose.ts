@@ -50,17 +50,64 @@ export const LINE_ICONS: Record<string, (cx: number, cy: number, r: number, c: s
   spark: (x, y, r, c) => `<g stroke="${c}" stroke-width="${r * 0.09}" fill="none" stroke-linecap="round"><path d="M${x} ${y - r} L${x} ${y + r} M${x - r} ${y} L${x + r} ${y} M${x - r * 0.6} ${y - r * 0.6} L${x + r * 0.6} ${y + r * 0.6} M${x - r * 0.6} ${y + r * 0.6} L${x + r * 0.6} ${y - r * 0.6}"/></g>`,
 };
 
-/** Parse **marked** words → gold. Returns plain words + which are accented. */
+/**
+ * Parse *marked* or **marked** text -> accent colour.
+ *
+ * Handles a marked PHRASE, not just a single word: the carousel prompt's
+ * highlight rule wraps 1-4 words ("3 fixes that stop *ghost salaries*"), and a
+ * word-at-a-time matcher left the asterisks on screen. Returns the text with
+ * the markers removed plus a per-word flag saying which take the accent.
+ */
 function parseMarks(text: string): { plain: string; flags: boolean[] } {
-  const words = text.split(/\s+/).filter(Boolean);
-  const plainWords: string[] = [];
+  const src = text || "";
+  const words: string[] = [];
   const flags: boolean[] = [];
-  for (const w of words) {
-    const m = /^\*\*(.+?)\*\*([.,!?;:]*)$/.exec(w);
-    if (m) { plainWords.push(m[1] + (m[2] || "")); flags.push(true); }
-    else { plainWords.push(w); flags.push(false); }
+  let cur = "";
+  let curAccent = false;
+  let open = false;
+  const push = () => {
+    if (!cur) return;
+    words.push(cur);
+    flags.push(curAccent);
+    cur = "";
+    curAccent = false;
+  };
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (c === "*") {
+      // ** and * are the same marker; consume the pair as one.
+      if (src[i + 1] === "*") i++;
+      open = !open;
+      continue;
+    }
+    if (/\s/.test(c)) { push(); continue; }
+    cur += c;
+    if (open) curAccent = true;
   }
-  return { plain: plainWords.join(" "), flags };
+  push();
+  return { plain: words.join(" "), flags };
+}
+
+/**
+ * Render one wrapped line as tspans, accenting the words the marks selected.
+ *
+ * `cursor` walks the whole headline's word list across every line, so a phrase
+ * split by a line wrap still colours correctly on both sides.
+ */
+function accentTspans(
+  line: string,
+  cursor: { i: number },
+  flags: boolean[],
+  fg: string,
+  accent: string
+): string {
+  return line
+    .split(" ")
+    .map((w, wi) => {
+      const on = flags[cursor.i++] === true;
+      return `<tspan xml:space="preserve" fill="${on ? accent : fg}">${wi ? " " : ""}${esc(w)}</tspan>`;
+    })
+    .join("");
 }
 
 const FONT_STACK: Record<OverlayTheme["font"], string> = {
@@ -316,6 +363,12 @@ export async function composeSlide(
 ): Promise<Buffer> {
   const { width: W, height: H, slide, theme } = opts;
   const base = await sharp(bg).resize(W, H, { fit: "cover", position: "centre" }).png().toBuffer();
+  // The title arrives with the prompt's *highlight* markers still in it. Strip
+  // them for measurement and wrapping, keep the per-word flags for colouring.
+  const titleMarks = parseMarks(slide.title || "");
+  const plainTitle = titleMarks.plain;
+  // Body copy is never accented, so its markers are simply removed.
+  const plainBody = slide.body ? parseMarks(slide.body).plain : "";
   const padX = Math.round(W * 0.09);
   const boxW = W - padX * 2;
   const F = FONT_STACK[theme.font];
@@ -336,22 +389,24 @@ export async function composeSlide(
       const bfs = Math.round(W * 0.028);
       parts.push(pill(slide.badge, Math.round(W / 2), Math.round(H * 0.12), bfs, theme.accent, readableOn(theme.accent)).svg);
     }
-    const { fontSize, lines } = layout(theme.uppercase ? slide.title.toUpperCase() : slide.title, boxW, {
+    const { fontSize, lines } = layout(theme.uppercase ? plainTitle.toUpperCase() : plainTitle, boxW, {
       maxLines: 4, maxFont: Math.round(W * 0.11), minFont: Math.round(W * 0.05),
     });
     const lh = Math.round(fontSize * 1.16);
     const top = Math.round((H - lines.length * lh) / 2 + fontSize * 0.78);
+    const cur = { i: 0 };
     lines.forEach((ln, i) => {
-      parts.push(`<text x="${W / 2}" y="${top + i * lh}" text-anchor="middle" font-family="${F}" font-size="${fontSize}" font-weight="700" fill="${theme.fg}">${esc(ln)}</text>`);
+      parts.push(`<text x="${W / 2}" y="${top + i * lh}" text-anchor="middle" font-family="${F}" font-size="${fontSize}" font-weight="700">${accentTspans(ln, cur, titleMarks.flags, theme.fg, theme.accent)}</text>`);
     });
     const sfs = Math.round(W * 0.03);
     parts.push(pill("Swipe", Math.round(W / 2), Math.round(H - H * 0.12), sfs, theme.accent, readableOn(theme.accent), true).svg);
   } else if (slide.kind === "cta") {
-    const { fontSize, lines } = layout(slide.title, boxW, { maxLines: 4, maxFont: Math.round(W * 0.1), minFont: Math.round(W * 0.05) });
+    const { fontSize, lines } = layout(plainTitle, boxW, { maxLines: 4, maxFont: Math.round(W * 0.1), minFont: Math.round(W * 0.05) });
     const lh = Math.round(fontSize * 1.16);
     const top = Math.round((H - lines.length * lh) / 2 + fontSize * 0.6);
+    const cur = { i: 0 };
     lines.forEach((ln, i) => {
-      parts.push(`<text x="${W / 2}" y="${top + i * lh}" text-anchor="middle" font-family="${F}" font-size="${fontSize}" font-weight="700" fill="${theme.fg}">${esc(ln)}</text>`);
+      parts.push(`<text x="${W / 2}" y="${top + i * lh}" text-anchor="middle" font-family="${F}" font-size="${fontSize}" font-weight="700">${accentTspans(ln, cur, titleMarks.flags, theme.fg, theme.accent)}</text>`);
     });
     const cfs = Math.round(W * 0.034);
     parts.push(pill(theme.cta || "Follow for more", Math.round(W / 2), Math.round(H - H * 0.16), cfs, theme.accent, readableOn(theme.accent), true).svg);
@@ -363,24 +418,25 @@ export async function composeSlide(
       parts.push(`<text x="${padX}" y="${y + nfs}" font-family="${F}" font-size="${nfs}" font-weight="700" fill="${theme.accent}">${esc(slide.number)}</text>`);
       y += Math.round(nfs * 1.35);
     }
-    const tl = layout(slide.title, boxW, { maxLines: 3, maxFont: Math.round(W * 0.072), minFont: Math.round(W * 0.045) });
+    const tl = layout(plainTitle, boxW, { maxLines: 3, maxFont: Math.round(W * 0.072), minFont: Math.round(W * 0.045) });
     const tlh = Math.round(tl.fontSize * 1.18);
     y += tl.fontSize;
+    const cur = { i: 0 };
     tl.lines.forEach((ln) => {
-      parts.push(`<text x="${padX}" y="${y}" font-family="${F}" font-size="${tl.fontSize}" font-weight="700" fill="${theme.fg}">${esc(ln)}</text>`);
+      parts.push(`<text x="${padX}" y="${y}" font-family="${F}" font-size="${tl.fontSize}" font-weight="700">${accentTspans(ln, cur, titleMarks.flags, theme.fg, theme.accent)}</text>`);
       y += tlh;
     });
-    if (slide.body) {
+    if (plainBody) {
       y += Math.round(tl.fontSize * 0.4);
       // Auto-fit: shrink the body font until ALL wrapped lines fit above the
       // footer zone — the full copy is always rendered, never truncated.
       const availH = Math.round(H * 0.86) - y;
       const minBfs = Math.round(W * 0.026);
       let bfs = Math.round(W * 0.044);
-      let bodyLines: string[] = wrap(slide.body, Math.floor(boxW / (bfs * 0.5)));
+      let bodyLines: string[] = wrap(plainBody, Math.floor(boxW / (bfs * 0.5)));
       let blh = Math.round(bfs * 1.4);
       for (; bfs > minBfs; bfs -= 2) {
-        bodyLines = wrap(slide.body, Math.floor(boxW / (bfs * 0.5)));
+        bodyLines = wrap(plainBody, Math.floor(boxW / (bfs * 0.5)));
         blh = Math.round(bfs * 1.4);
         if (bodyLines.length * blh <= availH) break;
       }

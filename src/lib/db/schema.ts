@@ -137,6 +137,10 @@ export const generatedPosts = sqliteTable("generated_posts", {
   carouselSlides: text("carousel_slides"), // JSON array of slide objects (nullable, for carousel type)
   imageUrl: text("image_url"),
   carouselImages: text("carousel_images"), // JSON array of generated slide image URLs (carousel type)
+  // The visual brief the content agent returned: web_image_agent + gethos_prompt,
+  // as JSON. Written at generation time and read when the image is rendered, so
+  // the picture follows the brief the copy was written with rather than a preset.
+  visualDirective: text("visual_directive"),
   // Status: pending | generating | completed | failed
   status: text("status").notNull().default("pending"),
   scheduledAt: integer("scheduled_at", { mode: "timestamp_ms" }),
