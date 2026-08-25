@@ -174,7 +174,7 @@ export async function POST(
                 kind,
                 number: sl.badge || String(i + 1).padStart(2, "0"),
                 title: sl.title,
-                body: (sl.body || "").replace(/s+/g, " ").trim(),
+                body: (sl.body || "").replace(/\s+/g, " ").trim(),
                 footer: `${i + 1} / ${total}`,
               }
             : { kind, badge: sl.badge || badge, title: sl.title }
