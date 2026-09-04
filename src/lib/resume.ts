@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { generateWithRetry } from "./gemini";
 
 /**
  * Resume → Creator Profile analyzer.
@@ -88,8 +88,6 @@ interface AnalyzeParams {
 }
 
 export async function analyzeResume(params: AnalyzeParams): Promise<CreatorProfileData> {
-  const genai = new GoogleGenAI({ apiKey: params.apiKey });
-
   const parts: Array<Record<string, unknown>> = [];
   if (params.pdfBase64) {
     parts.push({ inlineData: { mimeType: params.mimeType || "application/pdf", data: params.pdfBase64 } });
@@ -110,11 +108,8 @@ export async function analyzeResume(params: AnalyzeParams): Promise<CreatorProfi
 
   parts.push({ text: "Now produce the deep Creator Profile JSON, weaving the resume and (if present) the one-pager together." });
 
-  const response = await genai.models.generateContent({
-    // Same generation as the post generator rather than the older 2.5-flash.
-    // Do NOT add thinkingConfig here: gemini-3.6-flash rejects thinkingBudget: 0
-    // with a 400 INVALID_ARGUMENT, which fails the whole analysis.
-    model: "gemini-3.6-flash",
+  const response = await generateWithRetry({
+    apiKey: params.apiKey,
     config: {
       systemInstruction: ANALYSIS_PROMPT,
       temperature: 0.6,

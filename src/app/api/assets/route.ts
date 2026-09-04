@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { creatorProfiles, userApiKeys } from "@/lib/db/schema";
-import { decrypt } from "@/lib/crypto";
+import { creatorProfiles } from "@/lib/db/schema";
+import { resolveGeminiKey } from "@/lib/api-keys";
 import { generateAsset, ASSET_KINDS, type AssetKind } from "@/lib/assets-gen";
 import type { CreatorProfileData } from "@/lib/resume";
 
@@ -41,17 +41,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const [key] = await db
-      .select()
-      .from(userApiKeys)
-      .where(and(eq(userApiKeys.userId, userId), eq(userApiKeys.provider, "gemini")))
-      .limit(1);
-    if (!key) {
+    const apiKey = await resolveGeminiKey(userId);
+    if (!apiKey) {
       return NextResponse.json({ error: "Add your Google Gemini API key in Settings first." }, { status: 400 });
     }
 
     const result = await generateAsset({
-      apiKey: decrypt(key.encryptedKey, key.iv, key.authTag),
+      apiKey,
       kind: kind as AssetKind,
       profile: JSON.parse(row.profileJson) as CreatorProfileData,
       brief: typeof body.brief === "string" && body.brief.trim() ? body.brief.trim() : undefined,

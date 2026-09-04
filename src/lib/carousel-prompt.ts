@@ -14,7 +14,7 @@
  * job belongs to the database, so `buildCarouselPrompt` takes the history as an
  * argument and `src/app/api/generate/route.ts` supplies it from past posts.
  */
-import { GoogleGenAI } from "@google/genai";
+import { generateWithRetry } from "./gemini";
 
 export interface AngleDef {
   id: string;
@@ -264,16 +264,17 @@ THEME — ${theme.id}: bg ${theme.bg}, accent ${theme.accent}, text ${theme.text
 ${bannedHeadlines}
 ====================================================================
 
-STRUCTURE — EXACTLY 3 SLIDES. Not 4, not 8. Three.
+STRUCTURE — 4 OR 5 SLIDES. Default to 5 when the idea has depth.
 - Slide 1 HOOK: <=8 words, payoff/pain never topic-label, badge "swipe →"
-- Slide 2 PAYOFF: the single most valuable idea, delivered in full. Headline
-  <=8 words, body <=18 words. This is the whole substance of the carousel, so
-  choose the ONE idea worth the reader's swipe and drop the rest.
-- Slide 3 CTA: name + positioning line + "Follow for more" + "Repost" ask
+- Slide 2 CONTEXT: set up the problem or framing. Headline <=8 words, body <=18 words.
+- Slide 3 PAYOFF: the single most valuable idea, delivered in full. Headline
+  <=8 words, body <=18 words. This is the core substance of the carousel.
+- Slide 4 PROOF (optional, use when there's a real number or example):
+  evidence, stat, or concrete example. Headline <=8 words, body <=18 words.
+- Slide 5 CTA: name + positioning line + "Follow for more" + "Repost" ask
 
-Three slides changes what fits. Do NOT try to compress a five-part deck into
-three by shrinking each part — that produces three slides of headlines with no
-substance. Cut to one idea and give it the room instead.
+If the idea is simple and has no supporting evidence, use 4 slides by dropping
+Slide 4. Every slide must carry real substance — no filler slides.
 
 COPY LAWS:
 - Grade-5 reading level. Translate ALL jargon/acronyms into plain outcomes.
@@ -420,7 +421,6 @@ function slideTypeAt(raw: string | undefined, i: number, total: number): SlideTy
  * cannot draw the same angle, hook or theme twice.
  */
 export async function generateCarousels(params: CarouselParams): Promise<CarouselPost[]> {
-  const genai = new GoogleGenAI({ apiKey: params.apiKey });
   const history: RenderChoice[] = [...(params.history ?? [])];
   const posts: CarouselPost[] = [];
 
@@ -452,8 +452,8 @@ export async function generateCarousels(params: CarouselParams): Promise<Carouse
     // than split into a system instruction and a brief.
     parts.push({ text: built.prompt });
 
-    const res = await genai.models.generateContent({
-      model: "gemini-3.6-flash",
+    const res = await generateWithRetry({
+      apiKey: params.apiKey,
       config: { temperature: renderTemperature(), responseMimeType: "application/json" },
       contents: [{ role: "user", parts }],
     });

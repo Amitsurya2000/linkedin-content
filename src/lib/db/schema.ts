@@ -1,26 +1,28 @@
 import {
-  sqliteTable,
+  pgTable,
   text,
   integer,
+  timestamp,
   primaryKey,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // ─── NextAuth required tables ────────────────────────────────────────────────
 
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name"),
   email: text("email").unique(),
   password: text("password"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .$defaultFn(() => new Date()),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
-export const accounts = sqliteTable(
+export const accounts = pgTable(
   "accounts",
   {
     userId: text("userId")
@@ -44,27 +46,27 @@ export const accounts = sqliteTable(
   ]
 );
 
-export const sessions = sqliteTable("sessions", {
+export const sessions = pgTable("sessions", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
+  expires: timestamp("expires", { withTimezone: true }).notNull(),
 });
 
-export const verificationTokens = sqliteTable(
+export const verificationTokens = pgTable(
   "verification_tokens",
   {
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
-    expires: integer("expires", { mode: "timestamp_ms" }).notNull(),
+    expires: timestamp("expires", { withTimezone: true }).notNull(),
   },
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 );
 
 // ─── User API Keys (BYOK — encrypted at rest) ───────────────────────────────
 
-export const userApiKeys = sqliteTable(
+export const userApiKeys = pgTable(
   "user_api_keys",
   {
     id: text("id")
@@ -78,17 +80,19 @@ export const userApiKeys = sqliteTable(
     keyPrefix: text("key_prefix").notNull(), // first 4 chars for display
     iv: text("iv").notNull(), // hex-encoded initialization vector
     authTag: text("auth_tag").notNull(), // hex-encoded GCM auth tag
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .$defaultFn(() => new Date()),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .$defaultFn(() => new Date()),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (t) => [uniqueIndex("uq_user_api_key_provider").on(t.userId, t.provider)]
 );
 
 // ─── Post Batches ────────────────────────────────────────────────────────────
 
-export const postBatches = sqliteTable("post_batches", {
+export const postBatches = pgTable("post_batches", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -109,14 +113,15 @@ export const postBatches = sqliteTable("post_batches", {
   // from them — a photo the client supplied beats anything a model invents.
   referenceImages: text("reference_images"),
   errorMessage: text("error_message"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .$defaultFn(() => new Date()),
-  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
 });
 
 // ─── Generated Posts ─────────────────────────────────────────────────────────
 
-export const generatedPosts = sqliteTable("generated_posts", {
+export const generatedPosts = pgTable("generated_posts", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -143,12 +148,13 @@ export const generatedPosts = sqliteTable("generated_posts", {
   visualDirective: text("visual_directive"),
   // Status: pending | generating | completed | failed
   status: text("status").notNull().default("pending"),
-  scheduledAt: integer("scheduled_at", { mode: "timestamp_ms" }),
-  publishedAt: integer("published_at", { mode: "timestamp_ms" }),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
   // Approval: draft | approved | scheduled | published
   approvalStatus: text("approval_status").notNull().default("draft"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .$defaultFn(() => new Date()),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // ─── Creator Profile (derived from the client's CV / resume) ─────────────────
@@ -156,7 +162,7 @@ export const generatedPosts = sqliteTable("generated_posts", {
 // resume once; Gemini analyzes it into a structured profile that personalizes
 // every post, graphic, script, and article.
 
-export const creatorProfiles = sqliteTable("creator_profiles", {
+export const creatorProfiles = pgTable("creator_profiles", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -182,8 +188,12 @@ export const creatorProfiles = sqliteTable("creator_profiles", {
   // About section — the three assets a recruiter reads in their first 30
   // seconds. Kept beside the profile because it is derived from it.
   kitJson: text("kit_json"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 /**
@@ -194,7 +204,7 @@ export const creatorProfiles = sqliteTable("creator_profiles", {
  * page takes seconds and is enough to learn which hooks, formats and posting
  * days actually work for this account — which is the whole point.
  */
-export const postMetrics = sqliteTable("post_metrics", {
+export const postMetrics = pgTable("post_metrics", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -214,9 +224,11 @@ export const postMetrics = sqliteTable("post_metrics", {
   saves: integer("saves"),
   profileViews: integer("profile_views"),
   /** When it went live — the basis for day-of-week and hour analysis. */
-  postedAt: integer("posted_at", { mode: "timestamp_ms" }),
+  postedAt: timestamp("posted_at", { withTimezone: true }),
   notes: text("notes"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // ─── Relations ───────────────────────────────────────────────────────────────

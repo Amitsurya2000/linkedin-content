@@ -4,22 +4,27 @@
  *
  *   npx tsx scripts/deck-preview.ts
  */
+import "dotenv/config";
 import fs from "fs/promises";
 import path from "path";
-import Database from "better-sqlite3";
+import { eq, and, isNotNull } from "drizzle-orm";
+import { db } from "../src/lib/db";
+import { generatedPosts, postBatches } from "../src/lib/db/schema";
 import { renderEditorialDeck, toKoyopoSlides, type RawSlide } from "../src/lib/deck-render";
 
 async function main() {
-  const db = new Database("./linkedin-posts.db");
-  const row = db.prepare(
-    `select gp.id, gp.carousel_slides from generated_posts gp
-     join post_batches pb on pb.id = gp.batch_id
-     where pb.post_type = 'carousel' and gp.carousel_slides is not null
-     order by pb.created_at desc limit 1`
-  ).get() as { id: string; carousel_slides: string } | undefined;
+  const rows = await db
+    .select({ id: generatedPosts.id, carouselSlides: generatedPosts.carouselSlides })
+    .from(generatedPosts)
+    .innerJoin(postBatches, eq(postBatches.id, generatedPosts.batchId))
+    .where(and(eq(postBatches.postType, "carousel"), isNotNull(generatedPosts.carouselSlides)))
+    .orderBy(postBatches.createdAt)
+    .limit(1);
+
+  const row = rows[0];
   if (!row) { console.log("no carousel posts"); return; }
 
-  const slides = toKoyopoSlides(JSON.parse(row.carousel_slides) as RawSlide[]);
+  const slides = toKoyopoSlides(row.carouselSlides as RawSlide[]);
   const outDir = path.join(process.cwd(), "public", "deck-preview");
   await fs.mkdir(outDir, { recursive: true });
 

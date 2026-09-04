@@ -1112,7 +1112,7 @@ export default function CreatePage() {
                 <p className="text-xs text-[#1A1414]">
                   <span className="text-[#6B5B5A]">Format:</span>{" "}
                   {POST_TYPES.find((p) => p.value === postType)?.label} · {postsCount} post{postsCount !== 1 ? "s" : ""}
-                  {postType === "carousel" ? " · 8–10 slides" : ""}
+                  {postType === "carousel" ? " · 4–5 slides" : ""}
                 </p>
                 {(refFiles.length > 0 || customInstructions.trim()) && (
                   <p className="text-xs text-[#1A1414]">

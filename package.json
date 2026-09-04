@@ -7,18 +7,18 @@
     "build": "next build",
     "start": "next start --port 3060",
     "lint": "eslint",
-    "db:push": "tsx --env-file=.env.local node_modules/.bin/drizzle-kit push",
-    "db:generate": "tsx --env-file=.env.local node_modules/.bin/drizzle-kit generate",
-    "db:studio": "tsx --env-file=.env.local node_modules/.bin/drizzle-kit studio",
-    "db:seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.1",
     "@fal-ai/client": "^1.9.4",
     "@google/genai": "^1.43.0",
     "@hookform/resolvers": "^5.2.2",
+    "@neondatabase/serverless": "^1.1.0",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
@@ -40,7 +40,6 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
-    "@types/better-sqlite3": "^7.6.8",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -55,7 +54,6 @@
   },
   "allowScripts": {
     "sharp@0.34.5": true,
-    "better-sqlite3@13.0.2": true,
     "esbuild@0.18.20": true,
     "esbuild@0.25.12": true,
     "esbuild@0.28.1": true,

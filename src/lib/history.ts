@@ -9,10 +9,13 @@
  * Shared between `/api/generate` (first write) and `/api/posts/[id]/regenerate`
  * (every re-render after that) so both paths avoid the same history.
  */
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { generatedPosts, postBatches } from "@/lib/db/schema";
 import { HISTORY_LIMIT, type RenderChoice } from "@/lib/carousel-prompt";
+
+/** The maximum number of posts kept in history. Older ones are pruned. */
+export const HISTORY_KEEP_POSTS = 10;
 
 /** The shape the carousel builder writes onto every slide's `design`. */
 interface StoredDesign {
@@ -95,5 +98,45 @@ export async function recentAngles(
       .map((r) => ({ angle: r.angle || "(unrecorded)", hook: r.hook }));
   } catch {
     return [];
+  }
+}
+
+/**
+ * Keep only the most recent 10 posts for this user.
+ *
+ * Deleting individual posts would leave their parent batch half-empty, so we
+ * work in whole batches: find the batches that contain the NEWEST 10 posts,
+ * keep those, and delete every batch older than them (which cascades to their
+ * posts). Runs after each successful generation so the history page never
+ * shows more than the recent posts.
+ */
+export async function pruneHistory(userId: string): Promise<void> {
+  try {
+    // The 10 most recent posts, newest first.
+    const recent = await db
+      .select({ batchId: generatedPosts.batchId })
+      .from(generatedPosts)
+      .where(eq(generatedPosts.userId, userId))
+      .orderBy(desc(generatedPosts.createdAt))
+      .limit(HISTORY_KEEP_POSTS);
+
+    if (!recent.length) return;
+
+    // The distinct batches those posts belong to — these are the ones to keep.
+    const keepBatchIds = [...new Set(recent.map((r) => r.batchId))];
+
+    if (keepBatchIds.length) {
+      // Delete every batch that is NOT in the keep list. Cascade removes posts.
+      await db
+        .delete(postBatches)
+        .where(
+          and(
+            eq(postBatches.userId, userId),
+            notInArray(postBatches.id, keepBatchIds)
+          )
+        );
+    }
+  } catch (err) {
+    console.error("pruneHistory failed (non-fatal):", err);
   }
 }

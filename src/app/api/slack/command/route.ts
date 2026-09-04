@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { creatorProfiles, generatedPosts, postBatches, users, userApiKeys } from "@/lib/db/schema";
-import { decrypt } from "@/lib/crypto";
+import { creatorProfiles, generatedPosts, postBatches, users } from "@/lib/db/schema";
+import { resolveGeminiKey } from "@/lib/api-keys";
 import { generateContentAgentPosts } from "@/lib/content-agent";
 import { profileToContext, type CreatorProfileData } from "@/lib/resume";
 import { composePost } from "@/lib/utils";
@@ -78,12 +78,8 @@ async function generate(topic: string, responseUrl: string, slackUser: string): 
       return;
     }
 
-    const [keyRow] = await db
-      .select()
-      .from(userApiKeys)
-      .where(and(eq(userApiKeys.userId, user.id), eq(userApiKeys.provider, "gemini")))
-      .limit(1);
-    if (!keyRow) {
+    const apiKey = (await resolveGeminiKey(user.id)) || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
       await respond(responseUrl, { text: "No Gemini key on that account — add one in Settings." });
       return;
     }
@@ -119,7 +115,7 @@ async function generate(topic: string, responseUrl: string, slackUser: string): 
     // Same prompt the web route uses for text posts — see
     // src/lib/prompts/linkedin-content-agent.md.
     const posts = await generateContentAgentPosts({
-      apiKey: decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag),
+      apiKey,
       topic,
       postsCount: DEFAULT_COUNT,
       profileContext,

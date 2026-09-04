@@ -3,11 +3,11 @@ import fs from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { postBatches, generatedPosts, userApiKeys, creatorProfiles } from "@/lib/db/schema";
-import { decrypt } from "@/lib/crypto";
+import { postBatches, generatedPosts, creatorProfiles } from "@/lib/db/schema";
+import { resolveGeminiKey } from "@/lib/api-keys";
 import { generateContentAgentPosts } from "@/lib/content-agent";
 import { generateCarousels } from "@/lib/carousel-prompt";
-import { recentAngles, recentChoices } from "@/lib/history";
+import { recentAngles, recentChoices, pruneHistory } from "@/lib/history";
 import { profileToContext, type CreatorProfileData } from "@/lib/resume";
 import { eq, and } from "drizzle-orm";
 
@@ -97,23 +97,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get user's Gemini API key
-    const [geminiKeyRow] = await db
-      .select()
-      .from(userApiKeys)
-      .where(
-        and(eq(userApiKeys.userId, userId), eq(userApiKeys.provider, "gemini"))
-      )
-      .limit(1);
+    // Get Gemini API key — user's own key first, then server fallback
+    const apiKey = await resolveGeminiKey(userId);
 
-    if (!geminiKeyRow) {
+    if (!apiKey) {
       return NextResponse.json(
         { error: "No Gemini API key found. Please add your API key in Settings." },
         { status: 400 }
       );
     }
-
-    const apiKey = decrypt(geminiKeyRow.encryptedKey, geminiKeyRow.iv, geminiKeyRow.authTag);
 
     // Load the client's resume-derived Creator Profile (base context for content)
     let profileContext: string | undefined;
@@ -244,6 +236,9 @@ export async function POST(req: NextRequest) {
           completedAt: new Date(),
         })
         .where(eq(postBatches.id, batch.id));
+
+      // Keep only the recent 10 posts in history; prune older batches/posts.
+      await pruneHistory(userId);
 
       return NextResponse.json({
         batchId: batch.id,

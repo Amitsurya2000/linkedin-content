@@ -1,10 +1,8 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
 
-const sqlite = new Database(process.env.DATABASE_URL || "./linkedin-posts.db");
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
+const sql = neon(process.env.DATABASE_URL!);
 
-export const db = drizzle(sqlite, { schema });
+export const db = drizzle(sql, { schema });
 export type DB = typeof db;

@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { generateWithRetry } from "./gemini";
 import { profileToContext, type CreatorProfileData } from "./resume";
 import type { BannerVisual } from "./banner";
 
@@ -80,8 +80,6 @@ export async function generateProfileKit(params: {
   targetRole?: string;
   email?: string;
 }): Promise<ProfileKit> {
-  const genai = new GoogleGenAI({ apiKey: params.apiKey });
-
   const input = [
     profileToContext(params.profile),
     params.targetRole ? `\nTARGET ROLE & COMPANY TYPE: ${params.targetRole}` : "",
@@ -89,8 +87,8 @@ export async function generateProfileKit(params: {
     "\nNow produce the Profile Kit JSON.",
   ].join("\n");
 
-  const res = await genai.models.generateContent({
-    model: "gemini-3.6-flash",
+  const res = await generateWithRetry({
+    apiKey: params.apiKey,
     config: { systemInstruction: SYSTEM, temperature: 0.7, responseMimeType: "application/json" },
     contents: [{ role: "user", parts: [{ text: input }] }],
   });

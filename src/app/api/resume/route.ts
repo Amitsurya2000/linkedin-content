@@ -2,20 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { creatorProfiles, userApiKeys } from "@/lib/db/schema";
-import { decrypt } from "@/lib/crypto";
+import { creatorProfiles } from "@/lib/db/schema";
+import { resolveGeminiKey } from "@/lib/api-keys";
 import { analyzeResume, type CreatorProfileData } from "@/lib/resume";
 
 export const maxDuration = 120;
 
 async function getGeminiKey(userId: string): Promise<string | null> {
-  const [row] = await db
-    .select()
-    .from(userApiKeys)
-    .where(and(eq(userApiKeys.userId, userId), eq(userApiKeys.provider, "gemini")))
-    .limit(1);
-  if (!row) return null;
-  return decrypt(row.encryptedKey, row.iv, row.authTag);
+  return resolveGeminiKey(userId);
 }
 
 /** GET — return the current user's creator profile (or null). */

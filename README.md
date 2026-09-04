@@ -14,7 +14,7 @@ An AI SaaS that turns your real experience into scroll-stopping LinkedIn content
 ## Stack
 
 - Next.js 15 (App Router) · React · Tailwind v4
-- Drizzle ORM + SQLite (better-sqlite3)
+- Drizzle ORM + PostgreSQL (Supabase via Neon serverless driver)
 - NextAuth (credentials)
 - Google Gemini (copy + resume analysis) · Gathos (text-free image backgrounds)
 - `sharp` for server-side image composition
@@ -24,7 +24,7 @@ An AI SaaS that turns your real experience into scroll-stopping LinkedIn content
 ```bash
 npm install
 cp .env.example .env.local   # then fill in the values
-npm run db:push              # create the SQLite schema
+npm run db:push              # apply the PostgreSQL schema (needs DATABASE_URL)
 npm run dev                  # http://localhost:3060
 ```
 

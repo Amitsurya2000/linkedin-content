@@ -2,19 +2,25 @@
  * Lists the models the stored Gemini key can actually reach, so model IDs are
  * chosen from the API rather than guessed.
  *
- *   npx tsx --env-file=.env.local scripts/list-gemini-models.ts
+ *   npx tsx scripts/list-gemini-models.ts
  */
-import Database from "better-sqlite3";
+import "dotenv/config";
+import { eq } from "drizzle-orm";
+import { db } from "../src/lib/db";
+import { userApiKeys } from "../src/lib/db/schema";
 import { decrypt } from "../src/lib/crypto";
 
 async function main() {
-  const db = new Database("./linkedin-posts.db");
-  const row = db
-    .prepare("select encrypted_key, iv, auth_tag from user_api_keys where provider='gemini' limit 1")
-    .get() as { encrypted_key: string; iv: string; auth_tag: string } | undefined;
+  const rows = await db
+    .select({ encryptedKey: userApiKeys.encryptedKey, iv: userApiKeys.iv, authTag: userApiKeys.authTag })
+    .from(userApiKeys)
+    .where(eq(userApiKeys.provider, "gemini"))
+    .limit(1);
+
+  const row = rows[0];
   if (!row) { console.log("no gemini key stored"); return; }
 
-  const key = decrypt(row.encrypted_key, row.iv, row.auth_tag);
+  const key = decrypt(row.encryptedKey, row.iv, row.authTag);
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=1000`);
   const data = (await res.json()) as { models?: { name: string; supportedGenerationMethods?: string[] }[]; error?: { message: string } };
 

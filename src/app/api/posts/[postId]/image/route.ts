@@ -4,8 +4,8 @@ import fs from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { generatedPosts, postBatches, creatorProfiles, userApiKeys } from "@/lib/db/schema";
-import { decrypt } from "@/lib/crypto";
+import { generatedPosts, postBatches, creatorProfiles } from "@/lib/db/schema";
+import { resolveGeminiKey } from "@/lib/api-keys";
 import { generateBackground, newSeed } from "@/lib/image-engine";
 import { buildStyledPrompt, STYLE_BY_ID, DEFAULT_STYLE_IDS } from "@/lib/image-prompt";
 import { composeCard } from "@/lib/compose";
@@ -96,11 +96,7 @@ export async function POST(
     // Gathos when it is configured, Gemini otherwise — see lib/image-engine.ts.
     // The Gemini key is optional here: it is only needed if Gathos is absent or
     // its request fails.
-    const [keyRow] = await db
-      .select()
-      .from(userApiKeys)
-      .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
-      .limit(1);
+    const geminiKey = await resolveGeminiKey(session.user.id) || undefined;
 
     // An uploaded screenshot beats a generated one outright: it is the real
     // thing, it is free, and it is instant. Generate only when the client
@@ -164,7 +160,7 @@ export async function POST(
       seed,
       reference,
       mergeInstruction: directive?.multimodalInstruction || undefined,
-      geminiKey: keyRow ? decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag) : undefined,
+      geminiKey,
     });
     let outBuf: Buffer = img.buffer;
     if (overlay && overlay.text) {

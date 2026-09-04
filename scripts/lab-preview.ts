@@ -4,11 +4,14 @@
  *
  *   npx tsx scripts/lab-preview.ts
  */
+import "dotenv/config";
 import fs from "fs/promises";
 import path from "path";
 import { renderLabDeck } from "../src/lib/deck-lab";
 import { LAB_STYLES, type LabStyleName } from "../src/lib/deck-lab-styles";
-import Database from "better-sqlite3";
+import { eq } from "drizzle-orm";
+import { db } from "../src/lib/db";
+import { userApiKeys } from "../src/lib/db/schema";
 import { decrypt } from "../src/lib/crypto";
 import { toKoyopoSlides, type RawSlide } from "../src/lib/koyopo";
 
@@ -47,17 +50,22 @@ const SAMPLE: RawSlide[] = [
   },
 ];
 
+async function getGeminiKey(): Promise<string | undefined> {
+  const rows = await db
+    .select({ encryptedKey: userApiKeys.encryptedKey, iv: userApiKeys.iv, authTag: userApiKeys.authTag })
+    .from(userApiKeys)
+    .where(eq(userApiKeys.provider, "gemini"))
+    .limit(1);
+  const row = rows[0];
+  if (row) return decrypt(row.encryptedKey, row.iv, row.authTag);
+  return undefined;
+}
+
 async function main() {
   const outDir = path.join(process.cwd(), "public", "lab-preview");
   await fs.mkdir(outDir, { recursive: true });
   const art = process.argv.includes("--art");
-  let geminiKey: string | undefined;
-  if (art) {
-    const db = new Database("./linkedin-posts.db");
-    const row = db.prepare("select encrypted_key, iv, auth_tag from user_api_keys where provider='gemini' limit 1")
-      .get() as { encrypted_key: string; iv: string; auth_tag: string } | undefined;
-    if (row) geminiKey = decrypt(row.encrypted_key, row.iv, row.auth_tag);
-  }
+  const geminiKey = art ? await getGeminiKey() : undefined;
   const only = process.argv.find((a) => a.startsWith("--style="))?.split("=")[1] as LabStyleName | undefined;
   const styles = only ? [only] : (Object.keys(LAB_STYLES) as LabStyleName[]);
 

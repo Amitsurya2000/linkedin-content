@@ -7,9 +7,12 @@
  *   npx tsx scripts/swipe-preview.ts --sample   # built-in sample copy
  *   npx tsx scripts/swipe-preview.ts --theme=slate
  */
+import "dotenv/config";
 import fs from "fs/promises";
 import path from "path";
-import Database from "better-sqlite3";
+import { eq, and, isNotNull } from "drizzle-orm";
+import { db } from "../src/lib/db";
+import { generatedPosts, postBatches } from "../src/lib/db/schema";
 import { renderSwipeDeck, toKoyopoSlides, SWIPE_THEMES, type RawSlide, type SwipeThemeName } from "../src/lib/deck-swipe";
 
 const SAMPLE: RawSlide[] = [
@@ -66,14 +69,14 @@ async function main() {
   let seed = "sample";
   if (!useSample) {
     try {
-      const db = new Database("./linkedin-posts.db");
-      const row = db.prepare(
-        `select gp.id, gp.carousel_slides from generated_posts gp
-         join post_batches pb on pb.id = gp.batch_id
-         where pb.post_type = 'carousel' and gp.carousel_slides is not null
-         order by pb.created_at desc limit 1`
-      ).get() as { id: string; carousel_slides: string } | undefined;
-      if (row) { raw = JSON.parse(row.carousel_slides) as RawSlide[]; seed = row.id; }
+      const rows = await db
+        .select({ id: generatedPosts.id, carouselSlides: generatedPosts.carouselSlides })
+        .from(generatedPosts)
+        .innerJoin(postBatches, eq(postBatches.id, generatedPosts.batchId))
+        .where(and(eq(postBatches.postType, "carousel"), isNotNull(generatedPosts.carouselSlides)))
+        .orderBy(postBatches.createdAt)
+        .limit(1);
+      if (rows[0]) { raw = rows[0].carouselSlides as RawSlide[]; seed = rows[0].id; }
       else console.log("no carousel in DB — using the sample deck");
     } catch {
       console.log("DB unreadable — using the sample deck");

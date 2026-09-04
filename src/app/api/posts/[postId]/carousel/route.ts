@@ -4,8 +4,8 @@ import fs from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { generatedPosts, postBatches, userApiKeys } from "@/lib/db/schema";
-import { decrypt } from "@/lib/crypto";
+import { generatedPosts, postBatches } from "@/lib/db/schema";
+import { resolveGeminiKey } from "@/lib/api-keys";
 import { generateBackground, newSeed } from "@/lib/image-engine";
 import { buildStyledPrompt } from "@/lib/image-prompt";
 import { composeSlide, type SlideSpec, type OverlayTheme } from "@/lib/compose";
@@ -138,13 +138,7 @@ export async function POST(
     // the old path, where the background style fixes its own dimensions.
     const { width, height } = builder ? { width: 1080, height: 1350 } : built;
 
-    const [keyRow] = await db
-      .select()
-      .from(userApiKeys)
-      .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
-      .limit(1);
-
-    const geminiKey = keyRow ? decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag) : undefined;
+    const geminiKey = (await resolveGeminiKey(session.user.id)) || undefined;
 
     // One shared, cohesive background for the whole carousel (fast + consistent).
     // Used for the old path, and as the fallback for any builder slide whose own

@@ -4,8 +4,8 @@ import fs from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { creatorProfiles, generatedPosts, postBatches, userApiKeys } from "@/lib/db/schema";
-import { decrypt } from "@/lib/crypto";
+import { creatorProfiles, generatedPosts, postBatches } from "@/lib/db/schema";
+import { resolveGeminiKey } from "@/lib/api-keys";
 import { renderDeck, toKoyopoSlides, type RawSlide, type CanvasName } from "@/lib/koyopo";
 import { renderEditorialDeck } from "@/lib/deck-render";
 import { renderSwipeDeck } from "@/lib/deck-swipe";
@@ -179,15 +179,11 @@ async function handle(
         .from(postBatches)
         .where(eq(postBatches.id, post.batchId))
         .limit(1);
-      const [keyRow] = await db
-        .select()
-        .from(userApiKeys)
-        .where(and(eq(userApiKeys.userId, session.user.id), eq(userApiKeys.provider, "gemini")))
-        .limit(1);
+      const geminiKey = (await resolveGeminiKey(session.user.id)) || undefined;
       visualExtras = {
         referenceImages: batch?.referenceImages ? safeParse<string[]>(batch.referenceImages, []) : [],
         designDirections: limitSlides(raw, input.maxSlides).map((s2) => (s2 as RawSlide & { designDirection?: string }).designDirection),
-        geminiKey: keyRow ? decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag) : undefined,
+        geminiKey,
         topic: batch?.topic,
       };
     }

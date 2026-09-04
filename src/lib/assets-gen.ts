@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { generateWithRetry } from "./gemini";
 import fs from "fs";
 import path from "path";
 import { profileToContext, type CreatorProfileData } from "./resume";
@@ -277,8 +277,6 @@ export async function generateAsset(params: {
    */
   variant?: number;
 }): Promise<AssetResult & { angle: string }> {
-  const genai = new GoogleGenAI({ apiKey: params.apiKey });
-
   const angles = ANGLES[params.kind];
   const angle = angles[Math.abs(Math.trunc(params.variant ?? 0)) % angles.length];
 
@@ -291,8 +289,8 @@ export async function generateAsset(params: {
   }
   parts.push("\nNow produce the JSON.");
 
-  const res = await genai.models.generateContent({
-    model: "gemini-3.6-flash",
+  const res = await generateWithRetry({
+    apiKey: params.apiKey,
     config: {
       // The angle goes last so it is the freshest instruction before generation,
       // and is stated as a requirement rather than a suggestion — a preference

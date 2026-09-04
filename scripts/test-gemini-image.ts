@@ -4,19 +4,25 @@
  *
  *   npx tsx scripts/test-gemini-image.ts
  */
+import "dotenv/config";
 import fs from "fs/promises";
 import path from "path";
-import Database from "better-sqlite3";
+import { eq } from "drizzle-orm";
+import { db } from "../src/lib/db";
+import { userApiKeys } from "../src/lib/db/schema";
 import { decrypt } from "../src/lib/crypto";
 import { generateImage } from "../src/lib/gemini-image";
 
 async function main() {
-  const db = new Database("./linkedin-posts.db");
-  const row = db
-    .prepare("select encrypted_key, iv, auth_tag from user_api_keys where provider='gemini' limit 1")
-    .get() as { encrypted_key: string; iv: string; auth_tag: string } | undefined;
+  const rows = await db
+    .select({ encryptedKey: userApiKeys.encryptedKey, iv: userApiKeys.iv, authTag: userApiKeys.authTag })
+    .from(userApiKeys)
+    .where(eq(userApiKeys.provider, "gemini"))
+    .limit(1);
+
+  const row = rows[0];
   if (!row) { console.log("no gemini key stored"); return; }
-  const apiKey = decrypt(row.encrypted_key, row.iv, row.auth_tag);
+  const apiKey = decrypt(row.encryptedKey, row.iv, row.authTag);
 
   const prompt =
     "Editorial photograph for a LinkedIn post about automating financial reporting. " +

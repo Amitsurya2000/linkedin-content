@@ -7,19 +7,16 @@
  * Make sure .env.local exists with DATABASE_URL before running.
  */
 import "dotenv/config";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import bcryptjs from "bcryptjs";
 import { eq } from "drizzle-orm";
 import * as schema from "../src/lib/db/schema";
 
 const { users } = schema;
 
-const sqlite = new Database(process.env.DATABASE_URL || "./linkedin-posts.db");
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
-
-const db = drizzle(sqlite, { schema });
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql, { schema });
 
 const USER_NAME = "Rajan";
 const USER_EMAIL = "rajan@example.com";
@@ -51,11 +48,9 @@ async function main() {
   }
 
   console.log("\nSeed complete!");
-  sqlite.close();
 }
 
 main().catch((err) => {
   console.error("Seed failed:", err);
-  sqlite.close();
   process.exit(1);
 });

@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { generatedPosts, postBatches, userApiKeys, creatorProfiles } from "@/lib/db/schema";
-import { decrypt } from "@/lib/crypto";
+import { generatedPosts, postBatches, creatorProfiles } from "@/lib/db/schema";
+import { resolveGeminiKey } from "@/lib/api-keys";
 import { generateCarousels } from "@/lib/carousel-prompt";
 import { generateContentAgentPosts } from "@/lib/content-agent";
 import { recentAngles, recentChoices } from "@/lib/history";
@@ -51,18 +51,13 @@ export async function POST(
       .where(eq(postBatches.id, post.batchId))
       .limit(1);
 
-    const [keyRow] = await db
-      .select()
-      .from(userApiKeys)
-      .where(and(eq(userApiKeys.userId, userId), eq(userApiKeys.provider, "gemini")))
-      .limit(1);
-    if (!keyRow) {
+    const apiKey = await resolveGeminiKey(userId);
+    if (!apiKey) {
       return NextResponse.json(
         { error: "No Gemini API key found. Please add your API key in Settings." },
         { status: 400 }
       );
     }
-    const apiKey = decrypt(keyRow.encryptedKey, keyRow.iv, keyRow.authTag);
 
     let profileContext: string | undefined;
     const [profileRow] = await db

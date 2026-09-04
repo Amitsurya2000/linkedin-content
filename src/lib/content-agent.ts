@@ -13,7 +13,7 @@
  * the user renders an image later it follows the direction the copy was written
  * with, instead of one of the 36 presets.
  */
-import { GoogleGenAI } from "@google/genai";
+import { generateWithRetry } from "./gemini";
 import { renderTemperature } from "./carousel-prompt";
 import fs from "fs";
 import path from "path";
@@ -133,7 +133,6 @@ export async function generateContentAgentPosts(
     );
   }
 
-  const genai = new GoogleGenAI({ apiKey: params.apiKey });
   const used: { angle: string; hook: string }[] = [...(params.previousAngles ?? [])];
   const posts: ContentAgentPost[] = [];
 
@@ -152,11 +151,8 @@ export async function generateContentAgentPosts(
     }
     parts.push({ text: filled });
 
-    const res = await genai.models.generateContent({
-      model: "gemini-3.6-flash",
-      // The prompt asks for a different angle every execution, so the sampling
-      // is drawn fresh from 0.85-0.95 rather than fixed; the JSON contract is
-      // enforced by the response type.
+    const res = await generateWithRetry({
+      apiKey: params.apiKey,
       config: { temperature: renderTemperature(), responseMimeType: "application/json" },
       contents: [{ role: "user", parts }],
     });
