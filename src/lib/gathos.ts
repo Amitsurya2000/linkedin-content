@@ -17,8 +17,8 @@ const BASE = process.env.GATHOS_BASE_URL || "https://gathos.com/api/v1";
 const IMAGE_KEY = process.env.GATHOS_IMAGE_API_KEY || "";
 const I2I_KEY = process.env.GATHOS_I2I_API_KEY || "";
 
-const SUBMIT_RETRIES = 6;
-const POLL_TIMEOUT_MS = 210_000; // Gathos queue can be slow; be patient
+const SUBMIT_RETRIES = 3;
+const POLL_TIMEOUT_MS = 60_000; // 60s max per image — don't blow Vercel's 300s limit
 const POLL_INTERVAL_MS = 3_000;
 
 function headers(key: string, json = true): Record<string, string> {
@@ -64,6 +64,7 @@ async function submit(path: string, key: string, payload: unknown): Promise<stri
         method: "POST",
         headers: headers(key),
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(15_000),
       });
 
       if (res.status === 429) {
@@ -98,7 +99,7 @@ async function poll(path: string, key: string): Promise<PollResult> {
   let transient = 0;
   while (Date.now() - start < POLL_TIMEOUT_MS) {
     try {
-      const res = await fetch(`${BASE}${path}`, { headers: headers(key, false) });
+      const res = await fetch(`${BASE}${path}`, { headers: headers(key, false), signal: AbortSignal.timeout(10_000) });
       if (!res.ok) throw new Error(`poll ${res.status}`);
       const data = await res.json();
       transient = 0;

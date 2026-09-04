@@ -62,11 +62,16 @@ export async function generateWithRetry(
   for (const model of models) {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const res = await genai.models.generateContent({
-          model,
-          config: opts.config,
-          contents: opts.contents,
-        });
+        const res = await Promise.race([
+          genai.models.generateContent({
+            model,
+            config: opts.config,
+            contents: opts.contents,
+          }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Gemini ${model} timed out after 60s`)), 60_000)
+          ),
+        ]);
         return res;
       } catch (err) {
         const isLastModel = model === models[models.length - 1];

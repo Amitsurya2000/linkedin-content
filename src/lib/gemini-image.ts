@@ -73,21 +73,23 @@ export async function generateImage(
 
   for (const model of chain) {
     try {
-      const res = await genai.models.generateContent({
-        model,
-        contents: [{ role: "user", parts }],
-        config: {
-          responseModalities: ["IMAGE"],
-          ...(opts.aspectRatio ? { imageConfig: { aspectRatio: opts.aspectRatio } } : {}),
-        },
-      });
+      const res = await Promise.race([
+        genai.models.generateContent({
+          model,
+          contents: [{ role: "user", parts }],
+          config: {
+            responseModalities: ["IMAGE"],
+            ...(opts.aspectRatio ? { imageConfig: { aspectRatio: opts.aspectRatio } } : {}),
+          },
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Gemini ${model} timed out after 45s`)), 45_000)
+        ),
+      ]);
       const img = extractImage(res);
       if (img) {
         return { buffer: Buffer.from(img.data, "base64"), mimeType: img.mimeType, model };
       }
-      // A response with no image part usually means the prompt tripped a safety
-      // filter; the next model will almost certainly do the same, but trying is
-      // cheap and the error text differs usefully between them.
       errors.push(`${model}: no image in response`);
     } catch (err) {
       errors.push(`${model}: ${err instanceof Error ? err.message : String(err)}`);
