@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     // Belt-and-braces: two simultaneous signups can both pass the check above,
     // so surface the constraint as the real reason rather than a blank 500.
-    if (err instanceof Error && /UNIQUE constraint failed: users\.email/.test(err.message)) {
+    if (err instanceof Error && /duplicate key value violates unique constraint|UNIQUE constraint failed/.test(err.message)) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
         { status: 400 }
