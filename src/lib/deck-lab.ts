@@ -1,6 +1,4 @@
 import sharp from "sharp";
-import fs from "fs/promises";
-import path from "path";
 import { generateBackground } from "./image-engine";
 import type { KoyopoSlide, SlideTemplate } from "./koyopo";
 import { LAB_STYLES, FACE, GLYPH_W, type FaceKind, type StyleSpec, type LabStyleName } from "./deck-lab-styles";
@@ -115,10 +113,14 @@ export interface LabOptions {
   art?: Buffer | null;
 }
 
-/** Read an uploaded image off disk. A missing file is skipped, never fatal. */
+/** Read an uploaded image from the DB store. Missing images are skipped, never fatal. */
 async function loadUpload(publicPath: string): Promise<Buffer | null> {
   try {
-    return await fs.readFile(path.join(process.cwd(), "public", publicPath.replace(/^\//, "")));
+    const { getImageBytes, urlPrefixId } = await import("@/lib/store-images");
+    const id = urlPrefixId(publicPath);
+    if (!id) return null;
+    const img = await getImageBytes(id);
+    return img?.buffer ?? null;
   } catch {
     return null;
   }

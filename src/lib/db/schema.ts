@@ -157,6 +157,33 @@ export const generatedPosts = pgTable("generated_posts", {
     .notNull(),
 });
 
+// ─── Generated Images (stored in the DB — serverless filesystems are read-only) ─
+// Vercel deployments cannot write to disk, so every rendered image (carousel
+// slide, post visual, deck frame) is persisted here as base64 text and served
+// back through the /api/post-images/[id] proxy route. URLs stored on posts are
+// of the form `/api/post-images/{imageId}`.
+
+export const generatedImages = pgTable("generated_images", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  // The post the image belongs to (nullable so a batch upload reference can be
+  // detached from any single post).
+  postId: text("post_id").references(() => generatedPosts.id, {
+    onDelete: "cascade",
+  }),
+  // Base64-encoded bytes. PNG for rendered frames; the original encoding for
+  // client-uploaded reference images.
+  data: text("data").notNull(),
+  mimeType: text("mime_type").notNull().default("image/png"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 // ─── Creator Profile (derived from the client's CV / resume) ─────────────────
 // This is the BASE context for all generated content. A client uploads their
 // resume once; Gemini analyzes it into a structured profile that personalizes
@@ -256,7 +283,7 @@ export const postBatchesRelations = relations(postBatches, ({ one, many }) => ({
 
 export const generatedPostsRelations = relations(
   generatedPosts,
-  ({ one }) => ({
+  ({ one, many }) => ({
     batch: one(postBatches, {
       fields: [generatedPosts.batchId],
       references: [postBatches.id],
@@ -265,8 +292,20 @@ export const generatedPostsRelations = relations(
       fields: [generatedPosts.userId],
       references: [users.id],
     }),
+    images: many(generatedImages),
   })
 );
+
+export const generatedImagesRelations = relations(generatedImages, ({ one }) => ({
+  post: one(generatedPosts, {
+    fields: [generatedImages.postId],
+    references: [generatedPosts.id],
+  }),
+  user: one(users, {
+    fields: [generatedImages.userId],
+    references: [users.id],
+  }),
+}));
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -280,3 +319,5 @@ export type UserApiKey = typeof userApiKeys.$inferSelect;
 export type NewUserApiKey = typeof userApiKeys.$inferInsert;
 export type CreatorProfile = typeof creatorProfiles.$inferSelect;
 export type NewCreatorProfile = typeof creatorProfiles.$inferInsert;
+export type GeneratedImage = typeof generatedImages.$inferSelect;
+export type NewGeneratedImage = typeof generatedImages.$inferInsert;

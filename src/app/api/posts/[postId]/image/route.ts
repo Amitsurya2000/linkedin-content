@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
-import fs from "fs/promises";
-import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generatedPosts, postBatches, creatorProfiles } from "@/lib/db/schema";
@@ -11,6 +9,7 @@ import { buildStyledPrompt, STYLE_BY_ID, DEFAULT_STYLE_IDS } from "@/lib/image-p
 import { composeCard } from "@/lib/compose";
 import { findPhoto, isPhotoSearchConfigured } from "@/lib/tavily";
 import type { VisualDirective } from "@/lib/content-agent";
+import { storePostImages, getImageBytes, urlPrefixId } from "@/lib/store-images";
 
 export const maxDuration = 300;
 
@@ -105,22 +104,22 @@ export async function POST(
     if (uploads.length && body.useUpload !== false) {
       const pick = uploads[Math.abs(Number(body.index) || 0) % uploads.length];
       try {
-        const raw = await fs.readFile(path.join(process.cwd(), "public", pick.replace(/^\//, "")));
-        let buf: Buffer = raw;
-        if (overlay?.text) {
-          try {
-            buf = await composeCard(raw, { width, height, text: overlay.text, theme: overlay.theme });
-          } catch (e) {
-            console.error("overlay failed on the upload, using it raw:", e);
+        // The reference image is read from the DB store (the disk is read-only
+        // on serverless, so uploads are persisted there too).
+        const stored = await getImageBytes(urlPrefixId(pick) ?? "");
+        if (stored) {
+          let buf: Buffer = stored.buffer;
+          if (overlay?.text) {
+            try {
+              buf = await composeCard(stored.buffer, { width, height, text: overlay.text, theme: overlay.theme });
+            } catch (e) {
+              console.error("overlay failed on the upload, using it raw:", e);
+            }
           }
+          const [upUrl] = await storePostImages(session.user.id, [buf], postId);
+          await db.update(generatedPosts).set({ imageUrl: upUrl }).where(eq(generatedPosts.id, postId));
+          return NextResponse.json({ imageUrl: upUrl, style: styleId, styleName, engine: "upload", elapsedMs: 0 });
         }
-        const upDir = path.join(process.cwd(), "public", "generated");
-        await fs.mkdir(upDir, { recursive: true });
-        const upName = `${postId}-upload-${Date.now()}.png`;
-        await fs.writeFile(path.join(upDir, upName), buf);
-        const upUrl = `/generated/${upName}`;
-        await db.update(generatedPosts).set({ imageUrl: upUrl }).where(eq(generatedPosts.id, postId));
-        return NextResponse.json({ imageUrl: upUrl, style: styleId, styleName, engine: "upload", elapsedMs: 0 });
       } catch (e) {
         // A missing or unreadable upload falls through to generation rather
         // than failing the request.
@@ -171,20 +170,14 @@ export async function POST(
       }
     }
 
-    // Persist to /public/generated so it's served statically
-    const dir = path.join(process.cwd(), "public", "generated");
-    await fs.mkdir(dir, { recursive: true });
-    const filename = `${postId}-${styleId}-${Date.now()}.png`;
-    await fs.writeFile(path.join(dir, filename), outBuf);
-    const imageUrl = `/generated/${filename}`;
+    // Persist to the database and serve through the proxy route — the disk is
+    // read-only on serverless, so there is no static file to point at.
+    const [imageUrl] = await storePostImages(session.user.id, [outBuf], postId);
 
     await db
       .update(generatedPosts)
       .set({ imageUrl })
       .where(eq(generatedPosts.id, postId));
-
-    // The new picture is saved, so the previous render's files can go.
-    await purgeOldImages(dir, [imageUrl], postId);
 
     return NextResponse.json({
       imageUrl,
@@ -200,27 +193,6 @@ export async function POST(
     const message = err instanceof Error ? err.message : "Image generation failed";
     console.error("Image generation error:", err);
     return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
-
-
-/**
- * Delete images this post rendered earlier.
- *
- * Called only AFTER a new render has succeeded and been saved: purging first
- * would mean a failed render leaves the post with no picture at all. Paths are
- * confined to public/generated and matched against the post id, so nothing
- * outside this post's own output can be reached.
- */
-async function purgeOldImages(dir: string, keep: string[], postId: string) {
-  try {
-    const kept = new Set(keep.map((u) => u.split("/").pop()));
-    for (const name of await fs.readdir(dir)) {
-      if (!name.startsWith(`${postId}-`) || kept.has(name)) continue;
-      await fs.unlink(path.join(dir, name)).catch(() => {});
-    }
-  } catch {
-    // A cache that will not clear is not worth failing a good render over.
   }
 }
 

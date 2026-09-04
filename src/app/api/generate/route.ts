@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { postBatches, generatedPosts, creatorProfiles } from "@/lib/db/schema";
@@ -10,6 +8,7 @@ import { generateCarousels } from "@/lib/carousel-prompt";
 import { recentAngles, recentChoices, pruneHistory } from "@/lib/history";
 import { profileToContext, type CreatorProfileData } from "@/lib/resume";
 import { eq, and } from "drizzle-orm";
+import { storePostImages } from "@/lib/store-images";
 
 const VALID_POST_TYPES = ["text", "carousel", "article"] as const;
 
@@ -56,16 +55,11 @@ export async function POST(req: NextRequest) {
           // silently ignored one.
           : "application/pdf";
         referenceDocs.push({ data: buf.toString("base64"), mimeType, name: file.name });
-        // Images are also kept on disk: the illustrated deck renders WITH them,
-        // so a client-supplied photo can appear in the slides rather than only
-        // informing the copy.
+        // Images are stored in the DB (serverless filesystems are read-only)
+        // so the illustrated deck can use them as slide art.
         if (mimeType.startsWith("image/")) {
-          const dir = path.join(process.cwd(), "public", "uploads");
-          await fs.mkdir(dir, { recursive: true });
-          const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(-60);
-          const filename = `${Date.now()}-${referenceImages.length}-${safe}`;
-          await fs.writeFile(path.join(dir, filename), buf);
-          referenceImages.push(`/uploads/${filename}`);
+          const [url] = await storePostImages(userId, [buf]);
+          referenceImages.push(url);
         }
       }
     } else {

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
-import fs from "fs/promises";
-import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { creatorProfiles, generatedPosts, postBatches } from "@/lib/db/schema";
@@ -16,6 +14,7 @@ import { renderLabDeck, LAB_STYLES, type LabStyleName } from "@/lib/deck-lab";
 import { buildPptxFromImages, buildPdfFromImages } from "@/lib/koyopo-pptx";
 import { renderPaperDeck } from "@/lib/deck-paper";
 import { renderScrapbookDeck } from "@/lib/deck-scrapbook";
+import { storePostImages, loadImageBuffers, urlPrefixId, getImageBytes } from "@/lib/store-images";
 
 export const maxDuration = 300;
 
@@ -135,10 +134,7 @@ async function handle(
           { status: 400 }
         );
       }
-      const frames: Buffer[] = [];
-      for (const url of stored) {
-        frames.push(await fs.readFile(path.join(process.cwd(), "public", url.replace(/^\/+/, ""))));
-      }
+      const frames: Buffer[] = await loadImageBuffers(stored);
       const pdf = format === "pdf";
       const buf = pdf ? await buildPdfFromImages(frames) : await buildPptxFromImages(frames, { deckTitle });
       return new NextResponse(new Uint8Array(buf), {
@@ -219,16 +215,7 @@ async function handle(
             ? await renderEditorialDeck(slides, { canvas, deckTitle, seed: postId })
             : await renderDeck(slides, { canvas, deckTitle });
 
-    const dir = path.join(process.cwd(), "public", "generated");
-    await fs.mkdir(dir, { recursive: true });
-
-    const stamp = Date.now();
-    const urls: string[] = [];
-    for (let i = 0; i < buffers.length; i++) {
-      const filename = `${postId}-${style}-${canvas}-${i}-${stamp}.png`;
-      await fs.writeFile(path.join(dir, filename), buffers[i]);
-      urls.push(`/generated/${filename}`);
-    }
+    const urls = await storePostImages(session.user.id, buffers, postId);
 
     await db
       .update(generatedPosts)

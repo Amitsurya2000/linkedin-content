@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
-import fs from "fs/promises";
-import path from "path";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generatedPosts, postBatches } from "@/lib/db/schema";
@@ -9,6 +7,7 @@ import { resolveGeminiKey } from "@/lib/api-keys";
 import { generateBackground, newSeed } from "@/lib/image-engine";
 import { buildStyledPrompt } from "@/lib/image-prompt";
 import { composeSlide, type SlideSpec, type OverlayTheme } from "@/lib/compose";
+import { storePostImages } from "@/lib/store-images";
 
 export const maxDuration = 300;
 
@@ -197,68 +196,37 @@ export async function POST(
       });
     }
 
-    const dir = path.join(process.cwd(), "public", "generated");
-    await fs.mkdir(dir, { recursive: true });
-
-    const urls: string[] = [];
+    // Store every rendered slide in the database and point the post at the
+    // resulting proxy URLs. On serverless there is no writable disk to serve
+    // static files from, so the DB is the only persistent store.
+    const buffers: Buffer[] = [];
     for (let i = 0; i < specs.length; i++) {
-      // The prompt asks for a DIFFERENT background per slide, so the deck reads
-      // as designed rather than as one image repeated. That is one
-      // image call per slide: an 8-10 slide deck costs 8-10 generations, where
-      // the old path cost exactly one. A slide whose own call fails falls back
-      // to the shared deck background rather than failing the render.
       let slideBg = bgBuf;
       if (builder) {
         const p = slides[i]?.imagePrompt;
         if (p) {
           try {
-            // A fresh seed per slide: same theme, different picture, so a deck
-            // never comes back as one image repeated nine times.
             slideBg = (await generateBackground(p, { width, height, seed: newSeed(), geminiKey })).buffer;
           } catch (e) {
             console.error(`Slide ${i + 1} background failed, using the deck background:`, e);
           }
         }
       }
-      const buf = await composeSlide(slideBg, { width, height, slide: specs[i], theme });
-      const filename = `${postId}-carousel-${i}-${Date.now()}.png`;
-      await fs.writeFile(path.join(dir, filename), buf);
-      urls.push(`/generated/${filename}`);
+      buffers.push(await composeSlide(slideBg, { width, height, slide: specs[i], theme }));
     }
+
+    const urls = await storePostImages(session.user.id, buffers, postId);
 
     await db
       .update(generatedPosts)
       .set({ carouselImages: JSON.stringify(urls), imageUrl: urls[0] })
       .where(eq(generatedPosts.id, postId));
 
-    // The new deck is saved, so the previous render's files can go.
-    await purgeOldImages(dir, urls, postId);
-
     return NextResponse.json({ images: urls, count: urls.length, style: styleId, styleName: built.styleName });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Carousel generation failed";
     console.error("Carousel generation error:", err);
     return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
-
-/**
- * Delete images this post rendered earlier.
- *
- * Called only AFTER a new render has succeeded and been saved: purging first
- * would mean a failed render leaves the post with no picture at all. Paths are
- * confined to public/generated and matched against the post id, so nothing
- * outside this post's own output can be reached.
- */
-async function purgeOldImages(dir: string, keep: string[], postId: string) {
-  try {
-    const kept = new Set(keep.map((u) => u.split("/").pop()));
-    for (const name of await fs.readdir(dir)) {
-      if (!name.startsWith(`${postId}-`) || kept.has(name)) continue;
-      await fs.unlink(path.join(dir, name)).catch(() => {});
-    }
-  } catch {
-    // A cache that will not clear is not worth failing a good render over.
   }
 }
 
