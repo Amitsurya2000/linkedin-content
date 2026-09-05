@@ -77,36 +77,6 @@ export const HOOKS: AngleDef[] = [
   },
 ];
 
-/**
- * Topic rotation.
- *
- * A resume weighted toward one kind of work makes the model pick that work
- * every time — the "inventory accuracy" effect. Naming the territories and
- * drawing one in code removes the choice from the model entirely.
- */
-export const TOPICS: AngleDef[] = [
-  {
-    id: "COMPUTER_VISION",
-    directive:
-      "Computer Vision & Edge AI — YOLOv8, ONNX, FP16 quantization, on-device inference and what it costs to run.",
-  },
-  {
-    id: "MULTI_AGENT",
-    directive:
-      "Multi-Agent AI Systems — LangGraph, Tavily, Llama 3.3, tool routing, and where agent handoffs break.",
-  },
-  {
-    id: "RAG_SEARCH",
-    directive:
-      "RAG & Vector Search — FAISS, MiniLM, document grounding, chunking choices and retrieval quality.",
-  },
-  {
-    id: "DATA_PIPELINES",
-    directive:
-      "Data Engineering Pipelines & Model Accuracy — dataset validation, labelling error, and the accuracy it buys back.",
-  },
-];
-
 export interface ThemeDef {
   id: string;
   bg: string;
@@ -227,7 +197,16 @@ export function buildCarouselPrompt(
   const angle = pickFresh(ANGLES, usedAngles);
   const hook = pickFresh(HOOKS, usedHooks);
   const theme = pickFresh(THEMES, usedThemes);
-  const topic = pickFresh(TOPICS, history.map((h) => h.topic).filter(Boolean) as string[]);
+  // The SUBJECT is always the user's actual topic + resume. Variety across
+  // renders comes from the angle, hook and theme drawn above — never from
+  // silently swapping the topic for an unrelated one. Keeping a stable topic
+  // key lets the history machinery still de-duplicate angles/hooks/themes
+  // without ever drifting off the user's brief.
+  const topic: AngleDef = {
+    id: "USER_TOPIC",
+    directive:
+      "the user's requested topic and resume — draw ALL substance from the INPUT MATERIAL above. Stay strictly on what they asked to write about.",
+  };
 
   const bannedHeadlines =
     usedHeadlines.length > 0
@@ -247,14 +226,16 @@ TOPIC / INPUT MATERIAL:
 ${topicInput}
 
 ============ FORCED CREATIVE DIRECTION (non-negotiable) ============
-Seed for this invocation: ${nonce}. On EVERY invocation you MUST take a
-completely DIFFERENT topic from the resume and a completely DIFFERENT design
-aesthetic. Both have already been drawn for you below — do not substitute them.
+Seed for this invocation: ${nonce}. On EVERY invocation you MUST write about
+the user's ACTUAL topic and take a completely DIFFERENT angle, hook and design
+aesthetic. The subject is fixed — never substitute a different subject — only
+the framing, headline and look rotate.
 
 TOPIC — ${topic.id}: ${topic.directive}
-  Write about THIS territory of the resume and no other. If the resume is thin
-  here, go narrow and specific on what it does contain rather than drifting to
-  the work that fills the most lines.
+  The subject IS the INPUT MATERIAL above: the user's own topic, grounded in
+  their resume. Pull real specifics (numbers, projects, roles, industries) from
+  it. Do NOT drift to a generic or unrelated subject — the deck must be about
+  exactly what the user asked for and nothing else.
 ANGLE — ${angle.id}: ${angle.directive}
 HOOK  — ${hook.id}: ${hook.directive}
 THEME — ${theme.id}: bg ${theme.bg}, accent ${theme.accent}, text ${theme.text}
@@ -526,7 +507,7 @@ function mapOut(raw: RawOut, built: BuiltPrompt): CarouselPost {
       ? raw.hashtags.filter((h): h is string => typeof h === "string")
       : [],
     cta: stripMarks(last?.title || "Follow for more"),
-    whyThisWorks: `Topic: ${built.choices.topic} · Angle: ${built.choices.angle} · Hook: ${built.choices.hook} · Theme: ${built.choices.theme}`,
+    whyThisWorks: `Angle: ${built.choices.angle} · Hook: ${built.choices.hook} · Theme: ${built.choices.theme}`,
     // One deck per render. Variation happens ACROSS renders, forced by the
     // builder, rather than as alternative versions inside one.
     variations: [],
