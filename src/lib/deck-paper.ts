@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 import type { KoyopoSlide } from "./koyopo";
 
 /**
@@ -302,7 +303,7 @@ function coverSvg(s: KoyopoSlide, author?: string): string {
   }
   if (author)
     out += `<text x="96" y="${H - 74}" font-family="${SANS}" font-size="21" fill="${C.muted}">${esc(author)}</text>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${out}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${poppinsCss()}${out}</svg>`;
 }
 
 function slideSvg(s: KoyopoSlide, n: number, total: number, kind: string, seed: string): string {
@@ -339,7 +340,7 @@ function slideSvg(s: KoyopoSlide, n: number, total: number, kind: string, seed: 
 
   out += `<text x="${W / 2}" y="${H - 62}" text-anchor="middle" font-family="${SERIF}" font-size="22" fill="${C.muted}">${n}</text>`;
   void total;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${out}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${poppinsCss()}${out}</svg>`;
 }
 
 export interface PaperOptions {

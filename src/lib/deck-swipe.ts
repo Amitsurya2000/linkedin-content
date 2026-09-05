@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 import { type KoyopoSlide, type SlideTemplate, type RawSlide, toKoyopoSlides } from "./koyopo";
 
 /**
@@ -201,6 +202,7 @@ export async function renderSwipeSlide(slide: KoyopoSlide, opts: SwipeOptions = 
   }
 
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+  ${poppinsCss()}
   <rect width="${W}" height="${H}" fill="${isHero ? K.deep : K.bg}"/>
   ${parts.join("\n  ")}
 </svg>`;

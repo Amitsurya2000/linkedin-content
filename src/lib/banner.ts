@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 
 /**
  * LinkedIn profile banner — 1584 × 396, rendered as a real downloadable PNG.
@@ -210,6 +211,7 @@ export function bannerSvg(brief: BannerBrief, opts: BannerOptions = {}): string 
   parts.push(diagram(brief.visual ?? "arc", artCx, Math.round(H * 0.46), Math.min(artW, Math.round(H * 0.78)), K));
 
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  ${poppinsCss()}
   ${parts.join("\n  ")}
 </svg>`;
 }

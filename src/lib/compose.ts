@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 
 /**
  * Text-overlay compositor (concept-first, low-text architecture).
@@ -110,10 +111,15 @@ function accentTspans(
     .join("");
 }
 
+// Serverless runtimes (Vercel / AWS Lambda) ship with NO installed fonts, and
+// librsvg silently drops SVG <text> without one — slides come out as bare
+// backgrounds. Poppins is embedded in every SVG via @font-face (see
+// font-data.ts), so all three stacks resolve to a face that is guaranteed to
+// render; the generic names remain only as a last resort on font-bearing hosts.
 const FONT_STACK: Record<OverlayTheme["font"], string> = {
-  serif: "Georgia, 'Times New Roman', 'Noto Serif', serif",
-  sans: "Arial, Helvetica, 'Helvetica Neue', 'Noto Sans', sans-serif",
-  mono: "'Courier New', 'DejaVu Sans Mono', monospace",
+  serif: "Poppins, Georgia, 'Times New Roman', 'Noto Serif', serif",
+  sans: "Poppins, Arial, Helvetica, 'Helvetica Neue', 'Noto Sans', sans-serif",
+  mono: "Poppins, 'Courier New', 'DejaVu Sans Mono', monospace",
 };
 const SANS = FONT_STACK.sans;
 
@@ -322,6 +328,7 @@ export async function composeCard(bg: Buffer, opts: ComposeOptions): Promise<Buf
   }
 
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${poppinsCss()}
     <defs>
       <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
         <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000000" flood-opacity="0.45"/>
@@ -455,6 +462,7 @@ export async function composeSlide(
   }
 
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${poppinsCss()}
     <defs>
       <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000000" flood-opacity="0.4"/></filter>
       <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.85"/></linearGradient>

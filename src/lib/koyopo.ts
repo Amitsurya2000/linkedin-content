@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 
 /**
  * KOYOPO / 1Cr+ CAREER OS slide renderer.
@@ -244,6 +245,7 @@ export async function renderSlide(slide: KoyopoSlide, opts: RenderOptions = {}):
   }
 
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+  ${poppinsCss()}
   <rect width="${W}" height="${H}" fill="${bg}"/>
   ${parts.join("\n  ")}
 </svg>`;

@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 import { generateBackground } from "./image-engine";
 import type { KoyopoSlide, SlideTemplate } from "./koyopo";
 import { LAB_STYLES, FACE, GLYPH_W, type FaceKind, type StyleSpec, type LabStyleName } from "./deck-lab-styles";
@@ -351,6 +352,7 @@ export async function renderLabSlide(slide: KoyopoSlide, opts: LabOptions): Prom
   }
 
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+  ${poppinsCss()}
   ${art ? "" : `<rect width="${W}" height="${H}" fill="${ground}"/>`}
   ${parts.join("\n  ")}
 </svg>`;

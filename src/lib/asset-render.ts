@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 
 /**
  * Free vector renderers for the non-carousel visual assets: profile photos,
@@ -203,6 +204,7 @@ export function coverSvg(spec: CoverSpec, opts: { size?: CoverSize; theme?: Asse
   }
 
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  ${poppinsCss()}
   ${parts.join("\n  ")}
 </svg>`;
 }

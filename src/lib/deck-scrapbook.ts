@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 import type { KoyopoSlide } from "./koyopo";
 
 /**
@@ -311,7 +312,7 @@ export async function renderScrapbookDeck(
       svg += `<text x="${W / 2}" y="${H - 46}" text-anchor="middle" font-family="${SANS}" font-size="20" font-weight="600" fill="${C.muted}">${i}</text>`;
     }
 
-    out.push(await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${svg}</svg>`)).png().toBuffer());
+    out.push(await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${poppinsCss()}${svg}</svg>`)).png().toBuffer());
   }
   return out;
 }

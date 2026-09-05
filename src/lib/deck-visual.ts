@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 import { type KoyopoSlide, type SlideTemplate } from "./koyopo";
 import { generateBackground } from "./image-engine";
 import { AESTHETICS } from "./image-prompt";
@@ -296,6 +297,7 @@ export async function renderVisualDeck(
     if (opts.pageTotal) parts.push(T(`${i + 1} / ${opts.pageTotal}`, pad, H - 60, 20, { fill: K.muted }));
 
     const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+  ${poppinsCss()}
   <rect width="${W}" height="${H}" fill="${K.bg}"/>
   ${parts.join("\n  ")}
 </svg>`;

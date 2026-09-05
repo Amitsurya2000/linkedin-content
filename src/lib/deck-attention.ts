@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { poppinsCss } from "./font-data";
 import type { KoyopoSlide, SlideTemplate } from "./koyopo";
 
 /**
@@ -303,6 +304,7 @@ export async function renderAttnSlide(slide: KoyopoSlide, opts: AttnOptions = {}
   }
 
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+  ${poppinsCss()}
   <rect width="${W}" height="${H}" fill="${isHero && !isOutro ? K.deep : K.bg}"/>
   ${parts.join("\n  ")}
 </svg>`;
