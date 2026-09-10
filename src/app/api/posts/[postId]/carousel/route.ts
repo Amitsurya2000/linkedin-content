@@ -69,13 +69,26 @@ function builderTheme(slides: Slide[]): OverlayTheme {
     : dir.includes("serif")
       ? "serif"
       : "sans";
+  // The deck background is a photo-style image with a large text zone, so a
+  // plain drop shadow is rarely enough for AA contrast across the whole block.
+  // A light background takes a light glass panel (dark text keeps contrast);
+  // a dark / medium background takes a dark panel (white text pops).
+  const scrim: OverlayTheme["scrim"] = readableOn(d.bgHex || "#FFFFFF") === "#141414" ? "panel-light" : "panel-dark";
   return {
     fg: d.textHex || "#FFFFFF",
     accent: d.accentHex || "#E8B44A",
     font,
     align: "center",
-    scrim: "none",
+    scrim,
   };
+}
+
+/** Pick black or white text for best contrast on a given hex background. */
+function readableOn(hex: string): string {
+  const m = (hex || "#FFFFFF").replace("#", "");
+  const r = parseInt(m.slice(0, 2), 16), g = parseInt(m.slice(2, 4), 16), b = parseInt(m.slice(4, 6), 16);
+  const L = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return L > 0.62 ? "#141414" : "#FFFFFF";
 }
 
 /** POST — generate a multi-slide carousel (cover + content slides + CTA). */

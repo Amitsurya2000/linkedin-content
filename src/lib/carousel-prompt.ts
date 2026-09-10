@@ -101,7 +101,7 @@ export const THEMES: ThemeDef[] = [
     text: "#F2F5FF",
     font: "sans",
     imageStyle:
-      "charcoal near-black background, neon cyan and electric purple edge lighting, sleek dark-mode tech UI panels, subtle glass reflections",
+      "matte charcoal backdrop, very dim pastel cyan-magenta glow from one edge, soft depth of field, low saturation, minimal, flat, restful — never busy or neon-flooded",
   },
   {
     id: "MODERN_MINIMALIST",
@@ -110,7 +110,7 @@ export const THEMES: ThemeDef[] = [
     text: "#111111",
     font: "sans",
     imageStyle:
-      "pure white background, one deep cobalt blue flat block, generous whitespace, crisp Helvetica-era Swiss composition, no texture",
+      "pure white background, one muted deep cobalt flat block, generous whitespace, crisp Swiss composition, soft matte finish, no texture, no gradients",
   },
   {
     id: "DEVELOPER_TERMINAL",
@@ -119,7 +119,7 @@ export const THEMES: ThemeDef[] = [
     text: "#E6EDF3",
     font: "mono",
     imageStyle:
-      "pure black background, emerald green code-glow from one edge, faint scanlines, monospaced developer terminal mood",
+      "matte near-black background, faint muted green ambient glow from one edge, no scanlines, low contrast, minimal and flat, subtle and restful",
   },
   {
     id: "CORPORATE_SLATE",
@@ -128,7 +128,7 @@ export const THEMES: ThemeDef[] = [
     text: "#F8FAFC",
     font: "serif",
     imageStyle:
-      "slate grey background, one warm amber callout block, restrained corporate boardroom lighting, matte and confident",
+      "low-saturation slate grey background, a single desaturated amber accent shape in a corner, matte corporate finish, soft indirect lighting, flat, understated, no texture",
   },
 ];
 

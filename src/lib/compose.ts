@@ -383,10 +383,24 @@ export async function composeSlide(
   const fgLight = readableOn(theme.fg) === "#141414"; // fg is a light color
   const muted = fgLight ? "#E4E7EB" : "#3C4046";
 
-  // Scrim
+  // Scrim — hidden text was the #1 complaint on photo backgrounds. A full-image
+  // dark/light wash plus an optional rounded glass panel behind the text block
+  // keeps the deck looking editorial while holding AA contrast in every zone.
   let scrim = "";
   if (theme.scrim === "dark") scrim = `<rect width="100%" height="100%" fill="black" opacity="0.34"/>`;
+  else if (theme.scrim === "light") scrim = `<rect width="100%" height="100%" fill="white" opacity="0.22"/>`;
   else if (theme.scrim === "gradient-bottom") scrim = `<rect x="0" y="${Math.round(H * 0.35)}" width="${W}" height="${Math.round(H * 0.65)}" fill="url(#grad)"/>`;
+  else if (theme.scrim === "panel-dark" || theme.scrim === "panel-light") {
+    // A generous rounded panel across most of the slide, behind the text zone.
+    // The ear-to-ear block reads as a modern "frosted card" on photos and is a
+    // guaranteed-contrast surface no matter what the background model drew.
+    const px = Math.round(W * 0.06);
+    const py = Math.round(H * 0.1);
+    const pw = W - px * 2;
+    const ph = H - py * 2;
+    const fill = theme.scrim === "panel-dark" ? "black" : "white";
+    scrim = `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="${Math.round(W * 0.045)}" fill="${fill}" opacity="${theme.scrim === "panel-dark" ? 0.5 : 0.42}"/>`;
+  }
 
   const parts: string[] = [];
 
@@ -464,7 +478,7 @@ export async function composeSlide(
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
     ${poppinsCss()}
     <defs>
-      <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000000" flood-opacity="0.4"/></filter>
+      <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#000000" flood-opacity="0.55"/></filter>
       <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.85"/></linearGradient>
     </defs>
     ${scrim}
