@@ -31,6 +31,20 @@ const serif = Instrument_Serif({ subsets: ["latin"], weight: ["400"], style: ["i
 export const metadata: Metadata = {
   title: "LinkedIn Post Generator",
   description: "AI-powered LinkedIn content that goes viral",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    viewportFit: "cover",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "LI Post Gen",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
