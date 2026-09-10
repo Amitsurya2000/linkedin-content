@@ -199,21 +199,36 @@ export async function POST(
     // Store every rendered slide in the database and point the post at the
     // resulting proxy URLs. On serverless there is no writable disk to serve
     // static files from, so the DB is the only persistent store.
-    const buffers: Buffer[] = [];
-    for (let i = 0; i < specs.length; i++) {
-      let slideBg = bgBuf;
-      if (builder) {
-        const p = slides[i]?.imagePrompt;
-        if (p) {
-          try {
-            slideBg = (await generateBackground(p, { width, height, seed: newSeed(), geminiKey })).buffer;
-          } catch (e) {
-            console.error(`Slide ${i + 1} background failed, using the deck background:`, e);
-          }
+    // Generate slide backgrounds in batches of 3 instead of one-by-one.
+    // The image model takes ~30-125s per generation, so running them 3 at a
+    // time turns a 7-slide deck from ~7× worst-case into ~3× worst-case without
+    // exhausting the serverless function's memory.
+    const BATCH_SIZE = 3;
+    const slideBgs: Buffer[] = new Array(specs.length).fill(bgBuf);
+
+    for (let batch = 0; batch < specs.length; batch += BATCH_SIZE) {
+      const slice = specs.slice(batch, batch + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        slice.map((spec, j) => {
+          const i = batch + j;
+          if (!builder) return Promise.resolve(bgBuf);
+          const p = slides[i]?.imagePrompt;
+          if (!p) return Promise.resolve(bgBuf);
+          return generateBackground(p, { width, height, seed: newSeed(), geminiKey }).then((r) => r.buffer);
+        })
+      );
+      results.forEach((r, j) => {
+        if (r.status === "rejected") {
+          console.error(`Slide ${batch + j + 1} background failed, using the deck background:`, r.reason);
+        } else {
+          slideBgs[batch + j] = r.value;
         }
-      }
-      buffers.push(await composeSlide(slideBg, { width, height, slide: specs[i], theme }));
+      });
     }
+
+    const buffers = await Promise.all(
+      specs.map((spec, i) => composeSlide(slideBgs[i], { width, height, slide: spec, theme }))
+    );
 
     const urls = await storePostImages(session.user.id, buffers, postId);
 
