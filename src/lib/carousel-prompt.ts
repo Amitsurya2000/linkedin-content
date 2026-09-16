@@ -244,7 +244,7 @@ export function buildCarouselPrompt(
   const topic: AngleDef = {
     id: "USER_TOPIC",
     directive:
-      "the user's requested topic and resume — draw ALL substance from the INPUT MATERIAL above. Stay strictly on what they asked to write about.",
+      "the user's requested topic, informed by their resume where it is genuinely relevant. When the topic is a domain or industry subject the resume doesn't cover by name (an audit methodology, an industry mechanic, a process most readers have never seen), write it with real subject-matter expertise anyway: name the actual mechanisms, terms of art and concrete examples a practitioner in that field would recognise. Do not retreat into vague generalities just because it isn't literally in the resume — that is a failed render, not a safe one.",
   };
 
   const bannedHeadlines =
@@ -271,10 +271,15 @@ aesthetic. The subject is fixed — never substitute a different subject — onl
 the framing, headline and look rotate.
 
 TOPIC — ${topic.id}: ${topic.directive}
-  The subject IS the INPUT MATERIAL above: the user's own topic, grounded in
-  their resume. Pull real specifics (numbers, projects, roles, industries) from
-  it. Do NOT drift to a generic or unrelated subject — the deck must be about
-  exactly what the user asked for and nothing else.
+  The subject IS the INPUT MATERIAL above: exactly what the user asked to
+  write about, nothing else. Pull real specifics — numbers, projects, roles —
+  from the resume when it's personal experience. When it is a domain/industry
+  subject instead, pull real specifics from YOUR OWN subject-matter knowledge:
+  the actual named process steps, the terminology practitioners use, a
+  concrete illustrative example. "Inventory reconciliation takes longer" is a
+  failed slide; "VIN-level stock aging past 90 days is what actually gets
+  flagged" is the bar. A technically-correct but generic deck that could
+  describe any industry is exactly as wrong as an off-topic one.
 ANGLE — ${angle.id}: ${angle.directive}
 HOOK  — ${hook.id}: ${hook.directive}
 THEME — ${theme.id}: bg ${theme.bg}, accent ${theme.accent}, text ${theme.text}
@@ -297,8 +302,14 @@ If the idea is simple and has no supporting evidence, use 4 slides by dropping
 Slide 4. Every slide must carry real substance — no filler slides.
 
 COPY LAWS:
-- Grade-5 reading level. Translate ALL jargon/acronyms into plain outcomes.
-- Verbs first. Real numbers from the input only — never invent statistics.
+- Grade-5 reading level for the EXPLANATION, not the vocabulary. Name the real
+  term or mechanism, then explain what it means in one plain clause — do not
+  delete the specific term to sound simple, that is how a deck goes generic.
+- Verbs first. A number claimed as the USER'S OWN result must come from the
+  input — never invent one. A general domain fact (a typical threshold,
+  timeframe, percentage a practitioner would recognise) may be used as
+  background knowledge, stated as domain knowledge rather than as something
+  the user personally measured.
 - Banned: leverage, utilize, delve, unlock, elevate, game-changer, unleash,
   transformative, seamless, robust, streamline.
 - Exactly ONE *highlighted* phrase per headline = the TENSION phrase (pain,
@@ -317,7 +328,10 @@ IMAGE PROMPTS (per slide, background only):
 
 SELF-CHECK before answering (rewrite on any failure):
 - Hook != any forbidden headline? Payoff not topic? Every slide <3s readable?
-- Zero jargon? Highlight = tension? Recap screenshot-worthy? Real number used?
+- Unexplained jargon = none, but named specifics = yes? Highlight = tension?
+  Recap screenshot-worthy? Could this exact deck describe a different
+  industry with a find-and-replace? If yes, rewrite it — that's the generic
+  failure mode.
 
 OUTPUT: single JSON object only, no markdown fences:
 {
