@@ -158,6 +158,106 @@
 
   --maxw: 1240px;
   --section: clamp(56px, 7vh, 92px);
+
+  /* Highlight block behind a phrase in a headline — see .mark below. */
+  --mark-bg: #FBDDD9;
+  --mark-fg: #8E1B18;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Dark palette. next-themes puts .dark on <html> (attribute="class"), and
+   the "@theme inline" block above wires every background, text and border
+   utility to a var() reference rather than baking the light value in at
+   build time — so overriding these custom properties here is enough to
+   retheme anything that already consumes them. Infra-first, incremental:
+   components still written with a literal hex Tailwind class (bg-[#FDF3F2])
+   do NOT pick this up and need converting to the token classes (bg-secondary,
+   etc.) one page at a time.
+
+   Warm near-black rather than pure black, mirroring the light system's warm
+   white/blush — same brand temperature, inverted lightness. Chosen for a
+   clearly-safe margin on the main text/background pairs rather than a tool-
+   measured exact ratio the way the light ramp's comments state; re-check
+   before shipping anything that leans on a borderline pairing. */
+.dark {
+  --color-background: #15100F;
+  --color-foreground: #F5ECEA;
+  --color-surface-solid: #1D1614;
+  --color-surface-solid-hi: #241A17;
+
+  --color-card: #1D1614;
+  --color-card-foreground: #F5ECEA;
+  --color-primary: #FF6A5E;
+  --color-primary-foreground: #1A1010;
+  --color-secondary: #241A17;
+  --color-secondary-foreground: #F5ECEA;
+  --color-muted: #241A17;
+  --color-muted-foreground: #B8A29E;
+  --color-accent: #FF6A5E;
+  --color-accent-foreground: #1A1010;
+  --color-destructive: #FF6A5E;
+  --color-border: #3A2622;
+  --color-input: #3A2622;
+  --color-ring: #FF6A5E;
+  --color-popover: #1D1614;
+  --color-popover-foreground: #F5ECEA;
+
+  --color-koyopo-ink: #F5ECEA;
+  --color-koyopo-muted: #B8A29E;
+  --color-koyopo-card: #241A17;
+  --color-koyopo-border: #3A2622;
+
+  --w-02: rgba(0, 0, 0, 0.12);
+  --w-04: rgba(0, 0, 0, 0.18);
+  --w-06: rgba(0, 0, 0, 0.24);
+  --w-08: rgba(0, 0, 0, 0.3);
+  --w-10: rgba(0, 0, 0, 0.36);
+  --w-16: rgba(0, 0, 0, 0.44);
+
+  --r-06: rgba(255, 106, 94, 0.09);
+  --r-10: rgba(255, 106, 94, 0.14);
+  --r-18: rgba(255, 106, 94, 0.22);
+  --r-22: rgba(255, 106, 94, 0.28);
+  --r-32: rgba(255, 106, 94, 0.38);
+  --r-50: rgba(255, 106, 94, 0.55);
+
+  --ink: #F5ECEA;
+  --text-2: #D9C9C6;
+  --text-3: #B8A29E;
+  --text-4: #9C8783;
+  --text-deco: #5A4744;
+
+  --glass: #241A17;
+  --glass-2: #2C201C;
+  --line: #3A2622;
+  --line-red: rgba(255, 106, 94, 0.32);
+
+  --band-red: linear-gradient(135deg, #B32A2C 0%, #5A1010 100%);
+  --blush: #241A17;
+
+  --red: #FF6A5E;
+  --red-ink: #FF9089;
+  --red-deep: #FFAFA8;
+  --ember: #FF8F5C;
+
+  --acc-linkedin: #6CA8F0;   --acc-linkedin-tint: #1B2A3D;
+  --acc-amber:    #E8A23D;   --acc-amber-tint:    #3D2E14;
+  --acc-green:    #7CB863;   --acc-green-tint:    #223018;
+  --acc-slate:    #9AA7B5;   --acc-slate-tint:    #262B31;
+  --acc-rust:     #E27A54;   --acc-rust-tint:     #3A2118;
+  --red-grad: linear-gradient(135deg, #FF6A5E 0%, #FF8F5C 100%);
+  --red-grad-soft: linear-gradient(135deg, rgba(255, 106, 94, 0.22), rgba(255, 143, 92, 0.14));
+
+  --depth-1: 0 10px 30px -12px rgba(0, 0, 0, 0.55);
+  --depth-2: 0 24px 60px -20px rgba(0, 0, 0, 0.65);
+  --glow-sm: 0 8px 24px -8px rgba(255, 106, 94, 0.5);
+  --glow-md: 0 10px 34px -8px rgba(255, 106, 94, 0.5);
+  --glow-lg: 0 40px 90px -34px rgba(255, 106, 94, 0.35);
+  --glow-xl: 0 60px 120px -40px rgba(255, 106, 94, 0.42);
+  --hi-top: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  --mark-bg: #3A1614;
+  --mark-fg: #FFADA6;
 }
 
 body {
@@ -221,7 +321,7 @@ body::after {
 /* ─── Surfaces ─────────────────────────────────────────────────────────────
    Glass by alpha, never by a lighter grey hex. */
 .glass {
-  background: #FFFFFF;
+  background: var(--color-surface-solid);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   box-shadow: var(--depth-1);
@@ -244,8 +344,8 @@ body::after {
 
 /* Highlight block behind a phrase in a headline. */
 .mark {
-  background: #FBDDD9;
-  color: #8E1B18;
+  background: var(--mark-bg);
+  color: var(--mark-fg);
   padding: 0 0.18em;
   border-radius: 4px;
   box-decoration-break: clone;

@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Archivo, Hanken_Grotesk, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthSessionProvider } from "@/components/session-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 // Poppins from the bundled TTFs rather than next/font/google: the slide renderer
 // draws with these exact files, so the app and the decks it produces stay in the
@@ -31,12 +32,6 @@ const serif = Instrument_Serif({ subsets: ["latin"], weight: ["400"], style: ["i
 export const metadata: Metadata = {
   title: "LinkedIn Post Generator",
   description: "AI-powered LinkedIn content that goes viral",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    viewportFit: "cover",
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -47,16 +42,30 @@ export const metadata: Metadata = {
   },
 };
 
+// Next 15 wants viewport as its own export rather than nested in metadata —
+// the nested form still works but logs a warning on every route at build time.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning is required by next-themes: it sets the
+    // class/color-scheme on <html> before React hydrates, which would
+    // otherwise mismatch server vs. client on the very first paint.
+    <html lang="en" suppressHydrationWarning>
       <body className={`${font.variable} ${display.variable} ${body.variable} ${serif.variable} antialiased`}>
-        <AuthSessionProvider>{children}</AuthSessionProvider>
-        <Toaster richColors position="top-right" />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AuthSessionProvider>{children}</AuthSessionProvider>
+          <Toaster richColors position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   );
