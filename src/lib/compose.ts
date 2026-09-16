@@ -312,31 +312,34 @@ export async function composeCard(bg: Buffer, opts: ComposeOptions): Promise<Buf
     ctaEl = pill(theme.cta!, Math.round(W / 2), Math.round(H - H * 0.08 - ch), cfs, theme.accent, readableOn(theme.accent), true).svg;
   }
 
-  // Legibility scrim
+  // Legibility scrim — pushed darker/more opaque than these were first tuned
+  // for: a real searched photo carries far more edge detail everywhere than
+  // the flat generated backgrounds these opacities used to sit against.
   let scrim = "";
-  if (theme.scrim === "dark") scrim = `<rect width="100%" height="100%" fill="black" opacity="0.34"/>`;
-  else if (theme.scrim === "light") scrim = `<rect width="100%" height="100%" fill="white" opacity="0.28"/>`;
+  if (theme.scrim === "dark") scrim = `<rect width="100%" height="100%" fill="black" opacity="0.55"/>`;
+  else if (theme.scrim === "light") scrim = `<rect width="100%" height="100%" fill="white" opacity="0.45"/>`;
   else if (theme.scrim === "gradient-bottom") {
     // Cinematic dark gradient over the lower half for legible bottom text.
-    scrim = `<rect x="0" y="${Math.round(H * 0.35)}" width="${W}" height="${Math.round(H * 0.65)}" fill="url(#grad)"/>`;
+    scrim = `<rect x="0" y="${Math.round(H * 0.3)}" width="${W}" height="${Math.round(H * 0.7)}" fill="url(#grad)"/>`;
   } else if (theme.scrim === "panel-dark" || theme.scrim === "panel-light") {
     const panelPadY = Math.round(lineHeight * 0.7);
     const py = blockTop - panelPadY, ph = blockH + panelPadY * 2;
     const px = theme.align === "center" ? padX * 0.5 : padX * 0.6, pw = W - px * 2;
     const fill = theme.scrim === "panel-dark" ? "black" : "white";
-    scrim = `<rect x="${px}" y="${Math.max(0, py)}" width="${pw}" height="${ph}" rx="24" fill="${fill}" opacity="0.42"/>`;
+    scrim = `<rect x="${px}" y="${Math.max(0, py)}" width="${pw}" height="${ph}" rx="24" fill="${fill}" opacity="${theme.scrim === "panel-dark" ? 0.72 : 0.65}"/>`;
   }
 
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
     ${poppinsCss()}
     <defs>
       <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000000" flood-opacity="0.45"/>
+        <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.8"/>
+        <feDropShadow dx="0" dy="3" stdDeviation="8" flood-color="#000000" flood-opacity="0.45"/>
       </filter>
       <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
-        <stop offset="55%" stop-color="#000000" stop-opacity="0.55"/>
-        <stop offset="100%" stop-color="#000000" stop-opacity="0.9"/>
+        <stop offset="45%" stop-color="#000000" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.94"/>
       </linearGradient>
     </defs>
     ${scrim}
@@ -394,13 +397,15 @@ export async function composeSlide(
   const fgLight = readableOn(theme.fg) === "#141414"; // fg is a light color
   const muted = fgLight ? "#E4E7EB" : "#3C4046";
 
-  // Scrim — hidden text was the #1 complaint on photo backgrounds. A full-image
-  // dark/light wash plus an optional rounded glass panel behind the text block
-  // keeps the deck looking editorial while holding AA contrast in every zone.
+  // Scrim — hidden text was the #1 complaint on photo backgrounds, and a real
+  // searched photo has far more edge detail everywhere than the flat, mostly-
+  // empty generated backgrounds these opacities were first tuned against — so
+  // they're pushed noticeably darker/more opaque here, strong enough to hold
+  // AA contrast against a busy photo rather than just a smooth gradient.
   let scrim = "";
-  if (theme.scrim === "dark") scrim = `<rect width="100%" height="100%" fill="black" opacity="0.34"/>`;
-  else if (theme.scrim === "light") scrim = `<rect width="100%" height="100%" fill="white" opacity="0.22"/>`;
-  else if (theme.scrim === "gradient-bottom") scrim = `<rect x="0" y="${Math.round(H * 0.35)}" width="${W}" height="${Math.round(H * 0.65)}" fill="url(#grad)"/>`;
+  if (theme.scrim === "dark") scrim = `<rect width="100%" height="100%" fill="black" opacity="0.55"/>`;
+  else if (theme.scrim === "light") scrim = `<rect width="100%" height="100%" fill="white" opacity="0.42"/>`;
+  else if (theme.scrim === "gradient-bottom") scrim = `<rect x="0" y="${Math.round(H * 0.3)}" width="${W}" height="${Math.round(H * 0.7)}" fill="url(#grad)"/>`;
   else if (theme.scrim === "panel-dark" || theme.scrim === "panel-light") {
     // A generous rounded panel across most of the slide, behind the text zone.
     // The ear-to-ear block reads as a modern "frosted card" on photos and is a
@@ -410,7 +415,7 @@ export async function composeSlide(
     const pw = W - px * 2;
     const ph = H - py * 2;
     const fill = theme.scrim === "panel-dark" ? "black" : "white";
-    scrim = `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="${Math.round(W * 0.045)}" fill="${fill}" opacity="${theme.scrim === "panel-dark" ? 0.5 : 0.42}"/>`;
+    scrim = `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="${Math.round(W * 0.045)}" fill="${fill}" opacity="${theme.scrim === "panel-dark" ? 0.74 : 0.68}"/>`;
   }
 
   const parts: string[] = [];
@@ -489,8 +494,15 @@ export async function composeSlide(
   const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
     ${poppinsCss()}
     <defs>
-      <filter id="sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#000000" flood-opacity="0.55"/></filter>
-      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.85"/></linearGradient>
+      <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.85"/>
+        <feDropShadow dx="0" dy="3" stdDeviation="7" flood-color="#000000" flood-opacity="0.5"/>
+      </filter>
+      <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#000" stop-opacity="0"/>
+        <stop offset="45%" stop-color="#000" stop-opacity="0.45"/>
+        <stop offset="100%" stop-color="#000" stop-opacity="0.92"/>
+      </linearGradient>
     </defs>
     ${scrim}
     <g filter="url(#sh)">${parts.join("")}</g>
