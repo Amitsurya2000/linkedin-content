@@ -47,6 +47,16 @@ export const ANGLES: AngleDef[] = [
     directive:
       "Frame the entire carousel as a steal-able CHECKLIST. Each content slide = one check item + why skipping it costs money.",
   },
+  {
+    id: "INSIDER_TOUR",
+    directive:
+      "Frame the entire carousel as an INSIDER walkthrough of what outsiders never see. Each content slide = one 'behind the scenes' reveal that reframes the reader's assumption.",
+  },
+  {
+    id: "ANATOMY",
+    directive:
+      "Frame the entire carousel as the ANATOMY of the subject broken into its real component parts. Each content slide = one part + why it's the one people underestimate.",
+  },
 ];
 
 export const HOOKS: AngleDef[] = [
@@ -74,6 +84,11 @@ export const HOOKS: AngleDef[] = [
     id: "BEFORE_AFTER",
     directive:
       "Slide 1 headline MUST show transformation: '[Bad state] → [Good state]. Here's the bridge:'",
+  },
+  {
+    id: "INSIDER_SECRET",
+    directive:
+      "Slide 1 headline MUST promise access: 'What [insiders/experts] know about [subject] that you don't.' or 'Inside [subject]: what nobody shows you.'",
   },
 ];
 
@@ -130,6 +145,15 @@ export const THEMES: ThemeDef[] = [
     imageStyle:
       "low-saturation slate grey background, a single desaturated amber accent shape in a corner, matte corporate finish, soft indirect lighting, flat, understated, no texture",
   },
+  {
+    id: "LUXURY_EDITORIAL",
+    bg: "#0E0E10",
+    accent: "#C9A24B",
+    text: "#F4F1E8",
+    font: "serif",
+    imageStyle:
+      "near-black backdrop, one thin brushed-gold hairline or shape, dramatic single-source spotlight falling off into deep shadow, restrained and expensive, matte, no sparkle or glitter, no bling, editorial magazine feel — never neon or cheap-looking gold",
+  },
 ];
 
 /** One past render, as the builder needs to see it. */
@@ -162,10 +186,25 @@ export function renderTemperature(): number {
   return 0.95;
 }
 
-/** Random, but never what the history already used. Resets once all are spent. */
+/**
+ * Random, but never what the history already used.
+ *
+ * The pools are small (4-6 entries) and history holds up to HISTORY_LIMIT
+ * past renders ACROSS ALL TOPICS, so a handful of prior decks on any topic
+ * routinely exhausts a pool this size. Falling back to the full pool on
+ * exhaustion used to mean the fallback could re-pick the exact choice the
+ * immediately-preceding render used — which is what made two consecutive
+ * re-renders of the same post come back looking identical (same theme means
+ * same background palette, full stop). `usedIds` is newest-first, so once the
+ * pool is exhausted this still refuses to repeat that most recent pick, even
+ * though everything older is fair game again.
+ */
 function pickFresh<T extends { id: string }>(deck: T[], usedIds: string[]): T {
   const fresh = deck.filter((d) => !usedIds.includes(d.id));
-  const pool = fresh.length > 0 ? fresh : deck;
+  if (fresh.length > 0) return fresh[Math.floor(Math.random() * fresh.length)];
+  const mostRecent = usedIds[0];
+  const notMostRecent = mostRecent ? deck.filter((d) => d.id !== mostRecent) : deck;
+  const pool = notMostRecent.length > 0 ? notMostRecent : deck;
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
