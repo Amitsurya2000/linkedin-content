@@ -361,6 +361,13 @@ export interface SlideSpec {
   title: string;
   body?: string; // content slides only
   footer?: string; // e.g. "1 / 6"
+  /**
+   * Content slides only: put the photo beside the copy on a clean panel
+   * instead of behind it as a full-bleed background. "overlay" (the default)
+   * is the existing photo-behind-text look; "split" trades the scrim for
+   * guaranteed AA contrast, since the text never sits on top of the photo.
+   */
+  layout?: "overlay" | "split";
 }
 
 /** Compose a single carousel slide (cover / content / cta) with perfect text. */
@@ -368,6 +375,10 @@ export async function composeSlide(
   bg: Buffer,
   opts: { width: number; height: number; slide: SlideSpec; theme: OverlayTheme }
 ): Promise<Buffer> {
+  if (opts.slide.layout === "split" && opts.slide.kind === "content") {
+    return composeSplitContentSlide(bg, opts);
+  }
+
   const { width: W, height: H, slide, theme } = opts;
   const base = await sharp(bg).resize(W, H, { fit: "cover", position: "centre" }).png().toBuffer();
   // The title arrives with the prompt's *highlight* markers still in it. Strip
@@ -485,4 +496,97 @@ export async function composeSlide(
     <g filter="url(#sh)">${parts.join("")}</g>
   </svg>`;
   return sharp(base).composite([{ input: Buffer.from(svg), top: 0, left: 0 }]).png().toBuffer();
+}
+
+/**
+ * Content slide with the photo beside the copy rather than behind it.
+ *
+ * The overlay layout above fights the photo with a scrim to hold contrast —
+ * fine for a short cover headline, risky for 2-4 lines of body copy over a
+ * real, unpredictable photograph. Splitting the frame sidesteps the problem
+ * entirely: the text sits on a plain panel and never touches the image, so
+ * contrast is guaranteed no matter what the photo search turned up.
+ */
+async function composeSplitContentSlide(
+  bg: Buffer,
+  opts: { width: number; height: number; slide: SlideSpec; theme: OverlayTheme }
+): Promise<Buffer> {
+  const { width: W, height: H, slide, theme } = opts;
+  const titleMarks = parseMarks(slide.title || "");
+  const plainTitle = titleMarks.plain;
+  const plainBody = slide.body ? parseMarks(slide.body).plain : "";
+  const F = FONT_STACK[theme.font];
+
+  // Alternating sides gives the deck rhythm instead of every slide looking
+  // identical with new words in it.
+  const onRight = !!(slide.number && parseInt(slide.number, 10) % 2 === 0);
+  const imgW = Math.round(W * 0.44);
+  const gutter = Math.round(W * 0.07);
+  const padOuter = Math.round(W * 0.08);
+  const textX0 = onRight ? padOuter : imgW + gutter;
+  const textX1 = onRight ? imgW - gutter : W - padOuter;
+  const boxW = textX1 - textX0;
+
+  // A clean, fixed panel rather than one derived from the theme: the theme's
+  // fg/accent were tuned for contrast against a photo, not against each
+  // other, so reusing them here risks a panel with no real contrast at all.
+  const ink = "#141414";
+  const muted = "#5B5F66";
+  const panelBg = "#FFFFFF";
+
+  const photo = await sharp(bg).resize(imgW, H, { fit: "cover", position: "attention" }).png().toBuffer();
+
+  const parts: string[] = [];
+  let y = Math.round(H * 0.16);
+  if (slide.number) {
+    const nfs = Math.round(W * 0.09);
+    parts.push(`<text x="${textX0}" y="${y + nfs}" font-family="${F}" font-size="${nfs}" font-weight="700" fill="${theme.accent}">${esc(slide.number)}</text>`);
+    y += Math.round(nfs * 1.35);
+  }
+  const tl = layout(plainTitle, boxW, { maxLines: 4, maxFont: Math.round(W * 0.052), minFont: Math.round(W * 0.03) });
+  const tlh = Math.round(tl.fontSize * 1.2);
+  y += tl.fontSize;
+  const cur = { i: 0 };
+  tl.lines.forEach((ln) => {
+    parts.push(`<text x="${textX0}" y="${y}" font-family="${F}" font-size="${tl.fontSize}" font-weight="700">${accentTspans(ln, cur, titleMarks.flags, ink, theme.accent)}</text>`);
+    y += tlh;
+  });
+  if (plainBody) {
+    y += Math.round(tl.fontSize * 0.5);
+    // Auto-fit against the NARROWER split column, not the full slide width —
+    // reusing the overlay layout's sizing would overflow the panel.
+    const availH = Math.round(H * 0.84) - y;
+    const minBfs = Math.round(W * 0.02);
+    let bfs = Math.round(W * 0.03);
+    let bodyLines: string[] = wrap(plainBody, Math.floor(boxW / (bfs * 0.52)));
+    let blh = Math.round(bfs * 1.5);
+    for (; bfs > minBfs; bfs -= 1) {
+      bodyLines = wrap(plainBody, Math.floor(boxW / (bfs * 0.52)));
+      blh = Math.round(bfs * 1.5);
+      if (bodyLines.length * blh <= availH) break;
+    }
+    y += bfs;
+    bodyLines.forEach((ln) => {
+      parts.push(`<text x="${textX0}" y="${y}" font-family="${F}" font-size="${bfs}" font-weight="400" fill="${muted}">${esc(ln)}</text>`);
+      y += blh;
+    });
+  }
+  if (slide.footer) {
+    const ffs = Math.round(W * 0.024);
+    parts.push(`<text x="${textX1}" y="${H - Math.round(H * 0.06)}" text-anchor="end" font-family="${F}" font-size="${ffs}" font-weight="700" fill="${theme.accent}">${esc(slide.footer)}</text>`);
+  }
+  parts.push(`<rect x="${textX0}" y="${Math.round(H * 0.145)}" width="${Math.round(boxW * 0.22)}" height="4" rx="2" fill="${theme.accent}"/>`);
+
+  const svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+    ${poppinsCss()}
+    ${parts.join("")}
+  </svg>`;
+
+  return sharp({ create: { width: W, height: H, channels: 4, background: panelBg } })
+    .composite([
+      { input: photo, left: onRight ? W - imgW : 0, top: 0 },
+      { input: Buffer.from(svg), left: 0, top: 0 },
+    ])
+    .png()
+    .toBuffer();
 }

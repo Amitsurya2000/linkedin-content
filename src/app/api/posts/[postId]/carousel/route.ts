@@ -5,9 +5,18 @@ import { db } from "@/lib/db";
 import { generatedPosts, postBatches } from "@/lib/db/schema";
 import { resolveGeminiKey } from "@/lib/api-keys";
 import { generateBackground, newSeed } from "@/lib/image-engine";
-import { buildStyledPrompt } from "@/lib/image-prompt";
+import { buildStyledPrompt, photoQueryFor } from "@/lib/image-prompt";
 import { composeSlide, type SlideSpec, type OverlayTheme } from "@/lib/compose";
 import { storePostImages } from "@/lib/store-images";
+
+/**
+ * Appended to a slide's own art brief only when a real searched photo is
+ * being edited (the "real photo" style). Reusing the plain prompt as the edit
+ * instruction would ask Gemini to flatten the photo into an abstract
+ * background, which is exactly what a real photo was fetched to avoid.
+ */
+const PHOTO_MERGE_INSTRUCTION =
+  "Keep this a real, recognisable photograph — restyle its lighting and colour grade to match the brief above, but do not turn it into an illustration, painting, or flat graphic. Leave calm, uncluttered space for a text panel or scrim to sit over part of the frame. ABSOLUTELY NO text, letters, numbers, captions, watermarks or logos anywhere in the image.";
 
 export const maxDuration = 300;
 
@@ -103,6 +112,11 @@ export async function POST(
   try {
     const { postId } = await params;
     const body = await req.json().catch(() => ({}));
+    // The "real photo" style: hero slides (cover/cta) get a real, searched
+    // photo instead of a flat generated one; content slides move it beside
+    // the copy instead of behind it. Off by default — every existing caller
+    // keeps the flat-background look it already gets.
+    const usePhotos = body.realPhotos === true;
 
     const [post] = await db
       .select()
@@ -128,6 +142,9 @@ export async function POST(
       .from(postBatches)
       .where(eq(postBatches.id, post.batchId))
       .limit(1);
+    // Captured now, not read as batch?.topic later: the per-slide render loop
+    // below declares its own `let batch` as a counter, which shadows this one.
+    const topic = batch?.topic ?? "";
 
     // A builder deck brings its own colours and its own per-slide background
     // prompts; anything older still goes through the five-preset path.
@@ -155,11 +172,15 @@ export async function POST(
     // One shared, cohesive background for the whole carousel (fast + consistent).
     // Used for the old path, and as the fallback for any builder slide whose own
     // background fails — a deck that renders 9 of 10 slides is still a deck.
+    // This is also what the cover/CTA slides render over, so a real photo here
+    // is the "hero" half of the real-photo style — full-bleed, text on top.
     const bg = await generateBackground(builder ? deckFallbackPrompt(slides) : built.prompt, {
       width,
       height,
       seed: newSeed(),
       geminiKey,
+      photoQuery: usePhotos ? photoQueryFor(slides[0]?.title || post.hook, topic) : undefined,
+      mergeInstruction: usePhotos ? PHOTO_MERGE_INSTRUCTION : undefined,
     });
     const bgBuf = bg.buffer;
 
@@ -182,6 +203,7 @@ export async function POST(
                 title: sl.title,
                 body: (sl.body || "").replace(/\s+/g, " ").trim(),
                 footer: `${i + 1} / ${total}`,
+                layout: usePhotos ? "split" : undefined,
               }
             : { kind, badge: sl.badge || badge, title: sl.title }
         );
@@ -204,6 +226,7 @@ export async function POST(
             title: s.title,
             body: cleanBody,
             footer: `${i + 1} / ${total}`,
+            layout: usePhotos ? "split" : undefined,
           });
         }
       });
@@ -227,7 +250,14 @@ export async function POST(
           if (!builder) return Promise.resolve(bgBuf);
           const p = slides[i]?.imagePrompt;
           if (!p) return Promise.resolve(bgBuf);
-          return generateBackground(p, { width, height, seed: newSeed(), geminiKey }).then((r) => r.buffer);
+          return generateBackground(p, {
+            width,
+            height,
+            seed: newSeed(),
+            geminiKey,
+            photoQuery: usePhotos ? photoQueryFor(slides[i]?.title, topic) : undefined,
+            mergeInstruction: usePhotos ? PHOTO_MERGE_INSTRUCTION : undefined,
+          }).then((r) => r.buffer);
         })
       );
       results.forEach((r, j) => {

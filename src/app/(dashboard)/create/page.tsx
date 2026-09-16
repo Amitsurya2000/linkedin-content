@@ -123,6 +123,9 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
   const [carouselImages, setCarouselImages] = useState<string[]>(post.carouselImages ?? []);
   const [carLoading, setCarLoading] = useState(false);
   const [carError, setCarError] = useState<string | null>(null);
+  // "Real photo" style: cover/CTA get a real searched photo full-bleed behind
+  // the text; content slides move it beside the copy on a clean panel instead.
+  const [realPhotos, setRealPhotos] = useState(false);
   // Index of the slide open full screen; null when the viewer is closed.
   const [lightbox, setLightbox] = useState<number | null>(null);
 
@@ -181,7 +184,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       const res = await fetch(`/api/posts/${post.id}/carousel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ realPhotos }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -448,6 +451,18 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
                   <Maximize2 className="w-3 h-3" /> Expand
                 </button>
               )}
+              <button
+                onClick={() => setRealPhotos((v) => !v)}
+                disabled={carLoading}
+                title="Cover/CTA get a real searched photo full-bleed; content slides move it beside the copy"
+                className={`text-[10px] rounded-lg px-2 py-1 font-medium border flex items-center gap-1 disabled:opacity-50 ${
+                  realPhotos
+                    ? "bg-[#ED383B] text-white border-[#ED383B]"
+                    : "border-[#F2DAD8] text-[#1A1414] hover:border-[#ED383B]/50"
+                }`}
+              >
+                <ImageIcon className="w-3 h-3" /> Real Photo Style
+              </button>
               <button
                 onClick={() => generateCarousel(carouselImages.length > 0)}
                 disabled={carLoading}
