@@ -3,7 +3,7 @@ import { poppinsCss } from "./font-data";
 import { generateBackground } from "./image-engine";
 import type { KoyopoSlide, SlideTemplate } from "./koyopo";
 import { LAB_STYLES, FACE, GLYPH_W, type FaceKind, type StyleSpec, type LabStyleName } from "./deck-lab-styles";
-import { AESTHETICS } from "./image-prompt";
+import { AESTHETICS, photoQueryFor } from "./image-prompt";
 
 export { LAB_STYLES, type StyleSpec, type LabStyleName };
 
@@ -408,6 +408,7 @@ export async function renderLabDeck(slides: KoyopoSlide[], opts: LabOptions): Pr
           width: LAB_CANVAS.width,
           height: fit === "bleed" ? LAB_CANVAS.height : Math.round(LAB_CANVAS.height * (fit === "bottom" ? 0.46 : 0.42)),
           geminiKey: opts.geminiKey,
+          photoQuery: photoQueryFor(slides[i].title, opts.topic ?? ""),
         });
         art = img.buffer;
       } catch {

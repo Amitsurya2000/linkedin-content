@@ -173,7 +173,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
       // A re-render draws a new topic, angle, hook and palette. The first
       // render of a post does not: it draws the copy that was just written.
       if (rewrite && !(await regeneratePost())) return;
-      // One engine, no choices. Every deck is composed by Gathos: the copy is
+      // One engine, no choices. Every deck is composed by Gemini: the copy is
       // drawn over a generated photographic background, which is how a carousel
       // gets a premium image — a LinkedIn document post is ONE upload, so the
       // visual has to live inside the deck rather than beside it. Every slide
@@ -463,7 +463,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
               <div className="text-center px-4">
                 <Loader2 className="w-7 h-7 text-[#C9282A] animate-spin mx-auto mb-2" />
                 <p className="text-xs text-[#6B5B5A]">Designing your carousel slides…</p>
-                <p className="text-[10px] text-[#6B5B5A] mt-0.5">Gathos / Gemini · ~40–90s</p>
+                <p className="text-[10px] text-[#6B5B5A] mt-0.5">Gemini · ~40–90s</p>
               </div>
             </div>
           ) : carouselImages.length > 0 ? (
@@ -499,7 +499,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
 
       {/* Standalone image — text/article/poll only. A carousel is a document
           post and takes ONE upload, so its visual lives inside the deck, which
-          is rendered by Gathos above. */}
+          is rendered by Gemini above. */}
       {!isCarousel && (
       <div className="px-5 mt-3">
         <div className="flex items-center justify-between mb-2">
@@ -530,7 +530,7 @@ function PostCard({ post, userName, index, solo = false }: { post: GeneratedPost
             <div className="text-center px-4">
               <Loader2 className="w-7 h-7 text-[#C9282A] animate-spin mx-auto mb-2" />
               <p className="text-xs text-[#6B5B5A]">Designing your premium visual…</p>
-              <p className="text-[10px] text-[#6B5B5A] mt-0.5">Gathos / Gemini · ~20–60s</p>
+              <p className="text-[10px] text-[#6B5B5A] mt-0.5">Gemini · ~20–60s</p>
             </div>
           ) : imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

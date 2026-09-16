@@ -93,6 +93,21 @@ export function cardText(hook: string, maxWords = 8, maxChars = 54): string {
   return t.replace(/\.$/, "");
 }
 
+/**
+ * A short web-search phrase for a slide's real photo, built from its concept
+ * name plus the deck topic.
+ *
+ * Titles follow the "Concept Name — one-sentence expansion" convention, so
+ * only the part before the em-dash is a search-worthy subject; the expansion
+ * is prose that would only dilute the query.
+ */
+export function photoQueryFor(title: string | undefined, topic: string): string {
+  const concept = (title || "").split(/[—–]/)[0].replace(/\s+/g, " ").trim();
+  const t = (topic || "").replace(/\s+/g, " ").trim();
+  const q = concept && t ? `${concept} ${t}` : concept || t;
+  return q.slice(0, 100);
+}
+
 function topicPhrase(input: PostImageInput): string {
   return (input.topic || input.industry || "professional success and growth").replace(/\s+/g, " ").trim().slice(0, 120);
 }

@@ -3,9 +3,9 @@ import { GoogleGenAI } from "@google/genai";
 /**
  * Gemini image generation.
  *
- * Replaces the Gathos client: the app now runs on ONE key. Gemini's image
- * models are reached through the same `generateContent` call as text, with
- * IMAGE in the response modalities, and return the bytes inline as base64.
+ * The app runs on ONE key. Gemini's image models are reached through the same
+ * `generateContent` call as text, with IMAGE in the response modalities, and
+ * return the bytes inline as base64.
  *
  * Model choice is a fallback chain rather than a constant because the image
  * line moves fast and a hard-coded preview id turns into a 404 the day it is

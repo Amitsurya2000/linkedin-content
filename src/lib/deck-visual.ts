@@ -2,7 +2,7 @@ import sharp from "sharp";
 import { poppinsCss } from "./font-data";
 import { type KoyopoSlide, type SlideTemplate } from "./koyopo";
 import { generateBackground } from "./image-engine";
-import { AESTHETICS } from "./image-prompt";
+import { AESTHETICS, photoQueryFor } from "./image-prompt";
 
 /**
  * Illustrated deck — the style with real pictures in it.
@@ -16,8 +16,9 @@ import { AESTHETICS } from "./image-prompt";
  * Image sources, in priority order:
  *   1. Files the client uploaded with the brief. A real photo of the real thing
  *      beats anything a model invents, so uploads are used first and cycled.
- *   2. Generated from the slide's designDirection via the shared image engine
- *      (Gathos, falling back to Gemini).
+ *   2. A real photo searched for the slide's own concept + deck topic, then
+ *      altered by Gemini to match the slide's designDirection — or, when no
+ *      photo turns up, a Gemini text-to-image render of the same brief.
  *   3. Nothing — the slide degrades to a clean type-only layout rather than
  *      failing the whole deck.
  *
@@ -205,7 +206,12 @@ export async function renderVisualDeck(
         // run cut the head off the illustration.
         const img = await generateBackground(
           promptFor(slide, opts.designDirections?.[i], opts.topic ?? "", opts.aesthetic),
-          { width: 1080, height: Math.round(H * 0.52), geminiKey: opts.geminiKey }
+          {
+            width: 1080,
+            height: Math.round(H * 0.52),
+            geminiKey: opts.geminiKey,
+            photoQuery: photoQueryFor(slide.title, opts.topic ?? ""),
+          }
         );
         art = img.buffer;
       } catch {

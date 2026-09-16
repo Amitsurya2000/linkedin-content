@@ -1,6 +1,5 @@
 /**
- * Live check that Gemini image generation works with the stored key, so the
- * Gathos swap is proven rather than assumed.
+ * Live check that Gemini image generation works with the stored key.
  *
  *   npx tsx scripts/test-gemini-image.ts
  */

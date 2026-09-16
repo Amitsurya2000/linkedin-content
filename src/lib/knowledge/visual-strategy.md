@@ -1,8 +1,7 @@
 # VISUAL STRATEGY — which engine to use, and when
 
-Three ways to produce a visual in this app. They are not interchangeable: one is
-free and always works, one costs money per image, and one is unreliable by the
-vendor's own behaviour. Pick deliberately.
+Two ways to produce a visual in this app. They are not interchangeable: one is
+free and always works, one costs Gemini quota per image. Pick deliberately.
 
 ---
 
@@ -25,48 +24,38 @@ of high-performing LinkedIn content, which is text-oriented by nature.
 
 ---
 
-## 2. TEXT-TO-IMAGE — for photographic backgrounds
+## 2. PHOTO SEARCH + GEMINI EDIT — for photographic subjects
 
-`generateImage()` in `src/lib/gathos.ts`. Needs `GATHOS_IMAGE_API_KEY`.
+`generateBackground()` in `src/lib/image-engine.ts`, via `src/lib/tavily.ts`
+(Pexels / Tavily search) and `editImage()` in `src/lib/gemini-image.ts`.
 
-- **Cost:** paid, per image.
-- **Reliability:** production-solid. This is the engine the single-image post
-  path already uses.
-- **Produces:** a text-free editorial background. The app then overlays the copy
-  itself via `composeCard()` — which is why the visuals never contain typos.
+When a slide's `designDirection` names a real scene, the engine searches for a
+real, freely-licensed photo of it (a query built from the slide's own concept
+name plus the deck topic), then hands that photo to Gemini's image editor with
+the slide's art brief as the alteration instruction — so the output still
+carries the picture's real detail while matching the deck's palette and mood.
+A generated stopwatch draws invented digits on its face; a searched one does
+not, and Gemini only has to restyle it, not invent it from nothing.
 
-**Use for:** single-image posts where a photographic or textured backdrop adds
-something a flat colour cannot — mood, atmosphere, a sense of place.
+- **Cost:** the photo search is free (Pexels/Tavily, optional keys); the Gemini
+  edit call costs the same quota as a plain generation.
+- **Reliability:** the search step returns `null` rather than throwing on a dead
+  URL or an empty result, so a bad query costs one fall-through, not the image.
+- **Produces:** a text-free editorial visual. The app then overlays the copy
+  itself via `composeCard()` / the illustrated-deck layout, which is why the
+  visuals never contain typos.
 
-**Do not use for:** carousels. Paying per slide for a background that the vector
-renderer would draw better, and free, is a straight loss.
+**Use for:** single-image posts and illustrated-carousel slides (the "visual"
+style and the spec-driven lab styles) where a photographic or textured backdrop
+adds something a flat colour cannot — mood, atmosphere, a sense of place.
 
----
+**Falls back to plain Gemini text-to-image** when no photo turns up for the
+query, or when neither `PEXELS_API_KEY` nor `TAVILY_API_KEY` is configured —
+never a dead button, just a fully synthesised subject instead of a real one.
 
-## 3. IMAGE-TO-IMAGE / FACE — unreliable, treat as best-effort
-
-`editImage()` in `src/lib/gathos.ts`. Needs `GATHOS_I2I_API_KEY`.
-
-**This is the face-cloning path, and it is the weakest link in the stack.**
-
-- Gathos's i2i route is flaky across their instances. The client is written to
-  return `null` on failure rather than throw, precisely so a failure degrades to
-  text-to-image instead of breaking the request.
-- Face fidelity is materially below what a frontier image model produces. It will
-  generate *a* face; it will not reliably preserve *your* face.
-
-**So do not build a feature that depends on face cloning working.** Any flow that
-needs the creator's actual likeness should either:
-
-1. **Use a real photograph the creator uploads.** For a personal-brand post, a
-   real photo of the person beats any generated likeness — it is authentic, it is
-   free, and there is no uncanny-valley risk. This is almost always the right
-   answer.
-2. **Avoid the face entirely.** Text-oriented carousels, which are what perform
-   on LinkedIn anyway, need no likeness at all.
-3. **Escalate to a frontier image model** only if likeness is genuinely required
-   and a real photo is impossible — and price it in, because it is the most
-   expensive path here.
+**Do not use for:** the flat-colour carousel styles (koyopo, colour/brand). Those
+overlay multi-line text directly on the background image, and a busy photo
+undermines the legibility a clean, even background gives for free.
 
 ---
 
@@ -77,9 +66,9 @@ Ask what the visual actually has to carry:
 | The visual must carry | Use |
 |---|---|
 | An idea, a framework, a number, a list, a contrast | **Vector renderer** — free, exact, always works |
-| Mood, atmosphere, a sense of place, behind one line of copy | **Text-to-image** — paid, reliable |
-| The creator's real face | **A real uploaded photo.** Not i2i. |
-| A face that does not have to be anyone specific | Text-to-image with a portrait prompt |
+| Mood, atmosphere, a sense of place, behind one line of copy | **Photo search + Gemini edit** |
+| The creator's real face | **A real uploaded photo**, not a searched or generated one |
+| A face that does not have to be anyone specific | Gemini text-to-image with a portrait prompt |
 
 Default to the vector renderer. Reach past it only when a photograph is doing
 work that typography cannot — which, for LinkedIn carousels, is rare.
@@ -88,10 +77,7 @@ work that typography cannot — which, for LinkedIn carousels, is rare.
 
 ## CURRENT CONFIGURATION
 
-Both Gathos keys are empty in `.env.local`, so paths 2 and 3 are inactive.
-Carousels are unaffected: the vector renderer needs no key, which is why
-carousel generation works today while single-image generation returns 503.
-
-To enable the paid paths, set `GATHOS_IMAGE_API_KEY` (and `GATHOS_I2I_API_KEY`
-for the best-effort face path) and restart the dev server so Next picks up the
-new environment.
+Every image call runs on the user's own Gemini key (per-user, added in Settings
+— the only key required). `PEXELS_API_KEY` / `TAVILY_API_KEY` in `.env.local`
+are optional and additive: set either to turn real-photo search on, leave both
+empty and the app still runs on Gemini text-to-image alone.

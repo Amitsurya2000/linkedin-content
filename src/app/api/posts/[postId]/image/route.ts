@@ -92,9 +92,7 @@ export async function POST(
       styleId
     );
 
-    // Gathos when it is configured, Gemini otherwise — see lib/image-engine.ts.
-    // The Gemini key is optional here: it is only needed if Gathos is absent or
-    // its request fails.
+    // Every image goes through the user's own Gemini key — see lib/image-engine.ts.
     const geminiKey = await resolveGeminiKey(session.user.id) || undefined;
 
     // An uploaded screenshot beats a generated one outright: it is the real
@@ -133,12 +131,14 @@ export async function POST(
     // Step 3 — web image search agent. Runs when the brief asks for it, and
     // finds the contextual picture the copy was written around.
     let reference: string | undefined;
+    let referenceContentType: string | undefined;
     let referenceUrl: string | undefined;
     if (directive?.searchRequired && directive.searchQuery && isPhotoSearchConfigured()) {
       try {
         const found = await findPhoto(directive.searchQuery);
         if (found) {
           reference = found.buffer.toString("base64");
+          referenceContentType = found.contentType;
           referenceUrl = found.photo.url;
         }
       } catch (e) {
@@ -148,9 +148,9 @@ export async function POST(
       }
     }
 
-    // Step 4/5 — Gethos input assembly and render. The searched picture is an
-    // INPUT to Gathos alongside the merge instruction, not the output itself;
-    // when i2i is unavailable the chain falls back to text-to-image, and the
+    // Step 4/5 — render. The searched picture (when found) is an INPUT to
+    // Gemini's image editor alongside the merge instruction, not the output
+    // itself; with no photo the chain falls back to text-to-image, and the
     // seed is fresh either way so a re-render never repeats the last picture.
     const seed = newSeed();
     const img = await generateBackground(directive?.textToImagePrompt || prompt, {
@@ -158,6 +158,7 @@ export async function POST(
       height: ratio.height,
       seed,
       reference,
+      referenceContentType,
       mergeInstruction: directive?.multimodalInstruction || undefined,
       geminiKey,
     });

@@ -13,11 +13,11 @@
  *
  * A photograph has no such failure mode. So for slides whose subject is a real
  * scene — a person at a desk, a warehouse, a trading floor — a searched photo
- * beats a generated one outright, and costs a fraction of the time: Gathos took
- * 49-126 seconds per image; a search and download is under two.
+ * beats a generated one outright, and costs a fraction of the time: a Gemini
+ * render takes tens of seconds; a search and download is under two.
  *
- * Configured exactly like gathos.ts: absent key means absent source, never a
- * dead button. `isTavilyConfigured()` is the guard every caller checks first.
+ * Absent key means absent source, never a dead button.
+ * `isPhotoSearchConfigured()` is the guard every caller checks first.
  */
 
 const BASE = process.env.TAVILY_BASE_URL || "https://api.tavily.com";

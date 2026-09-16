@@ -1,32 +1,29 @@
-import { generateImage as gathosGenerate, editImage as gathosEdit, isGathosConfigured } from "./gathos";
 import { findPhoto, isPhotoSearchConfigured } from "./tavily";
-import { generateImage as geminiGenerate } from "./gemini-image";
+import { generateImage as geminiGenerate, editImage as geminiEdit } from "./gemini-image";
 
 /**
- * One entry point for photographic imagery, with three sources behind it.
+ * One entry point for imagery, with two sources behind it — both reached
+ * through the one Gemini key.
  *
- * Tavily is tried FIRST, and only when the caller supplies a `photoQuery`. A
- * searched photograph beats a generated one for any slide whose subject is a
- * real scene, because a real photo cannot contain invented lettering — the
- * failure that made a generated stopwatch read "71:88" with START / LAP / RESET
- * burned into it. It is also two orders of magnitude faster: a search and
- * download is about a second against 49-126 for a Gathos render.
+ * A real, searched photograph is tried first whenever the caller supplies a
+ * `photoQuery` or a `reference` it already found: a search and download is
+ * about a second, and a real photo cannot contain invented lettering — the
+ * failure that made a generated stopwatch read "71:88" with START / LAP /
+ * RESET burned into it. That photo is then handed to Gemini's image editor
+ * along with the slide's own prompt, so the output still matches the deck's
+ * art direction rather than looking like an unstyled stock photo pasted in.
  *
- * Gathos is next: it is the tuned engine these 36 prompt styles were written
- * against, and it is what an abstract or stylised subject still needs. Gemini is
- * the last fallback, and the only source on an account with no Gathos key — so
- * image generation never becomes a dead button because one provider is missing
- * or out of quota.
+ * Plain Gemini text-to-image is the fallback: no photo was found, or the
+ * caller asked for a fully synthesised subject to begin with.
  *
- * Callers pass LinkedIn-native pixel sizes. Each engine's constraints are
- * handled inside it: Gathos snaps to multiples of 16, Gemini takes an aspect
- * ratio instead of dimensions.
+ * Callers pass LinkedIn-native pixel sizes; Gemini takes an aspect ratio
+ * instead, computed here.
  */
 
 export interface EngineImage {
   buffer: Buffer;
   contentType: string;
-  engine: "tavily" | "gathos" | "gathos-i2i" | "gemini";
+  engine: "tavily" | "gemini" | "gemini-edit";
   model?: string;
   elapsedMs: number;
   /** Where a searched photo came from, so it can be credited or re-checked. */
@@ -36,11 +33,8 @@ export interface EngineImage {
 }
 
 /**
- * A fresh seed per render.
- *
- * Gathos treats -1 as "pick one", which is fine until two renders of the same
- * prompt come back identical. An explicit random integer is what guarantees the
- * picture moves even when the text does not.
+ * A fresh seed per render, so a re-render never repeats the previous picture
+ * by accident.
  */
 export function newSeed(): number {
   return 1 + Math.floor(Math.random() * 999999);
@@ -62,19 +56,21 @@ export async function generateBackground(
      */
     seed?: number;
     /**
-     * A reference picture (base64) to merge with, plus how to merge it. This is
-     * the multimodal path: the searched web image goes IN to Gathos rather than
-     * being used as the background directly.
+     * A reference picture (base64) the caller already searched for, plus how
+     * to alter it. This is the multimodal path: the real photo goes IN to
+     * Gemini's editor rather than being used as the background directly.
      */
     reference?: string;
+    referenceContentType?: string;
     mergeInstruction?: string;
     width: number;
     height: number;
     geminiKey?: string;
     /**
-     * A plain-language description of a real scene to search for. Supplying it
-     * opts this call into photography; omitting it keeps the previous
-     * generate-only behaviour exactly.
+     * A plain-language description of a real scene to search for. Supplying
+     * it opts this call into photography: the engine searches, then feeds the
+     * result into Gemini's editor with `prompt` as the alteration instruction.
+     * Omitting it (with no `reference` either) keeps pure text-to-image.
      */
     photoQuery?: string;
   }
@@ -83,62 +79,55 @@ export async function generateBackground(
   const errors: string[] = [];
   const seed = opts.seed ?? newSeed();
 
-  // Multimodal assembly: a reference picture was supplied (normally the web
-  // image the search agent found), so it is fed INTO Gathos with the merge
-  // instruction rather than used as the background as-is. Best-effort by
-  // design — editImage returns null instead of throwing, and the chain below
-  // carries on as if no reference had been given.
-  if (opts.reference && isGathosConfigured()) {
-    const merged = await gathosEdit(
-      opts.reference,
-      opts.mergeInstruction ? `${prompt}
+  // Get a real photo, either handed in already-found or searched for here.
+  let photo: Buffer | null = null;
+  let photoContentType = opts.referenceContentType || "image/jpeg";
+  let sourceUrl: string | undefined;
 
-${opts.mergeInstruction}` : prompt,
-      { seed }
-    );
-    if (merged) {
-      return {
-        buffer: Buffer.from(merged.base64, "base64"),
-        contentType: merged.contentType || "image/png",
-        engine: "gathos-i2i",
-        elapsedMs: Date.now() - start,
-        seed,
-      };
-    }
-    errors.push("gathos i2i: no result, falling back");
-  }
-
-  if (opts.photoQuery && isPhotoSearchConfigured()) {
+  if (opts.reference) {
+    photo = Buffer.from(opts.reference, "base64");
+  } else if (opts.photoQuery && isPhotoSearchConfigured()) {
     // findPhoto walks its candidates and returns null rather than throwing, so
     // a dead image URL costs one fall-through instead of the whole image.
     const found = await findPhoto(opts.photoQuery);
     if (found) {
-      return {
-        buffer: found.buffer,
-        contentType: found.contentType,
-        engine: "tavily",
-        elapsedMs: Date.now() - start,
-        sourceUrl: found.photo.url,
-      };
+      photo = found.buffer;
+      photoContentType = found.contentType;
+      sourceUrl = found.photo.url;
+    } else {
+      errors.push("photo search: no usable photo for that query");
     }
-    errors.push("photo search: no usable photo for that query");
   }
 
-  if (isGathosConfigured()) {
-    try {
-      const img = await gathosGenerate(prompt, { width: opts.width, height: opts.height, seed });
-      return {
-        buffer: Buffer.from(img.base64, "base64"),
-        contentType: img.contentType || "image/png",
-        engine: "gathos",
-        elapsedMs: Date.now() - start,
-        seed: img.seedUsed ?? seed,
-      };
-    } catch (err) {
-      // Falling through to Gemini rather than failing: a quota error or a queue
-      // timeout on one provider should not cost the user their image.
-      errors.push(`gathos: ${err instanceof Error ? err.message : String(err)}`);
+  if (photo) {
+    if (opts.geminiKey) {
+      try {
+        const instruction = opts.mergeInstruction ? `${prompt}\n\n${opts.mergeInstruction}` : prompt;
+        const img = await geminiEdit(opts.geminiKey, photo, instruction, photoContentType, {
+          aspectRatio: aspectFor(opts.width, opts.height),
+        });
+        return {
+          buffer: img.buffer,
+          contentType: img.mimeType,
+          engine: "gemini-edit",
+          model: img.model,
+          elapsedMs: Date.now() - start,
+          seed,
+          sourceUrl,
+        };
+      } catch (err) {
+        // Falling back to the raw photo rather than failing: an edit-model
+        // hiccup should not cost the user their image entirely.
+        errors.push(`gemini edit: ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
+    return {
+      buffer: photo,
+      contentType: photoContentType,
+      engine: "tavily",
+      elapsedMs: Date.now() - start,
+      sourceUrl,
+    };
   }
 
   if (opts.geminiKey) {
@@ -150,6 +139,7 @@ ${opts.mergeInstruction}` : prompt,
         engine: "gemini",
         model: img.model,
         elapsedMs: Date.now() - start,
+        seed,
       };
     } catch (err) {
       errors.push(`gemini: ${err instanceof Error ? err.message : String(err)}`);
@@ -161,6 +151,6 @@ ${opts.mergeInstruction}` : prompt,
   throw new Error(
     errors.length
       ? `Image generation failed. ${errors.join(" | ")}`
-      : "No image source is available. Add a Gemini key in Settings, or set GATHOS_IMAGE_API_KEY or TAVILY_API_KEY."
+      : "No image source is available. Add a Gemini key in Settings, or set TAVILY_API_KEY / PEXELS_API_KEY for real photos."
   );
 }
